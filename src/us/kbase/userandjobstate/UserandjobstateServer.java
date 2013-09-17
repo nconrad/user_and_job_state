@@ -1,6 +1,7 @@
 package us.kbase.userandjobstate;
 
 import java.util.List;
+import java.util.Map;
 import us.kbase.JsonServerMethod;
 import us.kbase.JsonServerServlet;
 import us.kbase.Tuple11;
@@ -102,6 +103,21 @@ public class UserandjobstateServer extends JsonServerServlet {
     public void removeState(String service, String key, AuthToken authPart) throws Exception {
         //BEGIN remove_state
         //END remove_state
+    }
+
+    /**
+     * <p>Original spec-file function name: list_state</p>
+     * <pre>
+     * List all key value pairs.
+     * </pre>
+     * @param   service   Original type "service_name" (A service name.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.list_state")
+    public Map<String,String> listState(String service, AuthToken authPart) throws Exception {
+        Map<String,String> returnVal = null;
+        //BEGIN list_state
+        //END list_state
+        return returnVal;
     }
 
     /**

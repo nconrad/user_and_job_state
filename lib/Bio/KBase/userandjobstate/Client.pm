@@ -364,6 +364,88 @@ sub remove_state
 
 
 
+=head2 list_state
+
+  $key_value_pairs = $obj->list_state($service)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$service is a UserAndJobState.service_name
+$key_value_pairs is a reference to a hash where the key is a string and the value is a string
+service_name is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$service is a UserAndJobState.service_name
+$key_value_pairs is a reference to a hash where the key is a string and the value is a string
+service_name is a string
+
+
+=end text
+
+=item Description
+
+List all key value pairs.
+
+=back
+
+=cut
+
+sub list_state
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function list_state (received $n, expecting 1)");
+    }
+    {
+	my($service) = @args;
+
+	my @_bad_arguments;
+        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to list_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'list_state');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.list_state",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'list_state',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_state",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'list_state',
+				       );
+    }
+}
+
+
+
 =head2 create_job
 
   $job = $obj->create_job()

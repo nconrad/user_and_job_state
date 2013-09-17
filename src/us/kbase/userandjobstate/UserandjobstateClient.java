@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import org.codehaus.jackson.type.TypeReference;
 import us.kbase.JsonClientCaller;
 import us.kbase.JsonClientException;
@@ -147,6 +148,23 @@ public class UserandjobstateClient {
         args.add(key);
         TypeReference<Object> retType = new TypeReference<Object>() {};
         caller.jsonrpcCall("UserAndJobState.remove_state", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: list_state</p>
+     * <pre>
+     * List all key value pairs.
+     * </pre>
+     * @param   service   Original type "service_name" (A service name.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public Map<String,String> listState(String service) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(service);
+        TypeReference<List<Map<String,String>>> retType = new TypeReference<List<Map<String,String>>>() {};
+        List<Map<String,String>> res = caller.jsonrpcCall("UserAndJobState.list_state", args, retType, true, true);
+        return res.get(0);
     }
 
     /**

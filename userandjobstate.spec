@@ -56,6 +56,10 @@ module UserAndJobState {
 	/* Remove a key value pair. */
 	funcdef remove_state(service_name service, string key) returns ()
 		authentication required;
+		
+	/* List all key value pairs. */
+	funcdef list_state(service_name service) returns(
+		mapping<string, string> key_value_pairs) authentication required;
 
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;
