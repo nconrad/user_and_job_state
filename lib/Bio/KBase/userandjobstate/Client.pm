@@ -27,6 +27,30 @@ job status reporting.
 The service assumes other services are capable of simple math and does not
 throw errors if a progress bar overflows.
 
+Since there is no way to authenticate as a service, devs are on the honor
+system not to clobber each other's settings and jobs.
+
+Potential process flows:
+
+Asysnc:
+UI calls service function which returns with job id
+service call [spawns thread/subprocess to run job that] periodically updates
+        the job status of the job id on the job status server
+meanwhile, the UI periodically polls the job status server to get progress
+        updates
+service call finishes, completes job
+UI pulls pointers to results from the job status server
+
+Sync:
+UI creates job, gets job id
+UI starts thread that calls service, providing job id
+service call runs, periodically updating the job status of the job id on the
+        job status server
+meanwhile, the UI periodically polls the job status server to get progress
+        updates
+service call finishes, completes job, returns results
+UI thread joins
+
 mongodb structures:
 
 State collection:
@@ -1644,6 +1668,166 @@ sub list_jobs
 
 
 
+=head2 delete_job
+
+  $obj->delete_job($job)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+job_id is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+job_id is a string
+
+
+=end text
+
+=item Description
+
+Delete a job. Will error out if the job is not complete.
+
+=back
+
+=cut
+
+sub delete_job
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function delete_job (received $n, expecting 1)");
+    }
+    {
+	my($job) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to delete_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'delete_job');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.delete_job",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'delete_job',
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method delete_job",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'delete_job',
+				       );
+    }
+}
+
+
+
+=head2 force_delete_job
+
+  $obj->force_delete_job($job)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+job_id is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+job_id is a string
+
+
+=end text
+
+=item Description
+
+Force delete a job - will always succeed, regardless of job state.
+
+=back
+
+=cut
+
+sub force_delete_job
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function force_delete_job (received $n, expecting 1)");
+    }
+    {
+	my($job) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to force_delete_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'force_delete_job');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.force_delete_job",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'force_delete_job',
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method force_delete_job",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'force_delete_job',
+				       );
+    }
+}
+
+
+
 sub version {
     my ($self) = @_;
     my $result = $self->{client}->call($self->{url}, {
@@ -1655,16 +1839,16 @@ sub version {
             Bio::KBase::Exceptions::JSONRPC->throw(
                 error => $result->error_message,
                 code => $result->content->{code},
-                method_name => 'list_jobs',
+                method_name => 'force_delete_job',
             );
         } else {
             return wantarray ? @{$result->result} : $result->result->[0];
         }
     } else {
         Bio::KBase::Exceptions::HTTP->throw(
-            error => "Error invoking method list_jobs",
+            error => "Error invoking method force_delete_job",
             status_line => $self->{client}->status_line,
-            method_name => 'list_jobs',
+            method_name => 'force_delete_job',
         );
     }
 }

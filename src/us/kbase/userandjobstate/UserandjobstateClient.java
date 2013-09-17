@@ -416,4 +416,36 @@ public class UserandjobstateClient {
         List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> res = caller.jsonrpcCall("UserAndJobState.list_jobs", args, retType, true, true);
         return res.get(0);
     }
+
+    /**
+     * <p>Original spec-file function name: delete_job</p>
+     * <pre>
+     * Delete a job. Will error out if the job is not complete.
+     * </pre>
+     * @param   job   Original type "job_id" (A job id.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void deleteJob(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.delete_job", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: force_delete_job</p>
+     * <pre>
+     * Force delete a job - will always succeed, regardless of job state.
+     * </pre>
+     * @param   job   Original type "job_id" (A job id.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void forceDeleteJob(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.force_delete_job", args, retType, false, true);
+    }
 }

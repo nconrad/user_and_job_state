@@ -348,6 +348,32 @@ public class UserandjobstateServer extends JsonServerServlet {
         return returnVal;
     }
 
+    /**
+     * <p>Original spec-file function name: delete_job</p>
+     * <pre>
+     * Delete a job. Will error out if the job is not complete.
+     * </pre>
+     * @param   job   Original type "job_id" (A job id.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.delete_job")
+    public void deleteJob(String job, AuthToken authPart) throws Exception {
+        //BEGIN delete_job
+        //END delete_job
+    }
+
+    /**
+     * <p>Original spec-file function name: force_delete_job</p>
+     * <pre>
+     * Force delete a job - will always succeed, regardless of job state.
+     * </pre>
+     * @param   job   Original type "job_id" (A job id.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.force_delete_job")
+    public void forceDeleteJob(String job, AuthToken authPart) throws Exception {
+        //BEGIN force_delete_job
+        //END force_delete_job
+    }
+
     public static void main(String[] args) throws Exception {
         if (args.length != 1) {
             System.out.println("Usage: <program> <server_port>");
