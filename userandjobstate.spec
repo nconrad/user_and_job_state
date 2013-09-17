@@ -41,25 +41,25 @@ Job collection:
 */
 
 module UserAndJobState {
+
+	/* All calls require authentication. */
+	authentication required;
 	
 	/* A service name. */
 	typedef string service_name;
 	
 	/* Set the state of a key for a service. */
-	funcdef set_state(service_name service, string key, string value) returns()
-		authentication required;
+	funcdef set_state(service_name service, string key, string value) returns();
 		
 	/* Get the state of a key for a service. */
-	funcdef get_state(service_name service, string key) returns(string value)
-		authentication required;
+	funcdef get_state(service_name service, string key) returns(string value);
 	
 	/* Remove a key value pair. */
-	funcdef remove_state(service_name service, string key) returns ()
-		authentication required;
+	funcdef remove_state(service_name service, string key) returns ();
 		
 	/* List all key value pairs. */
 	funcdef list_state(service_name service) returns(
-		mapping<string, string> key_value_pairs) authentication required;
+		mapping<string, string> key_value_pairs);
 
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;
@@ -128,51 +128,45 @@ module UserAndJobState {
 	} Results;
 		
 	/* Create a new job status report. */
-	funcdef create_job() returns(job_id job) authentication required;
+	funcdef create_job() returns(job_id job);
 	
 	/* Start a job and specify the job parameters. */
 	funcdef start_job(job_id job, service_name service, job_status status, 
-		job_description desc, InitProgress progress) returns()
-		authentication required;
+		job_description desc, InitProgress progress) returns();
 	
 	/* Create and start a job. */
 	funcdef create_and_start_job(service_name service, job_status status, 
-		job_description desc, InitProgress progress) returns(job_id job)
-		authentication required;
+		job_description desc, InitProgress progress) returns(job_id job);
 	
 	/* Update the status and progress for a job. */
 	funcdef update_job_progress(job_id job, job_status status, progress prog)
-		returns() authentication required;
+		returns();
 		
 	/* Update the status for a job. */
-	funcdef update_job(job_id job, job_status status) returns()
-		authentication required;
+	funcdef update_job(job_id job, job_status status) returns();
 	
 	/* Get the description of a job. */
 	funcdef get_job_description(job_id job) returns(service_name service,
-		progress_type ptype, max_progress max, job_description desc)
-		authentication required;
+		progress_type ptype, max_progress max, job_description desc);
 	
 	/* Get the status of a job. 
 		If the progress type is 'none' total_progress will always be 0.
 	*/
 	funcdef get_job_status(job_id job) returns(timestamp last_update, 
 		job_status status, total_progress progress, boolean complete,
-		boolean error) authentication required;
+		boolean error);
 	
 	/* Complete the job. After the job is completed, total_progress always
 		equals max_progress.
 	*/
 	funcdef complete_job(job_id job, job_status status, boolean error,
-		Results res) returns() authentication required;
+		Results res) returns();
 		
 	/* Get the job results. */
-	funcdef get_results(job_id job) returns(Results res)
-		authentication required;
+	funcdef get_results(job_id job) returns(Results res);
 	
 	/* List service names. */
-	funcdef get_services() returns (list<service_name> services)
-		authentication required;
+	funcdef get_services() returns (list<service_name> services);
 	
 	/* Information about a job. Note calls returning this structure will
 		probably be slower than the more targeted calls.
@@ -183,7 +177,7 @@ module UserAndJobState {
 		job_description desc, Results res> job_info;
 	
 	/* Get information about a job. */
-	funcdef get_job_info(job_id job) returns(job_info) authentication required;
+	funcdef get_job_info(job_id job) returns(job_info info);
 
 	/* Options for list_jobs command. 
 		
@@ -206,5 +200,5 @@ module UserAndJobState {
 	
 	/* List jobs. */
 	funcdef list_jobs(service_name service, ListJobsOptions options)
-		returns(list<job_info> jobs) authentication required;
+		returns(list<job_info> jobs);
 };

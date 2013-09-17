@@ -1367,7 +1367,7 @@ sub get_services
 
 =head2 get_job_info
 
-  $return = $obj->get_job_info($job)
+  $info = $obj->get_job_info($job)
 
 =over 4
 
@@ -1377,7 +1377,7 @@ sub get_services
 
 <pre>
 $job is a UserAndJobState.job_id
-$return is a UserAndJobState.job_info
+$info is a UserAndJobState.job_info
 job_id is a string
 job_info is a reference to a list containing 11 items:
 	0: (job) a UserAndJobState.job_id
@@ -1412,7 +1412,7 @@ Results is a reference to a hash where the following keys are defined:
 =begin text
 
 $job is a UserAndJobState.job_id
-$return is a UserAndJobState.job_info
+$info is a UserAndJobState.job_info
 job_id is a string
 job_info is a reference to a list containing 11 items:
 	0: (job) a UserAndJobState.job_id
