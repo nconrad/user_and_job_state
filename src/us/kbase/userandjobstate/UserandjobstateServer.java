@@ -21,6 +21,26 @@ import us.kbase.auth.AuthToken;
  * job status reporting.
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
+ * Since there is no way to authenticate as a service, devs are on the honor
+ * system not to clobber each other's settings and jobs.
+ * Potential process flows:
+ * Asysnc:
+ * UI calls service function which returns with job id
+ * service call [spawns thread/subprocess to run job that] periodically updates
+ *         the job status of the job id on the job status server
+ * meanwhile, the UI periodically polls the job status server to get progress
+ *         updates
+ * service call finishes, completes job
+ * UI pulls pointers to results from the job status server
+ * Sync:
+ * UI creates job, gets job id
+ * UI starts thread that calls service, providing job id
+ * service call runs, periodically updating the job status of the job id on the
+ *         job status server
+ * meanwhile, the UI periodically polls the job status server to get progress
+ *         updates
+ * service call finishes, completes job, returns results
+ * UI thread joins
  * mongodb structures:
  * State collection:
  * {
