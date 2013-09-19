@@ -1,12 +1,12 @@
 package us.kbase.userandjobstate;
 
 import java.util.List;
-import java.util.Map;
 import us.kbase.JsonServerMethod;
 import us.kbase.JsonServerServlet;
 import us.kbase.Tuple11;
 import us.kbase.Tuple4;
 import us.kbase.Tuple5;
+import us.kbase.UObject;
 import us.kbase.auth.AuthToken;
 
 //BEGIN_HEADER
@@ -15,7 +15,7 @@ import us.kbase.auth.AuthToken;
 /**
  * <p>Original spec-file module name: UserAndJobState</p>
  * <pre>
- * Service for storing arbitrary key value pairs on a per user per service basis
+ * Service for storing arbitrary key/object pairs on a per user per service basis
  * and storing job status so that a) long JSON RPC calls can report status and
  * UI elements can receive updates, and b) there's a centralized location for 
  * job status reporting.
@@ -23,6 +23,7 @@ import us.kbase.auth.AuthToken;
  * throw errors if a progress bar overflows.
  * Since there is no way to authenticate as a service, devs are on the honor
  * system not to clobber each other's settings and jobs.
+ * Setting objects are limited to 1Mb.
  * Potential process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -92,7 +93,7 @@ public class UserandjobstateServer extends JsonServerServlet {
      * @param   service   Original type "service_name" (A service name.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.set_state")
-    public void setState(String service, String key, String value, AuthToken authPart) throws Exception {
+    public void setState(String service, String key, UObject value, AuthToken authPart) throws Exception {
         //BEGIN set_state
         //END set_state
     }
@@ -105,8 +106,8 @@ public class UserandjobstateServer extends JsonServerServlet {
      * @param   service   Original type "service_name" (A service name.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_state")
-    public String getState(String service, String key, AuthToken authPart) throws Exception {
-        String returnVal = null;
+    public UObject getState(String service, String key, AuthToken authPart) throws Exception {
+        UObject returnVal = null;
         //BEGIN get_state
         //END get_state
         return returnVal;
@@ -128,13 +129,13 @@ public class UserandjobstateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: list_state</p>
      * <pre>
-     * List all key value pairs.
+     * List all keys.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_state")
-    public Map<String,String> listState(String service, AuthToken authPart) throws Exception {
-        Map<String,String> returnVal = null;
+    public List<String> listState(String service, AuthToken authPart) throws Exception {
+        List<String> returnVal = null;
         //BEGIN list_state
         //END list_state
         return returnVal;

@@ -1,5 +1,5 @@
 /* 
-Service for storing arbitrary key value pairs on a per user per service basis
+Service for storing arbitrary key/object pairs on a per user per service basis
 and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
@@ -9,6 +9,8 @@ throw errors if a progress bar overflows.
 
 Since there is no way to authenticate as a service, devs are on the honor
 system not to clobber each other's settings and jobs.
+
+Setting objects are limited to 1Mb.
 
 Potential process flows:
 
@@ -73,17 +75,19 @@ module UserAndJobState {
 	typedef string service_name;
 	
 	/* Set the state of a key for a service. */
-	funcdef set_state(service_name service, string key, string value) returns();
+	funcdef set_state(service_name service, string key,
+		UnspecifiedObject value) returns();
 		
 	/* Get the state of a key for a service. */
-	funcdef get_state(service_name service, string key) returns(string value);
+	funcdef get_state(service_name service, string key)
+		returns(UnspecifiedObject value);
 	
 	/* Remove a key value pair. */
 	funcdef remove_state(service_name service, string key) returns ();
 		
-	/* List all key value pairs. */
+	/* List all keys. */
 	funcdef list_state(service_name service) returns(
-		mapping<string, string> key_value_pairs);
+		list<string> keys);
 
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;

@@ -5,19 +5,19 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import org.codehaus.jackson.type.TypeReference;
 import us.kbase.JsonClientCaller;
 import us.kbase.JsonClientException;
 import us.kbase.Tuple11;
 import us.kbase.Tuple4;
 import us.kbase.Tuple5;
+import us.kbase.UObject;
 import us.kbase.auth.AuthToken;
 
 /**
  * <p>Original spec-file module name: UserAndJobState</p>
  * <pre>
- * Service for storing arbitrary key value pairs on a per user per service basis
+ * Service for storing arbitrary key/object pairs on a per user per service basis
  * and storing job status so that a) long JSON RPC calls can report status and
  * UI elements can receive updates, and b) there's a centralized location for 
  * job status reporting.
@@ -25,6 +25,7 @@ import us.kbase.auth.AuthToken;
  * throw errors if a progress bar overflows.
  * Since there is no way to authenticate as a service, devs are on the honor
  * system not to clobber each other's settings and jobs.
+ * Setting objects are limited to 1Mb.
  * Potential process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -126,7 +127,7 @@ public class UserandjobstateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void setState(String service, String key, String value) throws IOException, JsonClientException {
+    public void setState(String service, String key, UObject value) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
         args.add(key);
@@ -144,12 +145,12 @@ public class UserandjobstateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public String getState(String service, String key) throws IOException, JsonClientException {
+    public UObject getState(String service, String key) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
         args.add(key);
-        TypeReference<List<String>> retType = new TypeReference<List<String>>() {};
-        List<String> res = caller.jsonrpcCall("UserAndJobState.get_state", args, retType, true, true);
+        TypeReference<List<UObject>> retType = new TypeReference<List<UObject>>() {};
+        List<UObject> res = caller.jsonrpcCall("UserAndJobState.get_state", args, retType, true, true);
         return res.get(0);
     }
 
@@ -173,17 +174,17 @@ public class UserandjobstateClient {
     /**
      * <p>Original spec-file function name: list_state</p>
      * <pre>
-     * List all key value pairs.
+     * List all keys.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public Map<String,String> listState(String service) throws IOException, JsonClientException {
+    public List<String> listState(String service) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
-        TypeReference<List<Map<String,String>>> retType = new TypeReference<List<Map<String,String>>>() {};
-        List<Map<String,String>> res = caller.jsonrpcCall("UserAndJobState.list_state", args, retType, true, true);
+        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_state", args, retType, true, true);
         return res.get(0);
     }
 

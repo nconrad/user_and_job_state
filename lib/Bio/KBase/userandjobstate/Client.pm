@@ -19,7 +19,7 @@ Bio::KBase::userandjobstate::Client
 =head1 DESCRIPTION
 
 
-Service for storing arbitrary key value pairs on a per user per service basis
+Service for storing arbitrary key/object pairs on a per user per service basis
 and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
@@ -29,6 +29,8 @@ throw errors if a progress bar overflows.
 
 Since there is no way to authenticate as a service, devs are on the honor
 system not to clobber each other's settings and jobs.
+
+Setting objects are limited to 1Mb.
 
 Potential process flows:
 
@@ -147,7 +149,7 @@ sub new
 <pre>
 $service is a UserAndJobState.service_name
 $key is a string
-$value is a string
+$value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
 
 </pre>
@@ -158,7 +160,7 @@ service_name is a string
 
 $service is a UserAndJobState.service_name
 $key is a string
-$value is a string
+$value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
 
 
@@ -189,7 +191,7 @@ sub set_state
 	my @_bad_arguments;
         (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
         (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
-        (!ref($value)) or push(@_bad_arguments, "Invalid type for argument 3 \"value\" (value was \"$value\")");
+        (defined $value) or push(@_bad_arguments, "Invalid type for argument 3 \"value\" (value was \"$value\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to set_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -233,7 +235,7 @@ sub set_state
 <pre>
 $service is a UserAndJobState.service_name
 $key is a string
-$value is a string
+$value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
 
 </pre>
@@ -244,7 +246,7 @@ service_name is a string
 
 $service is a UserAndJobState.service_name
 $key is a string
-$value is a string
+$value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
 
 
@@ -390,7 +392,7 @@ sub remove_state
 
 =head2 list_state
 
-  $key_value_pairs = $obj->list_state($service)
+  $keys = $obj->list_state($service)
 
 =over 4
 
@@ -400,7 +402,7 @@ sub remove_state
 
 <pre>
 $service is a UserAndJobState.service_name
-$key_value_pairs is a reference to a hash where the key is a string and the value is a string
+$keys is a reference to a list where each element is a string
 service_name is a string
 
 </pre>
@@ -410,7 +412,7 @@ service_name is a string
 =begin text
 
 $service is a UserAndJobState.service_name
-$key_value_pairs is a reference to a hash where the key is a string and the value is a string
+$keys is a reference to a list where each element is a string
 service_name is a string
 
 
@@ -418,7 +420,7 @@ service_name is a string
 
 =item Description
 
-List all key value pairs.
+List all keys.
 
 =back
 
