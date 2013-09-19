@@ -7,8 +7,9 @@ job status reporting.
 The service assumes other services are capable of simple math and does not
 throw errors if a progress bar overflows.
 
-Since there is no way to authenticate as a service, devs are on the honor
-system not to clobber each other's settings and jobs.
+Currently devs are on the honor system not to clobber each other's settings and
+jobs. If necessary, per Steve Chan we could set up service authentication by
+passing a token in the arguments.
 
 Setting objects are limited to 1Mb.
 
