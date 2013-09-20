@@ -1,13 +1,13 @@
 package us.kbase.userandjobstate;
 
 import java.util.List;
-import us.kbase.JsonServerMethod;
-import us.kbase.JsonServerServlet;
-import us.kbase.Tuple11;
-import us.kbase.Tuple4;
-import us.kbase.Tuple5;
-import us.kbase.UObject;
 import us.kbase.auth.AuthToken;
+import us.kbase.common.service.JsonServerMethod;
+import us.kbase.common.service.JsonServerServlet;
+import us.kbase.common.service.Tuple11;
+import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple5;
+import us.kbase.common.service.UObject;
 
 //BEGIN_HEADER
 //END_HEADER
@@ -21,8 +21,9 @@ import us.kbase.auth.AuthToken;
  * job status reporting.
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
- * Since there is no way to authenticate as a service, devs are on the honor
- * system not to clobber each other's settings and jobs.
+ * Currently devs are on the honor system not to clobber each other's settings and
+ * jobs. If necessary, per Steve Chan we could set up service authentication by
+ * passing a token in the arguments.
  * Setting objects are limited to 1Mb.
  * Potential process flows:
  * Asysnc:
@@ -73,13 +74,13 @@ import us.kbase.auth.AuthToken;
  * }
  * </pre>
  */
-public class UserandjobstateServer extends JsonServerServlet {
+public class UserAndJobStateServer extends JsonServerServlet {
     private static final long serialVersionUID = 1L;
 
     //BEGIN_CLASS_HEADER
     //END_CLASS_HEADER
 
-    public UserandjobstateServer() throws Exception {
+    public UserAndJobStateServer() throws Exception {
         super("UserAndJobState");
         //BEGIN_CONSTRUCTOR
         //END_CONSTRUCTOR
@@ -380,6 +381,6 @@ public class UserandjobstateServer extends JsonServerServlet {
             System.out.println("Usage: <program> <server_port>");
             return;
         }
-        new UserandjobstateServer().startupServer(Integer.parseInt(args[0]));
+        new UserAndJobStateServer().startupServer(Integer.parseInt(args[0]));
     }
 }

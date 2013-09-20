@@ -6,13 +6,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import org.codehaus.jackson.type.TypeReference;
-import us.kbase.JsonClientCaller;
-import us.kbase.JsonClientException;
-import us.kbase.Tuple11;
-import us.kbase.Tuple4;
-import us.kbase.Tuple5;
-import us.kbase.UObject;
 import us.kbase.auth.AuthToken;
+import us.kbase.common.service.JsonClientCaller;
+import us.kbase.common.service.JsonClientException;
+import us.kbase.common.service.Tuple11;
+import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple5;
+import us.kbase.common.service.UObject;
 
 /**
  * <p>Original spec-file module name: UserAndJobState</p>
@@ -23,8 +23,9 @@ import us.kbase.auth.AuthToken;
  * job status reporting.
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
- * Since there is no way to authenticate as a service, devs are on the honor
- * system not to clobber each other's settings and jobs.
+ * Currently devs are on the honor system not to clobber each other's settings and
+ * jobs. If necessary, per Steve Chan we could set up service authentication by
+ * passing a token in the arguments.
  * Setting objects are limited to 1Mb.
  * Potential process flows:
  * Asysnc:
@@ -75,7 +76,7 @@ import us.kbase.auth.AuthToken;
  * }
  * </pre>
  */
-public class UserandjobstateClient {
+public class UserAndJobStateClient {
     private JsonClientCaller caller;
     private static URL DEFAULT_URL = null;
     static {
@@ -86,27 +87,27 @@ public class UserandjobstateClient {
         }
     }
 
-    public UserandjobstateClient() {
+    public UserAndJobStateClient() {
        caller = new JsonClientCaller(DEFAULT_URL);
     }
 
-    public UserandjobstateClient(URL url) {
+    public UserAndJobStateClient(URL url) {
         caller = new JsonClientCaller(url);
     }
 
-    public UserandjobstateClient(URL url, AuthToken token) {
+    public UserAndJobStateClient(URL url, AuthToken token) {
         caller = new JsonClientCaller(url, token);
     }
 
-    public UserandjobstateClient(URL url, String user, String password) {
+    public UserAndJobStateClient(URL url, String user, String password) {
         caller = new JsonClientCaller(url, user, password);
     }
 
-    public UserandjobstateClient(AuthToken token) {
+    public UserAndJobStateClient(AuthToken token) {
         caller = new JsonClientCaller(DEFAULT_URL, token);
     }
 
-    public UserandjobstateClient(String user, String password) {
+    public UserAndJobStateClient(String user, String password) {
         caller = new JsonClientCaller(DEFAULT_URL, user, password);
     }
 
