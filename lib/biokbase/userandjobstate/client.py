@@ -166,10 +166,45 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def get_state(self, service, key):
+    def set_state_auth(self, token, key, value):
+
+        arg_hash = { 'method': 'UserAndJobState.set_state_auth',
+                     'params': [token, key, value],
+                     'version': '1.1',
+                     'id': str(random.random())[2:]
+                     }
+
+        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        try:
+            request = urllib2.Request( self.url, body, self._headers)
+#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
+            ret = urllib2.urlopen(request, timeout = self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b) 
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            #this should never happen... but if it does 
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    raise se
+                    #raise h      #  h.read() will return '' in the calling code.
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' + ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result']
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def get_state(self, service, key, auth):
 
         arg_hash = { 'method': 'UserAndJobState.get_state',
-                     'params': [service, key],
+                     'params': [service, key, auth],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -236,10 +271,80 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def list_state(self, service):
+    def remove_state_auth(self, token, key):
+
+        arg_hash = { 'method': 'UserAndJobState.remove_state_auth',
+                     'params': [token, key],
+                     'version': '1.1',
+                     'id': str(random.random())[2:]
+                     }
+
+        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        try:
+            request = urllib2.Request( self.url, body, self._headers)
+#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
+            ret = urllib2.urlopen(request, timeout = self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b) 
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            #this should never happen... but if it does 
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    raise se
+                    #raise h      #  h.read() will return '' in the calling code.
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' + ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result']
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def list_state(self, service, auth):
 
         arg_hash = { 'method': 'UserAndJobState.list_state',
-                     'params': [service],
+                     'params': [service, auth],
+                     'version': '1.1',
+                     'id': str(random.random())[2:]
+                     }
+
+        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
+        try:
+            request = urllib2.Request( self.url, body, self._headers)
+#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
+            ret = urllib2.urlopen(request, timeout = self.timeout)
+        except HTTPError as h:
+            if _CT in h.headers and h.headers[_CT] == _AJ:
+                b = h.read()
+                err = json.loads(b) 
+                if 'error' in err:
+                    raise ServerError(**err['error'])
+                else:            #this should never happen... but if it does 
+                    se = ServerError('Unknown', 0, b)
+                    se.httpError = h
+                    raise se
+                    #raise h      #  h.read() will return '' in the calling code.
+            else:
+                raise h
+        if ret.code != httplib.OK:
+            raise URLError('Received bad response code from server:' + ret.code)
+        resp = json.loads(ret.read())
+
+        if 'result' in resp:
+            return resp['result'][0]
+        else:
+            raise ServerError('Unknown', 0, 'An unknown server error occurred')
+
+    def list_services(self, auth):
+
+        arg_hash = { 'method': 'UserAndJobState.list_services',
+                     'params': [auth],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -306,10 +411,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def start_job(self, job, service, status, desc, progress):
+    def start_job(self, job, token, status, desc, progress):
 
         arg_hash = { 'method': 'UserAndJobState.start_job',
-                     'params': [job, service, status, desc, progress],
+                     'params': [job, token, status, desc, progress],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -341,10 +446,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def create_and_start_job(self, service, status, desc, progress):
+    def create_and_start_job(self, token, status, desc, progress):
 
         arg_hash = { 'method': 'UserAndJobState.create_and_start_job',
-                     'params': [service, status, desc, progress],
+                     'params': [token, status, desc, progress],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -376,10 +481,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def update_job_progress(self, job, status, prog):
+    def update_job_progress(self, job, token, status, prog):
 
         arg_hash = { 'method': 'UserAndJobState.update_job_progress',
-                     'params': [job, status, prog],
+                     'params': [job, token, status, prog],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -411,10 +516,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def update_job(self, job, status):
+    def update_job(self, job, token, status):
 
         arg_hash = { 'method': 'UserAndJobState.update_job',
-                     'params': [job, status],
+                     'params': [job, token, status],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -516,10 +621,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def complete_job(self, job, status, error, res):
+    def complete_job(self, job, token, status, error, res):
 
         arg_hash = { 'method': 'UserAndJobState.complete_job',
-                     'params': [job, status, error, res],
+                     'params': [job, token, status, error, res],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -555,41 +660,6 @@ class UserAndJobState:
 
         arg_hash = { 'method': 'UserAndJobState.get_results',
                      'params': [job],
-                     'version': '1.1',
-                     'id': str(random.random())[2:]
-                     }
-
-        body = json.dumps(arg_hash, cls = JSONObjectEncoder)
-        try:
-            request = urllib2.Request( self.url, body, self._headers)
-#            ret = urllib2.urlopen(self.url, body, timeout = self.timeout)
-            ret = urllib2.urlopen(request, timeout = self.timeout)
-        except HTTPError as h:
-            if _CT in h.headers and h.headers[_CT] == _AJ:
-                b = h.read()
-                err = json.loads(b) 
-                if 'error' in err:
-                    raise ServerError(**err['error'])
-                else:            #this should never happen... but if it does 
-                    se = ServerError('Unknown', 0, b)
-                    se.httpError = h
-                    raise se
-                    #raise h      #  h.read() will return '' in the calling code.
-            else:
-                raise h
-        if ret.code != httplib.OK:
-            raise URLError('Received bad response code from server:' + ret.code)
-        resp = json.loads(ret.read())
-
-        if 'result' in resp:
-            return resp['result'][0]
-        else:
-            raise ServerError('Unknown', 0, 'An unknown server error occurred')
-
-    def get_services(self, ):
-
-        arg_hash = { 'method': 'UserAndJobState.get_services',
-                     'params': [],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -726,10 +796,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def force_delete_job(self, job):
+    def force_delete_job(self, token, job):
 
         arg_hash = { 'method': 'UserAndJobState.force_delete_job',
-                     'params': [job],
+                     'params': [token, job],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }

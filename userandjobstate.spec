@@ -7,11 +7,25 @@ job status reporting.
 The service assumes other services are capable of simple math and does not
 throw errors if a progress bar overflows.
 
-Currently devs are on the honor system not to clobber each other's settings and
-jobs. If necessary, per Steve Chan we could set up service authentication by
-passing a token in the arguments.
-
 Setting objects are limited to 1Mb.
+
+There are two modes of operation for setting key values for a user: 
+1) no service authentication - an authorization token for a service is not 
+	required, and any service with the user token can write to any other
+	service's unauthed values for that user.
+2) service authentication required - the service must pass a Globus Online
+	token that identifies the service in the argument list. Values can only be
+	set by services with possession of a valid token. The service name in
+	method returns will be set to the username of the token.
+The sets of key/value pairs for the two types of method calls are entirely
+separate - for example, the workspace service could have a key called 'default'
+that is writable by all other services (no auth) and the same key that was 
+set with auth to which only the workspace service can write (or any other
+service that has access to a workspace service account token, so keep your
+service credentials safe).
+
+All job writes require service authentication. No reads, either for key/value
+pairs or jobs, require service authentication.
 
 Potential process flows:
 
@@ -41,7 +55,8 @@ State collection:
 	_id:
 	user:
 	service:
-	key: (unique index on user/service/key)
+	auth: (bool)
+	key: (unique index on user/service/auth/key)
 	value:
 }
 
@@ -72,27 +87,46 @@ module UserAndJobState {
 	/* All calls require authentication. */
 	authentication required;
 	
-	/* A service name. */
-	typedef string service_name;
-	
-	/* Set the state of a key for a service. */
-	funcdef set_state(service_name service, string key,
-		UnspecifiedObject value) returns();
-		
-	/* Get the state of a key for a service. */
-	funcdef get_state(service_name service, string key)
-		returns(UnspecifiedObject value);
-	
-	/* Remove a key value pair. */
-	funcdef remove_state(service_name service, string key) returns ();
-		
-	/* List all keys. */
-	funcdef list_state(service_name service) returns(
-		list<string> keys);
-
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;
 	
+	/* A service name. */
+	typedef string service_name;
+	
+	/* A globus ID token that validates that the service really is said
+	service. */
+	typedef string service_token;
+	
+	/* Specifies whether results returned should be from key/value pairs
+		set with service authentication (true) or without (false)
+	*/
+	typedef boolean authed;
+	
+	/* Set the state of a key for a service without service authentication. */
+	funcdef set_state(service_name service, string key,
+		UnspecifiedObject value) returns();
+		
+	/* Set the state of a key for a service with service authentication. */
+	funcdef set_state_auth(service_token token, string key,
+		UnspecifiedObject value) returns();
+		
+	/* Get the state of a key for a service. */
+	funcdef get_state(service_name service, string key, authed auth)
+		returns(UnspecifiedObject value);
+	
+	/* Remove a key value pair without service authentication. */
+	funcdef remove_state(service_name service, string key) returns ();
+	
+	/* Remove a key value pair with service authentication. */
+	funcdef remove_state_auth(service_token token, string key) returns ();
+		
+	/* List all keys. */
+	funcdef list_state(service_name service, authed auth) returns(
+		list<string> keys);
+		
+	/* List all services. */
+	funcdef list_services(authed auth) returns(list<service_name> services);
+
 	/* A time, e.g. 2012-12-17T23:24:06. */
 	typedef string timestamp;
 		
@@ -160,19 +194,20 @@ module UserAndJobState {
 	funcdef create_job() returns(job_id job);
 	
 	/* Start a job and specify the job parameters. */
-	funcdef start_job(job_id job, service_name service, job_status status, 
+	funcdef start_job(job_id job, service_token token, job_status status, 
 		job_description desc, InitProgress progress) returns();
 	
 	/* Create and start a job. */
-	funcdef create_and_start_job(service_name service, job_status status, 
+	funcdef create_and_start_job(service_token token, job_status status, 
 		job_description desc, InitProgress progress) returns(job_id job);
 	
 	/* Update the status and progress for a job. */
-	funcdef update_job_progress(job_id job, job_status status, progress prog)
-		returns();
+	funcdef update_job_progress(job_id job, service_token token,
+		job_status status, progress prog) returns();
 		
 	/* Update the status for a job. */
-	funcdef update_job(job_id job, job_status status) returns();
+	funcdef update_job(job_id job, service_token token, job_status status)
+		returns();
 	
 	/* Get the description of a job. */
 	funcdef get_job_description(job_id job) returns(service_name service,
@@ -188,14 +223,11 @@ module UserAndJobState {
 	/* Complete the job. After the job is completed, total_progress always
 		equals max_progress.
 	*/
-	funcdef complete_job(job_id job, job_status status, boolean error,
-		Results res) returns();
+	funcdef complete_job(job_id job, service_token token, job_status status,
+		boolean error, Results res) returns();
 		
 	/* Get the job results. */
 	funcdef get_results(job_id job) returns(Results res);
-	
-	/* List service names. */
-	funcdef get_services() returns (list<service_name> services);
 	
 	/* Information about a job. Note calls returning this structure will
 		probably be slower than the more targeted calls.
@@ -235,5 +267,5 @@ module UserAndJobState {
 	funcdef delete_job(job_id job) returns();
 	
 	/* Force delete a job - will always succeed, regardless of job state. */
-	funcdef force_delete_job(job_id job) returns();
+	funcdef force_delete_job(service_token token, job_id job) returns();
 };

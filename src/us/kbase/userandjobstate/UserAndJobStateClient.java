@@ -23,10 +23,23 @@ import us.kbase.common.service.UObject;
  * job status reporting.
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
- * Currently devs are on the honor system not to clobber each other's settings and
- * jobs. If necessary, per Steve Chan we could set up service authentication by
- * passing a token in the arguments.
  * Setting objects are limited to 1Mb.
+ * There are two modes of operation for setting key values for a user: 
+ * 1) no service authentication - an authorization token for a service is not 
+ *         required, and any service with the user token can write to any other
+ *         service's unauthed values for that user.
+ * 2) service authentication required - the service must pass a Globus Online
+ *         token that identifies the service in the argument list. Values can only be
+ *         set by services with possession of a valid token. The service name in
+ *         method returns will be set to the username of the token.
+ * The sets of key/value pairs for the two types of method calls are entirely
+ * separate - for example, the workspace service could have a key called 'default'
+ * that is writable by all other services (no auth) and the same key that was 
+ * set with auth to which only the workspace service can write (or any other
+ * service that has access to a workspace service account token, so keep your
+ * service credentials safe).
+ * All job writes require service authentication. No reads, either for key/value
+ * pairs or jobs, require service authentication.
  * Potential process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -51,7 +64,8 @@ import us.kbase.common.service.UObject;
  *         _id:
  *         user:
  *         service:
- *         key: (unique index on user/service/key)
+ *         auth: (bool)
+ *         key: (unique index on user/service/auth/key)
  *         value:
  * }
  * Job collection:
@@ -122,7 +136,7 @@ public class UserAndJobStateClient {
     /**
      * <p>Original spec-file function name: set_state</p>
      * <pre>
-     * Set the state of a key for a service.
+     * Set the state of a key for a service without service authentication.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      * @throws IOException if an IO exception occurs
@@ -138,18 +152,38 @@ public class UserAndJobStateClient {
     }
 
     /**
+     * <p>Original spec-file function name: set_state_auth</p>
+     * <pre>
+     * Set the state of a key for a service with service authentication.
+     * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void setStateAuth(String token, String key, UObject value) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(token);
+        args.add(key);
+        args.add(value);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.set_state_auth", args, retType, false, true);
+    }
+
+    /**
      * <p>Original spec-file function name: get_state</p>
      * <pre>
      * Get the state of a key for a service.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public UObject getState(String service, String key) throws IOException, JsonClientException {
+    public UObject getState(String service, String key, Integer auth) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
         args.add(key);
+        args.add(auth);
         TypeReference<List<UObject>> retType = new TypeReference<List<UObject>>() {};
         List<UObject> res = caller.jsonrpcCall("UserAndJobState.get_state", args, retType, true, true);
         return res.get(0);
@@ -158,7 +192,7 @@ public class UserAndJobStateClient {
     /**
      * <p>Original spec-file function name: remove_state</p>
      * <pre>
-     * Remove a key value pair.
+     * Remove a key value pair without service authentication.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      * @throws IOException if an IO exception occurs
@@ -173,19 +207,55 @@ public class UserAndJobStateClient {
     }
 
     /**
+     * <p>Original spec-file function name: remove_state_auth</p>
+     * <pre>
+     * Remove a key value pair with service authentication.
+     * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void removeStateAuth(String token, String key) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(token);
+        args.add(key);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.remove_state_auth", args, retType, false, true);
+    }
+
+    /**
      * <p>Original spec-file function name: list_state</p>
      * <pre>
      * List all keys.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public List<String> listState(String service) throws IOException, JsonClientException {
+    public List<String> listState(String service, Integer auth) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
+        args.add(auth);
         TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
         List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_state", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: list_services</p>
+     * <pre>
+     * List all services.
+     * </pre>
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public List<String> listServices(Integer auth) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(auth);
+        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_services", args, retType, true, true);
         return res.get(0);
     }
 
@@ -211,17 +281,17 @@ public class UserAndJobStateClient {
      * Start a job and specify the job parameters.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   desc   Original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
      * @param   progress   Original type "InitProgress" (see {@link us.kbase.userandjobstate.InitProgress InitProgress} for details)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void startJob(String job, String service, String status, String desc, InitProgress progress) throws IOException, JsonClientException {
+    public void startJob(String job, String token, String status, String desc, InitProgress progress) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
-        args.add(service);
+        args.add(token);
         args.add(status);
         args.add(desc);
         args.add(progress);
@@ -234,7 +304,7 @@ public class UserAndJobStateClient {
      * <pre>
      * Create and start a job.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   desc   Original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
      * @param   progress   Original type "InitProgress" (see {@link us.kbase.userandjobstate.InitProgress InitProgress} for details)
@@ -242,9 +312,9 @@ public class UserAndJobStateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public String createAndStartJob(String service, String status, String desc, InitProgress progress) throws IOException, JsonClientException {
+    public String createAndStartJob(String token, String status, String desc, InitProgress progress) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
-        args.add(service);
+        args.add(token);
         args.add(status);
         args.add(desc);
         args.add(progress);
@@ -259,14 +329,16 @@ public class UserAndJobStateClient {
      * Update the status and progress for a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   prog   Original type "progress" (The amount of progress the job has made since the last update, summed to the total progress so far.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void updateJobProgress(String job, String status, Integer prog) throws IOException, JsonClientException {
+    public void updateJobProgress(String job, String token, String status, Integer prog) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
+        args.add(token);
         args.add(status);
         args.add(prog);
         TypeReference<Object> retType = new TypeReference<Object>() {};
@@ -279,13 +351,15 @@ public class UserAndJobStateClient {
      * Update the status for a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void updateJob(String job, String status) throws IOException, JsonClientException {
+    public void updateJob(String job, String token, String status) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
+        args.add(token);
         args.add(status);
         TypeReference<Object> retType = new TypeReference<Object>() {};
         caller.jsonrpcCall("UserAndJobState.update_job", args, retType, false, true);
@@ -333,15 +407,17 @@ public class UserAndJobStateClient {
      * equals max_progress.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   error   Original type "boolean" (A boolean. 0 = false, other = true.)
      * @param   res   Original type "Results" (see {@link us.kbase.userandjobstate.Results Results} for details)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void completeJob(String job, String status, Integer error, Results res) throws IOException, JsonClientException {
+    public void completeJob(String job, String token, String status, Integer error, Results res) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
+        args.add(token);
         args.add(status);
         args.add(error);
         args.add(res);
@@ -364,21 +440,6 @@ public class UserAndJobStateClient {
         args.add(job);
         TypeReference<List<Results>> retType = new TypeReference<List<Results>>() {};
         List<Results> res = caller.jsonrpcCall("UserAndJobState.get_results", args, retType, true, true);
-        return res.get(0);
-    }
-
-    /**
-     * <p>Original spec-file function name: get_services</p>
-     * <pre>
-     * List service names.
-     * </pre>
-     * @throws IOException if an IO exception occurs
-     * @throws JsonClientException if a JSON RPC exception occurs
-     */
-    public List<String> getServices() throws IOException, JsonClientException {
-        List<Object> args = new ArrayList<Object>();
-        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
-        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.get_services", args, retType, true, true);
         return res.get(0);
     }
 
@@ -440,12 +501,14 @@ public class UserAndJobStateClient {
      * <pre>
      * Force delete a job - will always succeed, regardless of job state.
      * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   job   Original type "job_id" (A job id.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void forceDeleteJob(String job) throws IOException, JsonClientException {
+    public void forceDeleteJob(String token, String job) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
+        args.add(token);
         args.add(job);
         TypeReference<Object> retType = new TypeReference<Object>() {};
         caller.jsonrpcCall("UserAndJobState.force_delete_job", args, retType, false, true);

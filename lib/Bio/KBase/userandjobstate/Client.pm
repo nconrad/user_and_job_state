@@ -27,10 +27,25 @@ job status reporting.
 The service assumes other services are capable of simple math and does not
 throw errors if a progress bar overflows.
 
-Since there is no way to authenticate as a service, devs are on the honor
-system not to clobber each other's settings and jobs.
-
 Setting objects are limited to 1Mb.
+
+There are two modes of operation for setting key values for a user: 
+1) no service authentication - an authorization token for a service is not 
+        required, and any service with the user token can write to any other
+        service's unauthed values for that user.
+2) service authentication required - the service must pass a Globus Online
+        token that identifies the service in the argument list. Values can only be
+        set by services with possession of a valid token. The service name in
+        method returns will be set to the username of the token.
+The sets of key/value pairs for the two types of method calls are entirely
+separate - for example, the workspace service could have a key called 'default'
+that is writable by all other services (no auth) and the same key that was 
+set with auth to which only the workspace service can write (or any other
+service that has access to a workspace service account token, so keep your
+service credentials safe).
+
+All job writes require service authentication. No reads, either for key/value
+pairs or jobs, require service authentication.
 
 Potential process flows:
 
@@ -60,7 +75,8 @@ State collection:
         _id:
         user:
         service:
-        key: (unique index on user/service/key)
+        auth: (bool)
+        key: (unique index on user/service/auth/key)
         value:
 }
 
@@ -168,7 +184,7 @@ service_name is a string
 
 =item Description
 
-Set the state of a key for a service.
+Set the state of a key for a service without service authentication.
 
 =back
 
@@ -222,9 +238,95 @@ sub set_state
 
 
 
+=head2 set_state_auth
+
+  $obj->set_state_auth($token, $key, $value)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$token is a UserAndJobState.service_token
+$key is a string
+$value is an UnspecifiedObject, which can hold any non-null object
+service_token is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$token is a UserAndJobState.service_token
+$key is a string
+$value is an UnspecifiedObject, which can hold any non-null object
+service_token is a string
+
+
+=end text
+
+=item Description
+
+Set the state of a key for a service with service authentication.
+
+=back
+
+=cut
+
+sub set_state_auth
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 3)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function set_state_auth (received $n, expecting 3)");
+    }
+    {
+	my($token, $key, $value) = @args;
+
+	my @_bad_arguments;
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 1 \"token\" (value was \"$token\")");
+        (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
+        (defined $value) or push(@_bad_arguments, "Invalid type for argument 3 \"value\" (value was \"$value\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to set_state_auth:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'set_state_auth');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.set_state_auth",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'set_state_auth',
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method set_state_auth",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'set_state_auth',
+				       );
+    }
+}
+
+
+
 =head2 get_state
 
-  $value = $obj->get_state($service, $key)
+  $value = $obj->get_state($service, $key, $auth)
 
 =over 4
 
@@ -235,8 +337,11 @@ sub set_state
 <pre>
 $service is a UserAndJobState.service_name
 $key is a string
+$auth is a UserAndJobState.authed
 $value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
 
 </pre>
 
@@ -246,8 +351,11 @@ service_name is a string
 
 $service is a UserAndJobState.service_name
 $key is a string
+$auth is a UserAndJobState.authed
 $value is an UnspecifiedObject, which can hold any non-null object
 service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
 
 
 =end text
@@ -266,17 +374,18 @@ sub get_state
 
 # Authentication: required
 
-    if ((my $n = @args) != 2)
+    if ((my $n = @args) != 3)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function get_state (received $n, expecting 2)");
+							       "Invalid argument count for function get_state (received $n, expecting 3)");
     }
     {
-	my($service, $key) = @args;
+	my($service, $key, $auth) = @args;
 
 	my @_bad_arguments;
         (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
         (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 3 \"auth\" (value was \"$auth\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to get_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -337,7 +446,7 @@ service_name is a string
 
 =item Description
 
-Remove a key value pair.
+Remove a key value pair without service authentication.
 
 =back
 
@@ -390,9 +499,92 @@ sub remove_state
 
 
 
+=head2 remove_state_auth
+
+  $obj->remove_state_auth($token, $key)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$token is a UserAndJobState.service_token
+$key is a string
+service_token is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$token is a UserAndJobState.service_token
+$key is a string
+service_token is a string
+
+
+=end text
+
+=item Description
+
+Remove a key value pair with service authentication.
+
+=back
+
+=cut
+
+sub remove_state_auth
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 2)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function remove_state_auth (received $n, expecting 2)");
+    }
+    {
+	my($token, $key) = @args;
+
+	my @_bad_arguments;
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 1 \"token\" (value was \"$token\")");
+        (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to remove_state_auth:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'remove_state_auth');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.remove_state_auth",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'remove_state_auth',
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method remove_state_auth",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'remove_state_auth',
+				       );
+    }
+}
+
+
+
 =head2 list_state
 
-  $keys = $obj->list_state($service)
+  $keys = $obj->list_state($service, $auth)
 
 =over 4
 
@@ -402,8 +594,11 @@ sub remove_state
 
 <pre>
 $service is a UserAndJobState.service_name
+$auth is a UserAndJobState.authed
 $keys is a reference to a list where each element is a string
 service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
 
 </pre>
 
@@ -412,8 +607,11 @@ service_name is a string
 =begin text
 
 $service is a UserAndJobState.service_name
+$auth is a UserAndJobState.authed
 $keys is a reference to a list where each element is a string
 service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
 
 
 =end text
@@ -432,16 +630,17 @@ sub list_state
 
 # Authentication: required
 
-    if ((my $n = @args) != 1)
+    if ((my $n = @args) != 2)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function list_state (received $n, expecting 1)");
+							       "Invalid argument count for function list_state (received $n, expecting 2)");
     }
     {
-	my($service) = @args;
+	my($service, $auth) = @args;
 
 	my @_bad_arguments;
         (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 2 \"auth\" (value was \"$auth\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to list_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -466,6 +665,92 @@ sub list_state
         Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_state",
 					    status_line => $self->{client}->status_line,
 					    method_name => 'list_state',
+				       );
+    }
+}
+
+
+
+=head2 list_services
+
+  $services = $obj->list_services($auth)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$auth is a UserAndJobState.authed
+$services is a reference to a list where each element is a UserAndJobState.service_name
+authed is a UserAndJobState.boolean
+boolean is an int
+service_name is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$auth is a UserAndJobState.authed
+$services is a reference to a list where each element is a UserAndJobState.service_name
+authed is a UserAndJobState.boolean
+boolean is an int
+service_name is a string
+
+
+=end text
+
+=item Description
+
+List all services.
+
+=back
+
+=cut
+
+sub list_services
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function list_services (received $n, expecting 1)");
+    }
+    {
+	my($auth) = @args;
+
+	my @_bad_arguments;
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 1 \"auth\" (value was \"$auth\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to list_services:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'list_services');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.list_services",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'list_services',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_services",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'list_services',
 				       );
     }
 }
@@ -543,7 +828,7 @@ sub create_job
 
 =head2 start_job
 
-  $obj->start_job($job, $service, $status, $desc, $progress)
+  $obj->start_job($job, $token, $status, $desc, $progress)
 
 =over 4
 
@@ -553,12 +838,12 @@ sub create_job
 
 <pre>
 $job is a UserAndJobState.job_id
-$service is a UserAndJobState.service_name
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
 job_id is a string
-service_name is a string
+service_token is a string
 job_status is a string
 job_description is a string
 InitProgress is a reference to a hash where the following keys are defined:
@@ -574,12 +859,12 @@ max_progress is an int
 =begin text
 
 $job is a UserAndJobState.job_id
-$service is a UserAndJobState.service_name
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
 job_id is a string
-service_name is a string
+service_token is a string
 job_status is a string
 job_description is a string
 InitProgress is a reference to a hash where the following keys are defined:
@@ -611,11 +896,11 @@ sub start_job
 							       "Invalid argument count for function start_job (received $n, expecting 5)");
     }
     {
-	my($job, $service, $status, $desc, $progress) = @args;
+	my($job, $token, $status, $desc, $progress) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 2 \"service\" (value was \"$service\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
         (!ref($desc)) or push(@_bad_arguments, "Invalid type for argument 4 \"desc\" (value was \"$desc\")");
         (ref($progress) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 5 \"progress\" (value was \"$progress\")");
@@ -651,7 +936,7 @@ sub start_job
 
 =head2 create_and_start_job
 
-  $job = $obj->create_and_start_job($service, $status, $desc, $progress)
+  $job = $obj->create_and_start_job($token, $status, $desc, $progress)
 
 =over 4
 
@@ -660,12 +945,12 @@ sub start_job
 =begin html
 
 <pre>
-$service is a UserAndJobState.service_name
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
 $job is a UserAndJobState.job_id
-service_name is a string
+service_token is a string
 job_status is a string
 job_description is a string
 InitProgress is a reference to a hash where the following keys are defined:
@@ -681,12 +966,12 @@ job_id is a string
 
 =begin text
 
-$service is a UserAndJobState.service_name
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
 $job is a UserAndJobState.job_id
-service_name is a string
+service_token is a string
 job_status is a string
 job_description is a string
 InitProgress is a reference to a hash where the following keys are defined:
@@ -719,10 +1004,10 @@ sub create_and_start_job
 							       "Invalid argument count for function create_and_start_job (received $n, expecting 4)");
     }
     {
-	my($service, $status, $desc, $progress) = @args;
+	my($token, $status, $desc, $progress) = @args;
 
 	my @_bad_arguments;
-        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 1 \"token\" (value was \"$token\")");
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 2 \"status\" (value was \"$status\")");
         (!ref($desc)) or push(@_bad_arguments, "Invalid type for argument 3 \"desc\" (value was \"$desc\")");
         (ref($progress) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 4 \"progress\" (value was \"$progress\")");
@@ -758,7 +1043,7 @@ sub create_and_start_job
 
 =head2 update_job_progress
 
-  $obj->update_job_progress($job, $status, $prog)
+  $obj->update_job_progress($job, $token, $status, $prog)
 
 =over 4
 
@@ -768,9 +1053,11 @@ sub create_and_start_job
 
 <pre>
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $prog is a UserAndJobState.progress
 job_id is a string
+service_token is a string
 job_status is a string
 progress is an int
 
@@ -781,9 +1068,11 @@ progress is an int
 =begin text
 
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $prog is a UserAndJobState.progress
 job_id is a string
+service_token is a string
 job_status is a string
 progress is an int
 
@@ -804,18 +1093,19 @@ sub update_job_progress
 
 # Authentication: required
 
-    if ((my $n = @args) != 3)
+    if ((my $n = @args) != 4)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function update_job_progress (received $n, expecting 3)");
+							       "Invalid argument count for function update_job_progress (received $n, expecting 4)");
     }
     {
-	my($job, $status, $prog) = @args;
+	my($job, $token, $status, $prog) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 2 \"status\" (value was \"$status\")");
-        (!ref($prog)) or push(@_bad_arguments, "Invalid type for argument 3 \"prog\" (value was \"$prog\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
+        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
+        (!ref($prog)) or push(@_bad_arguments, "Invalid type for argument 4 \"prog\" (value was \"$prog\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to update_job_progress:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -848,7 +1138,7 @@ sub update_job_progress
 
 =head2 update_job
 
-  $obj->update_job($job, $status)
+  $obj->update_job($job, $token, $status)
 
 =over 4
 
@@ -858,8 +1148,10 @@ sub update_job_progress
 
 <pre>
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 job_id is a string
+service_token is a string
 job_status is a string
 
 </pre>
@@ -869,8 +1161,10 @@ job_status is a string
 =begin text
 
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 job_id is a string
+service_token is a string
 job_status is a string
 
 
@@ -890,17 +1184,18 @@ sub update_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 2)
+    if ((my $n = @args) != 3)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function update_job (received $n, expecting 2)");
+							       "Invalid argument count for function update_job (received $n, expecting 3)");
     }
     {
-	my($job, $status) = @args;
+	my($job, $token, $status) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 2 \"status\" (value was \"$status\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
+        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to update_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1128,7 +1423,7 @@ sub get_job_status
 
 =head2 complete_job
 
-  $obj->complete_job($job, $status, $error, $res)
+  $obj->complete_job($job, $token, $status, $error, $res)
 
 =over 4
 
@@ -1138,10 +1433,12 @@ sub get_job_status
 
 <pre>
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $error is a UserAndJobState.boolean
 $res is a UserAndJobState.Results
 job_id is a string
+service_token is a string
 job_status is a string
 boolean is an int
 Results is a reference to a hash where the following keys are defined:
@@ -1157,10 +1454,12 @@ Results is a reference to a hash where the following keys are defined:
 =begin text
 
 $job is a UserAndJobState.job_id
+$token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $error is a UserAndJobState.boolean
 $res is a UserAndJobState.Results
 job_id is a string
+service_token is a string
 job_status is a string
 boolean is an int
 Results is a reference to a hash where the following keys are defined:
@@ -1187,19 +1486,20 @@ sub complete_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 4)
+    if ((my $n = @args) != 5)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function complete_job (received $n, expecting 4)");
+							       "Invalid argument count for function complete_job (received $n, expecting 5)");
     }
     {
-	my($job, $status, $error, $res) = @args;
+	my($job, $token, $status, $error, $res) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 2 \"status\" (value was \"$status\")");
-        (!ref($error)) or push(@_bad_arguments, "Invalid type for argument 3 \"error\" (value was \"$error\")");
-        (ref($res) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 4 \"res\" (value was \"$res\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
+        (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
+        (!ref($error)) or push(@_bad_arguments, "Invalid type for argument 4 \"error\" (value was \"$error\")");
+        (ref($res) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 5 \"res\" (value was \"$res\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to complete_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1316,75 +1616,6 @@ sub get_results
         Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_results",
 					    status_line => $self->{client}->status_line,
 					    method_name => 'get_results',
-				       );
-    }
-}
-
-
-
-=head2 get_services
-
-  $services = $obj->get_services()
-
-=over 4
-
-=item Parameter and return types
-
-=begin html
-
-<pre>
-$services is a reference to a list where each element is a UserAndJobState.service_name
-service_name is a string
-
-</pre>
-
-=end html
-
-=begin text
-
-$services is a reference to a list where each element is a UserAndJobState.service_name
-service_name is a string
-
-
-=end text
-
-=item Description
-
-List service names.
-
-=back
-
-=cut
-
-sub get_services
-{
-    my($self, @args) = @_;
-
-# Authentication: required
-
-    if ((my $n = @args) != 0)
-    {
-	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function get_services (received $n, expecting 0)");
-    }
-
-    my $result = $self->{client}->call($self->{url}, {
-	method => "UserAndJobState.get_services",
-	params => \@args,
-    });
-    if ($result) {
-	if ($result->is_error) {
-	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
-					       method_name => 'get_services',
-					      );
-	} else {
-	    return wantarray ? @{$result->result} : $result->result->[0];
-	}
-    } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_services",
-					    status_line => $self->{client}->status_line,
-					    method_name => 'get_services',
 				       );
     }
 }
@@ -1752,7 +1983,7 @@ sub delete_job
 
 =head2 force_delete_job
 
-  $obj->force_delete_job($job)
+  $obj->force_delete_job($token, $job)
 
 =over 4
 
@@ -1761,7 +1992,9 @@ sub delete_job
 =begin html
 
 <pre>
+$token is a UserAndJobState.service_token
 $job is a UserAndJobState.job_id
+service_token is a string
 job_id is a string
 
 </pre>
@@ -1770,7 +2003,9 @@ job_id is a string
 
 =begin text
 
+$token is a UserAndJobState.service_token
 $job is a UserAndJobState.job_id
+service_token is a string
 job_id is a string
 
 
@@ -1790,16 +2025,17 @@ sub force_delete_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 1)
+    if ((my $n = @args) != 2)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function force_delete_job (received $n, expecting 1)");
+							       "Invalid argument count for function force_delete_job (received $n, expecting 2)");
     }
     {
-	my($job) = @args;
+	my($token, $job) = @args;
 
 	my @_bad_arguments;
-        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 1 \"token\" (value was \"$token\")");
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 2 \"job\" (value was \"$job\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to force_delete_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1887,6 +2123,37 @@ sub _validate_version {
 
 
 
+=head2 boolean
+
+=over 4
+
+
+
+=item Description
+
+A boolean. 0 = false, other = true.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+an int
+</pre>
+
+=end html
+
+=begin text
+
+an int
+
+=end text
+
+=back
+
+
+
 =head2 service_name
 
 =over 4
@@ -1918,7 +2185,7 @@ a string
 
 
 
-=head2 boolean
+=head2 service_token
 
 =over 4
 
@@ -1926,7 +2193,8 @@ a string
 
 =item Description
 
-A boolean. 0 = false, other = true.
+A globus ID token that validates that the service really is said
+service.
 
 
 =item Definition
@@ -1934,14 +2202,46 @@ A boolean. 0 = false, other = true.
 =begin html
 
 <pre>
-an int
+a string
 </pre>
 
 =end html
 
 =begin text
 
-an int
+a string
+
+=end text
+
+=back
+
+
+
+=head2 authed
+
+=over 4
+
+
+
+=item Description
+
+Specifies whether results returned should be from key/value pairs
+set with service authentication (true) or without (false)
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a UserAndJobState.boolean
+</pre>
+
+=end html
+
+=begin text
+
+a UserAndJobState.boolean
 
 =end text
 

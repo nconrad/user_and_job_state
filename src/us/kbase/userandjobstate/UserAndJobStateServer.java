@@ -21,10 +21,23 @@ import us.kbase.common.service.UObject;
  * job status reporting.
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
- * Currently devs are on the honor system not to clobber each other's settings and
- * jobs. If necessary, per Steve Chan we could set up service authentication by
- * passing a token in the arguments.
  * Setting objects are limited to 1Mb.
+ * There are two modes of operation for setting key values for a user: 
+ * 1) no service authentication - an authorization token for a service is not 
+ *         required, and any service with the user token can write to any other
+ *         service's unauthed values for that user.
+ * 2) service authentication required - the service must pass a Globus Online
+ *         token that identifies the service in the argument list. Values can only be
+ *         set by services with possession of a valid token. The service name in
+ *         method returns will be set to the username of the token.
+ * The sets of key/value pairs for the two types of method calls are entirely
+ * separate - for example, the workspace service could have a key called 'default'
+ * that is writable by all other services (no auth) and the same key that was 
+ * set with auth to which only the workspace service can write (or any other
+ * service that has access to a workspace service account token, so keep your
+ * service credentials safe).
+ * All job writes require service authentication. No reads, either for key/value
+ * pairs or jobs, require service authentication.
  * Potential process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -49,7 +62,8 @@ import us.kbase.common.service.UObject;
  *         _id:
  *         user:
  *         service:
- *         key: (unique index on user/service/key)
+ *         auth: (bool)
+ *         key: (unique index on user/service/auth/key)
  *         value:
  * }
  * Job collection:
@@ -89,7 +103,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: set_state</p>
      * <pre>
-     * Set the state of a key for a service.
+     * Set the state of a key for a service without service authentication.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      */
@@ -100,14 +114,28 @@ public class UserAndJobStateServer extends JsonServerServlet {
     }
 
     /**
+     * <p>Original spec-file function name: set_state_auth</p>
+     * <pre>
+     * Set the state of a key for a service with service authentication.
+     * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.set_state_auth")
+    public void setStateAuth(String token, String key, UObject value, AuthToken authPart) throws Exception {
+        //BEGIN set_state_auth
+        //END set_state_auth
+    }
+
+    /**
      * <p>Original spec-file function name: get_state</p>
      * <pre>
      * Get the state of a key for a service.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_state")
-    public UObject getState(String service, String key, AuthToken authPart) throws Exception {
+    public UObject getState(String service, String key, Integer auth, AuthToken authPart) throws Exception {
         UObject returnVal = null;
         //BEGIN get_state
         //END get_state
@@ -117,7 +145,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: remove_state</p>
      * <pre>
-     * Remove a key value pair.
+     * Remove a key value pair without service authentication.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
      */
@@ -128,17 +156,46 @@ public class UserAndJobStateServer extends JsonServerServlet {
     }
 
     /**
+     * <p>Original spec-file function name: remove_state_auth</p>
+     * <pre>
+     * Remove a key value pair with service authentication.
+     * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.remove_state_auth")
+    public void removeStateAuth(String token, String key, AuthToken authPart) throws Exception {
+        //BEGIN remove_state_auth
+        //END remove_state_auth
+    }
+
+    /**
      * <p>Original spec-file function name: list_state</p>
      * <pre>
      * List all keys.
      * </pre>
      * @param   service   Original type "service_name" (A service name.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_state")
-    public List<String> listState(String service, AuthToken authPart) throws Exception {
+    public List<String> listState(String service, Integer auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state
         //END list_state
+        return returnVal;
+    }
+
+    /**
+     * <p>Original spec-file function name: list_services</p>
+     * <pre>
+     * List all services.
+     * </pre>
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.list_services")
+    public List<String> listServices(Integer auth, AuthToken authPart) throws Exception {
+        List<String> returnVal = null;
+        //BEGIN list_services
+        //END list_services
         return returnVal;
     }
 
@@ -163,13 +220,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Start a job and specify the job parameters.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   desc   Original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
      * @param   progress   Original type "InitProgress" (see {@link us.kbase.userandjobstate.InitProgress InitProgress} for details)
      */
     @JsonServerMethod(rpc = "UserAndJobState.start_job")
-    public void startJob(String job, String service, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
+    public void startJob(String job, String token, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
         //BEGIN start_job
         //END start_job
     }
@@ -179,14 +236,14 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * Create and start a job.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   desc   Original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
      * @param   progress   Original type "InitProgress" (see {@link us.kbase.userandjobstate.InitProgress InitProgress} for details)
      * @return   Original type "job_id" (A job id.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.create_and_start_job")
-    public String createAndStartJob(String service, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
+    public String createAndStartJob(String token, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
         String returnVal = null;
         //BEGIN create_and_start_job
         //END create_and_start_job
@@ -199,11 +256,12 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Update the status and progress for a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   prog   Original type "progress" (The amount of progress the job has made since the last update, summed to the total progress so far.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.update_job_progress")
-    public void updateJobProgress(String job, String status, Integer prog, AuthToken authPart) throws Exception {
+    public void updateJobProgress(String job, String token, String status, Integer prog, AuthToken authPart) throws Exception {
         //BEGIN update_job_progress
         //END update_job_progress
     }
@@ -214,10 +272,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Update the status for a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.update_job")
-    public void updateJob(String job, String status, AuthToken authPart) throws Exception {
+    public void updateJob(String job, String token, String status, AuthToken authPart) throws Exception {
         //BEGIN update_job
         //END update_job
     }
@@ -278,12 +337,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * equals max_progress.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
      * @param   error   Original type "boolean" (A boolean. 0 = false, other = true.)
      * @param   res   Original type "Results" (see {@link us.kbase.userandjobstate.Results Results} for details)
      */
     @JsonServerMethod(rpc = "UserAndJobState.complete_job")
-    public void completeJob(String job, String status, Integer error, Results res, AuthToken authPart) throws Exception {
+    public void completeJob(String job, String token, String status, Integer error, Results res, AuthToken authPart) throws Exception {
         //BEGIN complete_job
         //END complete_job
     }
@@ -301,20 +361,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Results returnVal = null;
         //BEGIN get_results
         //END get_results
-        return returnVal;
-    }
-
-    /**
-     * <p>Original spec-file function name: get_services</p>
-     * <pre>
-     * List service names.
-     * </pre>
-     */
-    @JsonServerMethod(rpc = "UserAndJobState.get_services")
-    public List<String> getServices(AuthToken authPart) throws Exception {
-        List<String> returnVal = null;
-        //BEGIN get_services
-        //END get_services
         return returnVal;
     }
 
@@ -368,10 +414,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * Force delete a job - will always succeed, regardless of job state.
      * </pre>
+     * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   job   Original type "job_id" (A job id.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.force_delete_job")
-    public void forceDeleteJob(String job, AuthToken authPart) throws Exception {
+    public void forceDeleteJob(String token, String job, AuthToken authPart) throws Exception {
         //BEGIN force_delete_job
         //END force_delete_job
     }
