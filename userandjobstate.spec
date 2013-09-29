@@ -90,7 +90,7 @@ module UserAndJobState {
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;
 	
-	/* A service name. */
+	/* A service name. Alphanumerics and the underscore are allowed. */
 	typedef string service_name;
 	
 	/* A globus ID token that validates that the service really is said

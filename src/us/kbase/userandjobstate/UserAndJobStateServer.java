@@ -10,6 +10,18 @@ import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.UObject;
 
 //BEGIN_HEADER
+import java.io.IOException;
+import java.net.UnknownHostException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
+
+import us.kbase.auth.AuthService;
+import us.kbase.auth.TokenExpiredException;
+import us.kbase.auth.TokenFormatException;
+import us.kbase.common.mongo.exceptions.InvalidHostException;
+import us.kbase.common.mongo.exceptions.MongoAuthException;
+import us.kbase.userandjobstate.userstate.UserState;
 //END_HEADER
 
 /**
@@ -92,11 +104,108 @@ public class UserAndJobStateServer extends JsonServerServlet {
     private static final long serialVersionUID = 1L;
 
     //BEGIN_CLASS_HEADER
+	//required deploy parameters:
+	private static final String HOST = "mongodb-host";
+	private static final String DB = "mongodb-database";
+	//auth params:
+	private static final String USER = "mongodb-user";
+	private static final String PWD = "mongodb-pwd";
+	
+	private static Map<String, String> ujConfig = null;
+	
+	private static final String USER_COLLECTION = "userstate";
+	
+	private final UserState us;
+	
+	private UserState getUserState(final String host, final String dbs,
+			final String user, final String pwd) {
+		try {
+			if (user != null) {
+				return new UserState(host, dbs, USER_COLLECTION, user, pwd);
+			} else {
+				return new UserState(host, dbs, USER_COLLECTION);
+			}
+		} catch (UnknownHostException uhe) {
+			fail("Couldn't find mongo host " + host + ": " +
+					uhe.getLocalizedMessage());
+		} catch (IOException io) {
+			fail("Couldn't connect to mongo host " + host + ": " +
+					io.getLocalizedMessage());
+		} catch (MongoAuthException ae) {
+			fail("Not authorized: " + ae.getLocalizedMessage());
+		} catch (InvalidHostException ihe) {
+			fail(host + " is an invalid database host: "  +
+					ihe.getLocalizedMessage());
+		}
+		return null;
+	}
+	
+	private void fail(final String error) {
+		logErr(error);
+		System.err.println(error);
+		startupFailed();
+	}
+	
+	private String getServiceName(String serviceToken)
+			throws TokenFormatException, TokenExpiredException, IOException {
+		if (serviceToken == null || serviceToken.isEmpty()) {
+			throw new IllegalArgumentException(
+					"Service token cannot be null or the empty string");
+		}
+		final AuthToken t = new AuthToken(serviceToken);
+		if (!AuthService.validateToken(t)) {
+			throw new IllegalArgumentException("Service token is invalid");
+		}
+		return t.getUserName();
+	}
     //END_CLASS_HEADER
 
     public UserAndJobStateServer() throws Exception {
         super("UserAndJobState");
         //BEGIN_CONSTRUCTOR
+		//assign config once per jvm, otherwise you could wind up with
+		//different threads talking to different mongo instances
+		//E.g. first thread's config applies to all threads.
+		if (ujConfig == null) {
+			ujConfig = new HashMap<String, String>();
+			ujConfig.putAll(super.config);
+		}
+		boolean failed = false;
+		if (!ujConfig.containsKey(HOST)) {
+			fail("Must provide param " + HOST + " in config file");
+			failed = true;
+		}
+		final String host = ujConfig.get(HOST);
+		if (!ujConfig.containsKey(DB)) {
+			fail("Must provide param " + DB + " in config file");
+			failed = true;
+		}
+		final String dbs = ujConfig.get(DB);
+		if (ujConfig.containsKey(USER) ^ ujConfig.containsKey(PWD)) {
+			fail(String.format("Must provide both %s and %s ",
+					USER, PWD) + "params in config file if authentication " + 
+					"is to be used");
+			failed = true;
+		}
+		if (failed) {
+			fail("Server startup failed - all calls will error out.");
+			us = null;
+		} else {
+			final String user = ujConfig.get(USER);
+			final String pwd = ujConfig.get(PWD);
+			String params = "";
+			for (String s: Arrays.asList(HOST, DB, USER)) {
+				if (ujConfig.containsKey(s)) {
+					params += s + "=" + ujConfig.get(s) + "\n";
+				}
+			}
+			if (pwd != null) {
+				params += PWD + "=[redacted for your safety and comfort]\n";
+			}
+			System.out.println("Using connection parameters:\n" + params);
+			logInfo("Using connection parameters:\n" + params);
+			us = getUserState(host, dbs, user, pwd);
+		}
         //END_CONSTRUCTOR
     }
 
@@ -110,6 +219,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.set_state")
     public void setState(String service, String key, UObject value, AuthToken authPart) throws Exception {
         //BEGIN set_state
+		us.setState(authPart.getUserName(), service, false, key,
+				value == null ? null : value.asClassInstance(Object.class));
         //END set_state
     }
 
@@ -123,6 +234,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.set_state_auth")
     public void setStateAuth(String token, String key, UObject value, AuthToken authPart) throws Exception {
         //BEGIN set_state_auth
+		us.setState(authPart.getUserName(), getServiceName(token), true, key,
+				value == null ? null : value.asClassInstance(Object.class));
+		
         //END set_state_auth
     }
 
