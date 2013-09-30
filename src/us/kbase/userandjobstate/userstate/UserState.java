@@ -196,7 +196,7 @@ public class UserState { //TODO tests for all this
 		pfields.put(MONGO_ID, 0);
 		SERV_PROJ = new BasicDBObject("$project", pfields);
 		SERV_GROUP = new BasicDBObject("$group",
-				new BasicDBObject("_id", "$" + SERVICE));
+				new BasicDBObject(MONGO_ID, "$" + SERVICE));
 	}
 
 	public List<String> listServices(final String user, final boolean auth)
