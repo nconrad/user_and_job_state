@@ -671,9 +671,9 @@ sub list_state
 
 
 
-=head2 list_services
+=head2 list_state_services
 
-  $services = $obj->list_services($auth)
+  $services = $obj->list_state_services($auth)
 
 =over 4
 
@@ -705,13 +705,13 @@ service_name is a string
 
 =item Description
 
-List all services.
+List all state services.
 
 =back
 
 =cut
 
-sub list_services
+sub list_state_services
 {
     my($self, @args) = @_;
 
@@ -720,7 +720,7 @@ sub list_services
     if ((my $n = @args) != 1)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function list_services (received $n, expecting 1)");
+							       "Invalid argument count for function list_state_services (received $n, expecting 1)");
     }
     {
 	my($auth) = @args;
@@ -728,29 +728,29 @@ sub list_services
 	my @_bad_arguments;
         (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 1 \"auth\" (value was \"$auth\")");
         if (@_bad_arguments) {
-	    my $msg = "Invalid arguments passed to list_services:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    my $msg = "Invalid arguments passed to list_state_services:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
-								   method_name => 'list_services');
+								   method_name => 'list_state_services');
 	}
     }
 
     my $result = $self->{client}->call($self->{url}, {
-	method => "UserAndJobState.list_services",
+	method => "UserAndJobState.list_state_services",
 	params => \@args,
     });
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
 					       code => $result->content->{code},
-					       method_name => 'list_services',
+					       method_name => 'list_state_services',
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
 	}
     } else {
-        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_services",
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_state_services",
 					    status_line => $self->{client}->status_line,
-					    method_name => 'list_services',
+					    method_name => 'list_state_services',
 				       );
     }
 }
@@ -1901,6 +1901,92 @@ sub list_jobs
 
 
 
+=head2 list_job_services
+
+  $services = $obj->list_job_services($auth)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$auth is a UserAndJobState.authed
+$services is a reference to a list where each element is a UserAndJobState.service_name
+authed is a UserAndJobState.boolean
+boolean is an int
+service_name is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$auth is a UserAndJobState.authed
+$services is a reference to a list where each element is a UserAndJobState.service_name
+authed is a UserAndJobState.boolean
+boolean is an int
+service_name is a string
+
+
+=end text
+
+=item Description
+
+List all job services.
+
+=back
+
+=cut
+
+sub list_job_services
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function list_job_services (received $n, expecting 1)");
+    }
+    {
+	my($auth) = @args;
+
+	my @_bad_arguments;
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 1 \"auth\" (value was \"$auth\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to list_job_services:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'list_job_services');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.list_job_services",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'list_job_services',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_job_services",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'list_job_services',
+				       );
+    }
+}
+
+
+
 =head2 delete_job
 
   $obj->delete_job($job)
@@ -2162,7 +2248,7 @@ an int
 
 =item Description
 
-A service name.
+A service name. Alphanumerics and the underscore are allowed.
 
 
 =item Definition
@@ -2226,7 +2312,7 @@ a string
 =item Description
 
 Specifies whether results returned should be from key/value pairs
-set with service authentication (true) or without (false)
+set with service authentication (true) or without (false).
 
 
 =item Definition

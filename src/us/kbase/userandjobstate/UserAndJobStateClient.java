@@ -138,7 +138,7 @@ public class UserAndJobStateClient {
      * <pre>
      * Set the state of a key for a service without service authentication.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
@@ -174,8 +174,8 @@ public class UserAndJobStateClient {
      * <pre>
      * Get the state of a key for a service.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
@@ -194,7 +194,7 @@ public class UserAndJobStateClient {
      * <pre>
      * Remove a key value pair without service authentication.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
@@ -228,8 +228,8 @@ public class UserAndJobStateClient {
      * <pre>
      * List all keys.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
@@ -243,19 +243,19 @@ public class UserAndJobStateClient {
     }
 
     /**
-     * <p>Original spec-file function name: list_services</p>
+     * <p>Original spec-file function name: list_state_services</p>
      * <pre>
-     * List all services.
+     * List all state services.
      * </pre>
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public List<String> listServices(Integer auth) throws IOException, JsonClientException {
+    public List<String> listStateServices(Integer auth) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(auth);
         TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
-        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_services", args, retType, true, true);
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_state_services", args, retType, true, true);
         return res.get(0);
     }
 
@@ -466,7 +466,7 @@ public class UserAndJobStateClient {
      * <pre>
      * List jobs.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      * @param   options   Original type "ListJobsOptions" (see {@link us.kbase.userandjobstate.ListJobsOptions ListJobsOptions} for details)
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
@@ -477,6 +477,23 @@ public class UserAndJobStateClient {
         args.add(options);
         TypeReference<List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>> retType = new TypeReference<List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>>() {};
         List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> res = caller.jsonrpcCall("UserAndJobState.list_jobs", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: list_job_services</p>
+     * <pre>
+     * List all job services.
+     * </pre>
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public List<String> listJobServices(Integer auth) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(auth);
+        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_job_services", args, retType, true, true);
         return res.get(0);
     }
 

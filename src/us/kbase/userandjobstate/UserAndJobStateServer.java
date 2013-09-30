@@ -214,7 +214,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * Set the state of a key for a service without service authentication.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.set_state")
     public void setState(String service, String key, UObject value, AuthToken authPart) throws Exception {
@@ -244,8 +244,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * Get the state of a key for a service.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_state")
     public UObject getState(String service, String key, Integer auth, AuthToken authPart) throws Exception {
@@ -262,7 +262,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * Remove a key value pair without service authentication.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.remove_state")
     public void removeState(String service, String key, AuthToken authPart) throws Exception {
@@ -291,8 +291,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * List all keys.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_state")
     public List<String> listState(String service, Integer auth, AuthToken authPart) throws Exception {
@@ -304,18 +304,18 @@ public class UserAndJobStateServer extends JsonServerServlet {
     }
 
     /**
-     * <p>Original spec-file function name: list_services</p>
+     * <p>Original spec-file function name: list_state_services</p>
      * <pre>
-     * List all services.
+     * List all state services.
      * </pre>
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false)) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
-    @JsonServerMethod(rpc = "UserAndJobState.list_services")
-    public List<String> listServices(Integer auth, AuthToken authPart) throws Exception {
+    @JsonServerMethod(rpc = "UserAndJobState.list_state_services")
+    public List<String> listStateServices(Integer auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
-        //BEGIN list_services
+        //BEGIN list_state_services
 		returnVal = us.listServices(authPart.getUserName(), auth != 0);
-        //END list_services
+        //END list_state_services
         return returnVal;
     }
 
@@ -505,7 +505,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * List jobs.
      * </pre>
-     * @param   service   Original type "service_name" (A service name.)
+     * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      * @param   options   Original type "ListJobsOptions" (see {@link us.kbase.userandjobstate.ListJobsOptions ListJobsOptions} for details)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
@@ -513,6 +513,21 @@ public class UserAndJobStateServer extends JsonServerServlet {
         List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
         //BEGIN list_jobs
         //END list_jobs
+        return returnVal;
+    }
+
+    /**
+     * <p>Original spec-file function name: list_job_services</p>
+     * <pre>
+     * List all job services.
+     * </pre>
+     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.list_job_services")
+    public List<String> listJobServices(Integer auth, AuthToken authPart) throws Exception {
+        List<String> returnVal = null;
+        //BEGIN list_job_services
+        //END list_job_services
         return returnVal;
     }
 
