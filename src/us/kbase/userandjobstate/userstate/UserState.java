@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.jongo.Jongo;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -35,11 +34,11 @@ public class UserState { //TODO tests for all this
 	private final static String KEY = "key";
 	private final static String AUTH = "auth";
 	private final static String VALUE = "value";
+	private final static String MONGO_ID = "_id";
 	
 	private final static String IDX_UNIQ = "unique";
 	
 	private final DBCollection uscol;
-	private final Jongo usjongo;
 	
 	private final static ObjectMapper MAPPER = new ObjectMapper();
 	private final static Pattern INVALID_SERV_NAMES = 
@@ -49,7 +48,6 @@ public class UserState { //TODO tests for all this
 			final String collection)
 			throws UnknownHostException, IOException, InvalidHostException {
 		final DB m = GetMongoDB.getDB(host, database);
-		usjongo = new Jongo(m);
 		uscol = m.getCollection(collection);
 		ensureIndexes();
 	}
@@ -59,7 +57,6 @@ public class UserState { //TODO tests for all this
 			throws UnknownHostException, IOException, InvalidHostException,
 			MongoAuthException {
 		final DB m = GetMongoDB.getDB(host, database, user, password);
-		usjongo = new Jongo(m);
 		uscol = m.getCollection(collection);
 		ensureIndexes();
 	}
@@ -190,5 +187,36 @@ public class UserState { //TODO tests for all this
 			keys.add((String) o.get(KEY));
 		}
 		return keys;
+	}
+	
+	final static DBObject SERV_GROUP;
+	final static DBObject SERV_PROJ;
+	static {
+		final DBObject pfields = new BasicDBObject(SERVICE, 1);
+		pfields.put(MONGO_ID, 0);
+		SERV_PROJ = new BasicDBObject("$project", pfields);
+		SERV_GROUP = new BasicDBObject("$group",
+				new BasicDBObject("_id", "$" + SERVICE));
+	}
+
+	public List<String> listServices(final String user, final boolean auth)
+			throws CommunicationException {
+		isNonEmptyString(user, "user");
+		final DBObject mfields = new BasicDBObject(USER, user);
+		mfields.put(AUTH, auth);
+		final DBObject match = new BasicDBObject("$match", mfields);
+		
+		final AggregationOutput mret;
+		try {
+			mret = uscol.aggregate(match, SERV_PROJ, SERV_GROUP);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		final List<String> services = new LinkedList<String>();
+		for (DBObject o: mret.results()) {
+			services.add((String) o.get(MONGO_ID));
+		}
+		return services;
 	}
 }
