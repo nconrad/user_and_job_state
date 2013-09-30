@@ -124,8 +124,8 @@ module UserAndJobState {
 	funcdef list_state(service_name service, authed auth) returns(
 		list<string> keys);
 		
-	/* List all services. */
-	funcdef list_services(authed auth) returns(list<service_name> services);
+	/* List all state services. */
+	funcdef list_state_services(authed auth) returns(list<service_name> services);
 
 	/* A time, e.g. 2012-12-17T23:24:06. */
 	typedef string timestamp;
@@ -262,6 +262,9 @@ module UserAndJobState {
 	/* List jobs. */
 	funcdef list_jobs(service_name service, ListJobsOptions options)
 		returns(list<job_info> jobs);
+	
+	/* List all job services. */
+	funcdef list_job_services(authed auth) returns(list<service_name> services);
 	
 	/* Delete a job. Will error out if the job is not complete. */
 	funcdef delete_job(job_id job) returns();

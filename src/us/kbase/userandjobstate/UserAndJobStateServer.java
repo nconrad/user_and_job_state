@@ -236,7 +236,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
         //BEGIN set_state_auth
 		us.setState(authPart.getUserName(), getServiceName(token), true, key,
 				value == null ? null : value.asClassInstance(Object.class));
-		
         //END set_state_auth
     }
 
@@ -252,6 +251,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public UObject getState(String service, String key, Integer auth, AuthToken authPart) throws Exception {
         UObject returnVal = null;
         //BEGIN get_state
+		returnVal = new UObject(us.getState(authPart.getUserName(), service,
+				auth != 0, key));
         //END get_state
         return returnVal;
     }

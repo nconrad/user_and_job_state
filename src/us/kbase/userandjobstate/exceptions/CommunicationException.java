@@ -1,4 +1,4 @@
-package us.kbase.userandjobstate.mongo.exceptions;
+package us.kbase.userandjobstate.exceptions;
 
 /** 
  * Thrown when communication to the mongo database fails.

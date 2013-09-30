@@ -1,5 +1,7 @@
 package us.kbase.userandjobstate.userstate;
 
+import static us.kbase.common.utils.StringUtils.isNonEmptyString;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.regex.Matcher;
@@ -18,7 +20,8 @@ import com.mongodb.MongoException;
 import us.kbase.common.mongo.GetMongoDB;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
 import us.kbase.common.mongo.exceptions.MongoAuthException;
-import us.kbase.userandjobstate.mongo.exceptions.CommunicationException;
+import us.kbase.userandjobstate.exceptions.CommunicationException;
+import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
 public class UserState {
 	
@@ -77,15 +80,6 @@ public class UserState {
 			final boolean auth, final String key, final Object value)
 			throws CommunicationException {
 		//TODO tests
-		if (user == null || user.isEmpty()) {
-			throw new IllegalArgumentException(
-					"User cannot be null or the empty string");
-		}
-		checkServiceName(service);
-		if (key == null || key.isEmpty()) {
-			throw new IllegalArgumentException(
-					"Key cannot be null or the empty string");
-		}
 		if (value != null) {
 			final String valueStr;
 			try {
@@ -98,11 +92,7 @@ public class UserState {
 				throw new IllegalArgumentException(VAL_ERR);
 			}
 		}
-		final DBObject query = new BasicDBObject();
-		query.put(USER, user);
-		query.put(SERVICE, service);
-		query.put(AUTH, auth);
-		query.put(KEY, key);
+		final DBObject query = generateQuery(user, service, auth, key);
 		final DBObject set = new BasicDBObject();
 		final DBObject val = new BasicDBObject();
 		val.put(VALUE, value);
@@ -114,16 +104,47 @@ public class UserState {
 					"There was a problem communicating with the database", me);
 		}
 	}
+
+	private DBObject generateQuery(final String user, final String service,
+			final boolean auth, final String key) {
+		isNonEmptyString(user, "user");
+		checkServiceName(service);
+		isNonEmptyString(key, "key");
+		final DBObject query = new BasicDBObject();
+		query.put(USER, user);
+		query.put(SERVICE, service);
+		query.put(AUTH, auth);
+		query.put(KEY, key);
+		return query;
+	}
 	
-	private static void checkServiceName(String name) {
-		if (name == null || name.isEmpty()) {
-			throw new IllegalArgumentException(
-					"A service name cannot be null or the empty string");
-		}
+	private static void checkServiceName(final String name) {
+		isNonEmptyString(name, "service");
 		final Matcher m = INVALID_SERV_NAMES.matcher(name);
 		if (m.find()) {
 			throw new IllegalArgumentException(String.format(
 					"Illegal character in service name %s: %s", name, m.group()));
 		}
+	}
+
+	public Object getState(final String user, final String service, 
+			final boolean auth, final String key)
+			throws CommunicationException, NoSuchKeyException {
+		final DBObject query = generateQuery(user, service, auth, key);
+		final DBObject projection = new BasicDBObject();
+		projection.put(VALUE, 1);
+		final DBObject mret;
+		try {
+			mret = uscol.findOne(query, projection);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if (mret == null) {
+			throw new NoSuchKeyException(String.format(
+					"There is no key %s for the %sauthorized service %s", key,
+					auth ? "" : "un", service));
+		}
+		return mret.get(VALUE);
 	}
 }
