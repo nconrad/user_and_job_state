@@ -4,6 +4,8 @@ import static us.kbase.common.utils.StringUtils.isNonEmptyString;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +16,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
+import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import com.mongodb.MongoException;
 
@@ -157,5 +160,35 @@ public class UserState { //TODO tests for all this
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
+	}
+
+	public List<String> listState(final String user, final String service,
+			final boolean auth)
+			throws CommunicationException, NoSuchKeyException {
+		isNonEmptyString(user, "user");
+		checkServiceName(service);
+		final DBObject query = new BasicDBObject();
+		query.put(USER, user);
+		query.put(SERVICE, service);
+		query.put(AUTH, auth);
+		final DBObject projection = new BasicDBObject();
+		projection.put(KEY, 1);
+		final DBCursor mret;
+		try {
+			mret = uscol.find(query, projection);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if (mret == null) {
+			throw new NoSuchKeyException(String.format(
+					"There are no keys for the %sauthorized service %s",
+					auth ? "" : "un", service));
+		}
+		final List<String> keys = new LinkedList<String>();
+		for (DBObject o: mret) {
+			keys.add((String) o.get(KEY));
+		}
+		return keys;
 	}
 }

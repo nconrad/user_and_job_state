@@ -298,6 +298,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<String> listState(String service, Integer auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state
+		returnVal = us.listState(authPart.getUserName(), service, auth != 0);
         //END list_state
         return returnVal;
     }
