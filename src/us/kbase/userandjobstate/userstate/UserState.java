@@ -26,6 +26,7 @@ import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
 public class UserState { //TODO tests for all this
+	//TODO fix glassfish start scripts so they fail if no contact
 	
 	private final static int MAX_VALUE_SIZE = 1000000;
 	
