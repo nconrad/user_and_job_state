@@ -98,7 +98,7 @@ module UserAndJobState {
 	typedef string service_token;
 	
 	/* Specifies whether results returned should be from key/value pairs
-		set with service authentication (true) or without (false)
+		set with service authentication (true) or without (false).
 	*/
 	typedef boolean authed;
 	
