@@ -23,7 +23,7 @@ import us.kbase.common.mongo.exceptions.MongoAuthException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
-public class UserState {
+public class UserState { //TODO tests for all this
 	
 	private final static int MAX_VALUE_SIZE = 1000000;
 	
@@ -79,7 +79,6 @@ public class UserState {
 	public void setState(final String user, final String service,
 			final boolean auth, final String key, final Object value)
 			throws CommunicationException {
-		//TODO tests
 		if (value != null) {
 			final String valueStr;
 			try {
@@ -146,5 +145,17 @@ public class UserState {
 					auth ? "" : "un", service));
 		}
 		return mret.get(VALUE);
+	}
+
+	public void removeState(final String user, final String service, 
+			final boolean auth, final String key)
+			throws CommunicationException {
+		final DBObject query = generateQuery(user, service, auth, key);
+		try {
+			uscol.remove(query);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
 	}
 }

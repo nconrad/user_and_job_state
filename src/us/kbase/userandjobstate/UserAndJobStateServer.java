@@ -267,6 +267,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.remove_state")
     public void removeState(String service, String key, AuthToken authPart) throws Exception {
         //BEGIN remove_state
+		us.removeState(authPart.getUserName(), service, false, key);
         //END remove_state
     }
 
@@ -280,6 +281,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.remove_state_auth")
     public void removeStateAuth(String token, String key, AuthToken authPart) throws Exception {
         //BEGIN remove_state_auth
+		us.removeState(authPart.getUserName(), getServiceName(token), true,
+				key);	
         //END remove_state_auth
     }
 
