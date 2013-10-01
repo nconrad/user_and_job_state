@@ -41,8 +41,8 @@ import us.kbase.userandjobstate.userstate.UserState;
  *         service's unauthed values for that user.
  * 2) service authentication required - the service must pass a Globus Online
  *         token that identifies the service in the argument list. Values can only be
- *         set by services with possession of a valid token. The service name in
- *         method returns will be set to the username of the token.
+ *         set by services with possession of a valid token. The service name 
+ *         will be set to the username of the token.
  * The sets of key/value pairs for the two types of method calls are entirely
  * separate - for example, the workspace service could have a key called 'default'
  * that is writable by all other services (no auth) and the same key that was 
@@ -51,7 +51,7 @@ import us.kbase.userandjobstate.userstate.UserState;
  * service credentials safe).
  * All job writes require service authentication. No reads, either for key/value
  * pairs or jobs, require service authentication.
- * Potential process flows:
+ * Potential job process flows:
  * Asysnc:
  * UI calls service function which returns with job id
  * service call [spawns thread/subprocess to run job that] periodically updates
@@ -524,10 +524,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <pre>
      * List all job services.
      * </pre>
-     * @param   auth   Original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; Original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_job_services")
-    public List<String> listJobServices(Integer auth, AuthToken authPart) throws Exception {
+    public List<String> listJobServices(AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_job_services
         //END list_job_services

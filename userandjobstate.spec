@@ -15,8 +15,8 @@ There are two modes of operation for setting key values for a user:
 	service's unauthed values for that user.
 2) service authentication required - the service must pass a Globus Online
 	token that identifies the service in the argument list. Values can only be
-	set by services with possession of a valid token. The service name in
-	method returns will be set to the username of the token.
+	set by services with possession of a valid token. The service name 
+	will be set to the username of the token.
 The sets of key/value pairs for the two types of method calls are entirely
 separate - for example, the workspace service could have a key called 'default'
 that is writable by all other services (no auth) and the same key that was 
@@ -27,7 +27,7 @@ service credentials safe).
 All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.
 
-Potential process flows:
+Potential job process flows:
 
 Asysnc:
 UI calls service function which returns with job id
@@ -264,7 +264,7 @@ module UserAndJobState {
 		returns(list<job_info> jobs);
 	
 	/* List all job services. */
-	funcdef list_job_services(authed auth) returns(list<service_name> services);
+	funcdef list_job_services() returns(list<service_name> services);
 	
 	/* Delete a job. Will error out if the job is not complete. */
 	funcdef delete_job(job_id job) returns();

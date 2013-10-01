@@ -764,10 +764,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def list_job_services(self, auth):
+    def list_job_services(self, ):
 
         arg_hash = { 'method': 'UserAndJobState.list_job_services',
-                     'params': [auth],
+                     'params': [],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
