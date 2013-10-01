@@ -144,6 +144,8 @@ public class UserState { //TODO tests for all this
 					"There is no key %s for the %sauthorized service %s", key,
 					auth ? "" : "un", service));
 		}
+		//might make sense to run through this and switch all DBObjects to 
+		//Maps, but doesn't really matter for the application, so pass
 		return mret.get(VALUE);
 	}
 
