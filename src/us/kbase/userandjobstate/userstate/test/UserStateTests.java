@@ -132,9 +132,44 @@ public class UserStateTests {
 		try {
 			us.getState("u", "nostate", true, "thing");
 			fail("got non-existant state");
-		} catch (NoSuchKeyException iae) {
-			assertThat("correct exception", iae.getLocalizedMessage(),
+		} catch (NoSuchKeyException nske) {
+			assertThat("correct exception", nske.getLocalizedMessage(),
 					is("There is no key thing for the authorized service nostate"));
+		}
+	}
+	
+	@Test
+	public void removeState() throws Exception {
+		us.setState("u", "remstate", false, "thing1", "foo");
+		us.setState("u", "remstate", true, "thing1", "foo");
+		assertThat("get works prior to remove",
+				us.getState("u", "remstate", false, "thing1"),
+				is((Object) "foo"));
+		assertThat("get works prior to remove",
+				us.getState("u", "remstate", true, "thing1"),
+				is((Object) "foo"));
+		us.removeState("u", "remstate", false, "thing1");
+		assertThat("get works after unauthed remove",
+				us.getState("u", "remstate", true, "thing1"),
+				is((Object) "foo"));
+		try {
+			us.getState("u", "remstate", false, "thing1");
+			fail("got removed state");
+		} catch (NoSuchKeyException nske) {
+			assertThat("correct exception", nske.getLocalizedMessage(),
+					is("There is no key thing1 for the unauthorized service remstate"));
+		}
+		us.setState("u", "remstate", false, "thing1", "foo");
+		us.removeState("u", "remstate", true, "thing1");
+		assertThat("get works after authed remove",
+				us.getState("u", "remstate", false, "thing1"),
+				is((Object) "foo"));
+		try {
+			us.getState("u", "remstate", true, "thing1");
+			fail("got removed state");
+		} catch (NoSuchKeyException nske) {
+			assertThat("correct exception", nske.getLocalizedMessage(),
+					is("There is no key thing1 for the authorized service remstate"));
 		}
 	}
 
