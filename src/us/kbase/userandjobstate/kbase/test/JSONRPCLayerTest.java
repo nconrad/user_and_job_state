@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -123,26 +124,95 @@ public class JSONRPCLayerTest {
 		List<Integer> data = Arrays.asList(1, 2, 3, 5, 8, 13);
 		List<Integer> data2 = Arrays.asList(42);
 		CLIENT1.setState("serv1", "key1", new UObject(data));
-		CLIENT2.setState("serv1", "key1", new UObject(data2));
-		CLIENT1.setStateAuth(token2, "key1", new UObject(data));
-		CLIENT2.setStateAuth(token1, "key1", new UObject(data2));
+		CLIENT2.setState("serv1", "2key1", new UObject(data2));
+		CLIENT1.setStateAuth(token2, "akey1", new UObject(data));
+		CLIENT2.setStateAuth(token1, "2akey1", new UObject(data2));
 		assertThat("get correct data back",
 				CLIENT1.getState("serv1", "key1", 0)
 				.asClassInstance(Object.class),
 				is((Object) data));
 		assertThat("get correct data back",
-				CLIENT2.getState("serv1", "key1", 0)
+				CLIENT2.getState("serv1", "2key1", 0)
 				.asClassInstance(Object.class),
 				is((Object) data2));
 		assertThat("get correct data back",
-				CLIENT1.getState(USER2, "key1", 1)
+				CLIENT1.getState(USER2, "akey1", 1)
 				.asClassInstance(Object.class),
 				is((Object) data));
 		assertThat("get correct data back",
-				CLIENT2.getState(USER1, "key1", 1)
+				CLIENT2.getState(USER1, "2akey1", 1)
 				.asClassInstance(Object.class),
 				is((Object) data2));
-		
+		CLIENT1.setState("serv1", "key2", new UObject(data));
+		CLIENT1.setState("serv2", "key", new UObject(data));
+		CLIENT1.setStateAuth(token2, "akey2", new UObject(data));
+		CLIENT1.setStateAuth(token1, "akey", new UObject(data));
+		assertThat("get correct keys",
+				new HashSet<String>(CLIENT1.listState("serv1", 0)),
+				is(new HashSet<String>(Arrays.asList("key1", "key2"))));
+		assertThat("get correct keys",
+				new HashSet<String>(CLIENT1.listState("serv2", 0)),
+				is(new HashSet<String>(Arrays.asList("key"))));
+		assertThat("get correct keys",
+				new HashSet<String>(CLIENT1.listState(USER2, 1)),
+				is(new HashSet<String>(Arrays.asList("akey1", "akey2"))));
+		assertThat("get correct keys",
+				new HashSet<String>(CLIENT1.listState(USER1, 1)),
+				is(new HashSet<String>(Arrays.asList("akey"))));
+		assertThat("get correct services",
+				new HashSet<String>(CLIENT1.listStateServices(0)),
+				is(new HashSet<String>(Arrays.asList("serv1", "serv2"))));
+		assertThat("get correct services",
+				new HashSet<String>(CLIENT1.listStateServices(1)),
+				is(new HashSet<String>(Arrays.asList(USER1, USER2))));
+		CLIENT1.removeState("serv1", "key1");
+		CLIENT1.removeStateAuth(token2, "akey1");
+		try {
+			CLIENT1.getState("serv1", "key1", 0);
+			fail("got deleted state");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("There is no key key1 for the unauthorized service serv1"));
+		}
+		try {
+			CLIENT1.getState(USER2, "akey1", 1);
+			fail("got deleted state");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("There is no key akey1 for the authorized service " + USER2));
+		}
+	}
+	
+	@Test
+	public void badToken() throws Exception {
+		try {
+			CLIENT1.setStateAuth(null, "key", new UObject("foo"));
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token cannot be null or the empty string"));
+		}
+		try {
+			CLIENT1.setStateAuth("", "key", new UObject("foo"));
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token cannot be null or the empty string"));
+		}
+		try {
+			CLIENT1.setStateAuth("boogabooga", "key", new UObject("foo"));
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Auth token is in the incorrect format, near 'boogabooga'"));
+		}
+		try {
+			CLIENT1.setStateAuth(token2 + "a", "key", new UObject("foo"));
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token is invalid"));
+		}
 	}
 	
 }

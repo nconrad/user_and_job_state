@@ -252,5 +252,4 @@ public class UserStateTests {
 					is("Value cannot be > 1000000 bytes when serialized"));
 		}
 	}
-	//TODO jsonrpc tests
 }
