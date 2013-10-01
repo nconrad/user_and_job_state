@@ -63,9 +63,8 @@ test-client: test-service
 	$(ANT) test_client_import
 
 test-service:
-	@echo "TODO: add tests"
-	#test/cfg_to_runner.py $(TESTCFG)
-	#test/run_tests.sh
+	test/cfg_to_runner.py $(TESTCFG)
+	test/run_tests.sh
 
 test-scripts:
 	@echo "no scripts to test"
