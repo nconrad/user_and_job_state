@@ -4,8 +4,8 @@ import static us.kbase.common.utils.StringUtils.isNonEmptyString;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -159,7 +159,7 @@ public class UserState { //TODO tests for all this
 		}
 	}
 
-	public List<String> listState(final String user, final String service,
+	public Set<String> listState(final String user, final String service,
 			final boolean auth)
 			throws CommunicationException, NoSuchKeyException {
 		isNonEmptyString(user, "user");
@@ -177,12 +177,7 @@ public class UserState { //TODO tests for all this
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		if (mret == null) {
-			throw new NoSuchKeyException(String.format(
-					"There are no keys for the %sauthorized service %s",
-					auth ? "" : "un", service));
-		}
-		final List<String> keys = new LinkedList<String>();
+		final Set<String> keys = new HashSet<String>();
 		for (DBObject o: mret) {
 			keys.add((String) o.get(KEY));
 		}
@@ -199,7 +194,7 @@ public class UserState { //TODO tests for all this
 				new BasicDBObject(MONGO_ID, "$" + SERVICE));
 	}
 
-	public List<String> listServices(final String user, final boolean auth)
+	public Set<String> listServices(final String user, final boolean auth)
 			throws CommunicationException {
 		isNonEmptyString(user, "user");
 		final DBObject mfields = new BasicDBObject(USER, user);
@@ -213,7 +208,7 @@ public class UserState { //TODO tests for all this
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		final List<String> services = new LinkedList<String>();
+		final Set<String> services = new HashSet<String>();
 		for (DBObject o: mret.results()) {
 			services.add((String) o.get(MONGO_ID));
 		}

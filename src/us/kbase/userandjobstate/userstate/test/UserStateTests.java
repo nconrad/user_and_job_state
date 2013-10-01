@@ -4,8 +4,13 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.swing.JFrame;
 
@@ -40,37 +45,37 @@ public class UserStateTests {
 	
 	@Test
 	public void illegalArgs() throws Exception {
-		checkArgs(null, "foo", true, "key", "user cannot be null or the empty string");
-		checkArgs(null, "foo", false, "key", "user cannot be null or the empty string");
-		checkArgs("", "foo", true, "key", "user cannot be null or the empty string");
-		checkArgs("", "foo", false, "key", "user cannot be null or the empty string");
-		checkArgs("u", null, true, "key", "service cannot be null or the empty string");
-		checkArgs("u", null, false, "key", "service cannot be null or the empty string");
-		checkArgs("u", "", true, "key", "service cannot be null or the empty string");
-		checkArgs("u", "", false, "key", "service cannot be null or the empty string");
-		checkArgs("u", "afa)aafe", true, "key", "Illegal character in service name afa)aafe: )");
-		checkArgs("u", "afae-afa", false, "key", "Illegal character in service name afae-afa: -");
-		checkArgs("u", "foo", true, null, "key cannot be null or the empty string");
-		checkArgs("u", "foo", false, null, "key cannot be null or the empty string");
-		checkArgs("u", "foo", true, "", "key cannot be null or the empty string");
-		checkArgs("u", "foo", false, "", "key cannot be null or the empty string");
-		checkListState(null, "foo", true, "user cannot be null or the empty string");
-		checkListState(null, "foo", false, "user cannot be null or the empty string");
-		checkListState("", "foo", true, "user cannot be null or the empty string");
-		checkListState("", "foo", false, "user cannot be null or the empty string");
-		checkListState("u", null, true, "service cannot be null or the empty string");
-		checkListState("u", null, false, "service cannot be null or the empty string");
-		checkListState("u", "", true, "service cannot be null or the empty string");
-		checkListState("u", "", false, "service cannot be null or the empty string");
-		checkListState("u", "afa)aafe", true, "Illegal character in service name afa)aafe: )");
-		checkListState("u", "afae-afa", false, "Illegal character in service name afae-afa: -");
-		checkListServices(null, true, "user cannot be null or the empty string");
-		checkListServices(null, false, "user cannot be null or the empty string");
-		checkListServices("", true, "user cannot be null or the empty string");
-		checkListServices("", false, "user cannot be null or the empty string");
+		checkBadArgs(null, "foo", true, "key", "user cannot be null or the empty string");
+		checkBadArgs(null, "foo", false, "key", "user cannot be null or the empty string");
+		checkBadArgs("", "foo", true, "key", "user cannot be null or the empty string");
+		checkBadArgs("", "foo", false, "key", "user cannot be null or the empty string");
+		checkBadArgs("u", null, true, "key", "service cannot be null or the empty string");
+		checkBadArgs("u", null, false, "key", "service cannot be null or the empty string");
+		checkBadArgs("u", "", true, "key", "service cannot be null or the empty string");
+		checkBadArgs("u", "", false, "key", "service cannot be null or the empty string");
+		checkBadArgs("u", "afa)aafe", true, "key", "Illegal character in service name afa)aafe: )");
+		checkBadArgs("u", "afae-afa", false, "key", "Illegal character in service name afae-afa: -");
+		checkBadArgs("u", "foo", true, null, "key cannot be null or the empty string");
+		checkBadArgs("u", "foo", false, null, "key cannot be null or the empty string");
+		checkBadArgs("u", "foo", true, "", "key cannot be null or the empty string");
+		checkBadArgs("u", "foo", false, "", "key cannot be null or the empty string");
+		checkListStateBadArgs(null, "foo", true, "user cannot be null or the empty string");
+		checkListStateBadArgs(null, "foo", false, "user cannot be null or the empty string");
+		checkListStateBadArgs("", "foo", true, "user cannot be null or the empty string");
+		checkListStateBadArgs("", "foo", false, "user cannot be null or the empty string");
+		checkListStateBadArgs("u", null, true, "service cannot be null or the empty string");
+		checkListStateBadArgs("u", null, false, "service cannot be null or the empty string");
+		checkListStateBadArgs("u", "", true, "service cannot be null or the empty string");
+		checkListStateBadArgs("u", "", false, "service cannot be null or the empty string");
+		checkListStateBadArgs("u", "afa)aafe", true, "Illegal character in service name afa)aafe: )");
+		checkListStateBadArgs("u", "afae-afa", false, "Illegal character in service name afae-afa: -");
+		checkListServicesBadArgs(null, true, "user cannot be null or the empty string");
+		checkListServicesBadArgs(null, false, "user cannot be null or the empty string");
+		checkListServicesBadArgs("", true, "user cannot be null or the empty string");
+		checkListServicesBadArgs("", false, "user cannot be null or the empty string");
 	}
 	
-	private void checkListState(String user, String service, boolean auth,
+	private void checkListStateBadArgs(String user, String service, boolean auth,
 			String exception) throws Exception {
 		try {
 			us.listState(user, service, auth);
@@ -81,7 +86,7 @@ public class UserStateTests {
 		}
 	}
 	
-	private void checkListServices(String user, boolean auth,
+	private void checkListServicesBadArgs(String user, boolean auth,
 			String exception) throws Exception {
 		try {
 			us.listServices(user, auth);
@@ -92,7 +97,7 @@ public class UserStateTests {
 		}
 	}
 	
-	private void checkArgs(String user, String service, boolean auth,
+	private void checkBadArgs(String user, String service, boolean auth,
 			String key, String exception) throws Exception {
 		Object data = "foo";
 		try {
@@ -174,7 +179,7 @@ public class UserStateTests {
 	}
 
 	@Test
-	public void getAndSetState() throws Exception {
+	public void getSetListStateAndService() throws Exception {
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("bar", "baz");
 		us.setState("foo", "serv1", false, "key1", data);
@@ -191,7 +196,32 @@ public class UserStateTests {
 		us.setState("foo", "serv2", false, "key", data);
 		us.setState("foo", "authserv1", true, "authkey2", data2);
 		us.setState("foo", "authserv2", true, "authkey", data2);
-		//TODO finish basic ops testing
+
+		checkListState("foo", "serv1", false, Arrays.asList("key1", "key2"));
+		checkListState("foo", "serv2", false, Arrays.asList("key"));
+		checkListState("foo", "serv3", false, new ArrayList<String>());
+		checkListState("foo", "authserv1", true, Arrays.asList("authkey1", "authkey2"));
+		checkListState("foo", "authserv2", true, Arrays.asList("authkey"));
+		checkListState("foo", "authserv3", true, new ArrayList<String>());
+		
+		checkListServ("foo", false, Arrays.asList("serv1", "serv2"));
+		checkListServ("foo1", false, new ArrayList<String>());
+		checkListServ("foo", true, Arrays.asList("authserv1", "authserv2"));
+		checkListServ("foo1", true, new ArrayList<String>());
+	}
+	
+	private void checkListServ(String user, boolean auth,
+			List<String> expected) throws Exception {
+		Set<String> expc = new HashSet<String>(expected);
+		assertThat("get correct services", us.listServices(user, auth),
+				is(expc));
+	}
+	
+	private void checkListState(String user, String service, boolean auth,
+			List<String> expected) throws Exception {
+		Set<String> expc = new HashSet<String>(expected);
+		assertThat("get correct keys", us.listState(user, service, auth),
+				is(expc));
 	}
 	
 	@Test
@@ -222,4 +252,5 @@ public class UserStateTests {
 					is("Value cannot be > 1000000 bytes when serialized"));
 		}
 	}
+	//TODO jsonrpc tests
 }

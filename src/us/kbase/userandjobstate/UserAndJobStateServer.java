@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Map;
 
 import us.kbase.auth.AuthService;
@@ -298,7 +299,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<String> listState(String service, Integer auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state
-		returnVal = us.listState(authPart.getUserName(), service, auth != 0);
+		returnVal = new LinkedList<String>(us.listState(authPart.getUserName(),
+				service, auth != 0));
         //END list_state
         return returnVal;
     }
@@ -314,7 +316,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<String> listStateServices(Integer auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state_services
-		returnVal = us.listServices(authPart.getUserName(), auth != 0);
+		returnVal = new LinkedList<String>(us.listServices(
+				authPart.getUserName(), auth != 0));
         //END list_state_services
         return returnVal;
     }
