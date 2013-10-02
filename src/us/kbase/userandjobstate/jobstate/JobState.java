@@ -245,17 +245,8 @@ public class JobState {
 			throws CommunicationException {
 		final String jobid = createJob(user);
 		try {
-			if (progType == PROG_NONE) {
-				startJob(user, jobid, service, status, description);
-			} else if (progType == PROG_TASK) {
-				startJob(user, jobid, service, status, description, maxProg);
-			} else if (progType == PROG_PERC) {
-				startJobWithPercentProg(user, jobid, service, status,
-						description);
-			} else {
-				throw new IllegalArgumentException("Illegal progress type: " +
-						progType);
-			}
+			startJob(user, jobid, service, status, description, progType,
+					maxProg);
 		} catch (NoSuchJobException nsje) {
 			throw new RuntimeException(
 					"Just created a job and it's already deleted", nsje);
