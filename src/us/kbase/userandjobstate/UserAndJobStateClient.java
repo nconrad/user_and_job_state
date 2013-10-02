@@ -9,9 +9,9 @@ import java.util.List;
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonClientCaller;
 import us.kbase.common.service.JsonClientException;
-import us.kbase.common.service.Tuple11;
+import us.kbase.common.service.Tuple12;
 import us.kbase.common.service.Tuple4;
-import us.kbase.common.service.Tuple5;
+import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 
 /**
@@ -21,9 +21,7 @@ import us.kbase.common.service.UObject;
  * and storing job status so that a) long JSON RPC calls can report status and
  * UI elements can receive updates, and b) there's a centralized location for 
  * job status reporting.
- * The service assumes other services are capable of simple math and does not
- * throw errors if a progress bar overflows.
- * Setting objects are limited to 1Mb.
+ * Setting objects are limited to 640Kb.
  * There are two modes of operation for setting key values for a user: 
  * 1) no service authentication - an authorization token for a service is not 
  *         required, and any service with the user token can write to any other
@@ -40,6 +38,9 @@ import us.kbase.common.service.UObject;
  * service credentials safe).
  * All job writes require service authentication. No reads, either for key/value
  * pairs or jobs, require service authentication.
+ * The service assumes other services are capable of simple math and does not
+ * throw errors if a progress bar overflows.
+ * Jobs are automatically deleted after 30 days.
  * Potential job process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -58,36 +59,6 @@ import us.kbase.common.service.UObject;
  *         updates
  * service call finishes, completes job, returns results
  * UI thread joins
- * mongodb structures:
- * State collection:
- * {
- *         _id:
- *         user:
- *         service:
- *         auth: (bool)
- *         key: (unique index on user/service/auth/key)
- *         value:
- * }
- * Job collection:
- * {
- *         _id:
- *         user:
- *         service:
- *         desc:
- *         progtype: ('percent', 'task', 'none')
- *         prog: (int)
- *         maxprog: (int, 100 for percent, user specified for task)
- *         status: (user supplied string)
- *         updated: (date)
- *         complete: (bool) (index on user/service/complete)
- *         error: (bool)
- *         result: {
- *                 shocknodes: (list of strings)
- *                 shockurl:
- *                 workspaceids: (list of strings)
- *                 workspaceurl:
- *         }
- * }
  * </pre>
  */
 public class UserAndJobStateClient {
@@ -392,11 +363,11 @@ public class UserAndJobStateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public Tuple5<String, String, Integer, Integer, Integer> getJobStatus(String job) throws IOException, JsonClientException {
+    public Tuple6<String, String, String, Integer, Integer, Integer> getJobStatus(String job) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
-        TypeReference<Tuple5<String, String, Integer, Integer, Integer>> retType = new TypeReference<Tuple5<String, String, Integer, Integer, Integer>>() {};
-        Tuple5<String, String, Integer, Integer, Integer> res = caller.jsonrpcCall("UserAndJobState.get_job_status", args, retType, true, true);
+        TypeReference<Tuple6<String, String, String, Integer, Integer, Integer>> retType = new TypeReference<Tuple6<String, String, String, Integer, Integer, Integer>>() {};
+        Tuple6<String, String, String, Integer, Integer, Integer> res = caller.jsonrpcCall("UserAndJobState.get_job_status", args, retType, true, true);
         return res;
     }
 
@@ -453,11 +424,11 @@ public class UserAndJobStateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job) throws IOException, JsonClientException {
+    public Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
-        TypeReference<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> retType = new TypeReference<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>() {};
-        List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> res = caller.jsonrpcCall("UserAndJobState.get_job_info", args, retType, true, true);
+        TypeReference<List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> retType = new TypeReference<List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>() {};
+        List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> res = caller.jsonrpcCall("UserAndJobState.get_job_info", args, retType, true, true);
         return res.get(0);
     }
 
@@ -471,12 +442,12 @@ public class UserAndJobStateClient {
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, ListJobsOptions options) throws IOException, JsonClientException {
+    public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, ListJobsOptions options) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(service);
         args.add(options);
-        TypeReference<List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>> retType = new TypeReference<List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>>() {};
-        List<List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> res = caller.jsonrpcCall("UserAndJobState.list_jobs", args, retType, true, true);
+        TypeReference<List<List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>> retType = new TypeReference<List<List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>>>() {};
+        List<List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>>> res = caller.jsonrpcCall("UserAndJobState.list_jobs", args, retType, true, true);
         return res.get(0);
     }
 

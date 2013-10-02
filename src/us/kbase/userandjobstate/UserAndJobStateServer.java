@@ -4,9 +4,9 @@ import java.util.List;
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
 import us.kbase.common.service.JsonServerServlet;
-import us.kbase.common.service.Tuple11;
+import us.kbase.common.service.Tuple12;
 import us.kbase.common.service.Tuple4;
-import us.kbase.common.service.Tuple5;
+import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 
 //BEGIN_HEADER
@@ -32,9 +32,7 @@ import us.kbase.userandjobstate.userstate.UserState;
  * and storing job status so that a) long JSON RPC calls can report status and
  * UI elements can receive updates, and b) there's a centralized location for 
  * job status reporting.
- * The service assumes other services are capable of simple math and does not
- * throw errors if a progress bar overflows.
- * Setting objects are limited to 1Mb.
+ * Setting objects are limited to 640Kb.
  * There are two modes of operation for setting key values for a user: 
  * 1) no service authentication - an authorization token for a service is not 
  *         required, and any service with the user token can write to any other
@@ -51,6 +49,9 @@ import us.kbase.userandjobstate.userstate.UserState;
  * service credentials safe).
  * All job writes require service authentication. No reads, either for key/value
  * pairs or jobs, require service authentication.
+ * The service assumes other services are capable of simple math and does not
+ * throw errors if a progress bar overflows.
+ * Jobs are automatically deleted after 30 days.
  * Potential job process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -69,36 +70,6 @@ import us.kbase.userandjobstate.userstate.UserState;
  *         updates
  * service call finishes, completes job, returns results
  * UI thread joins
- * mongodb structures:
- * State collection:
- * {
- *         _id:
- *         user:
- *         service:
- *         auth: (bool)
- *         key: (unique index on user/service/auth/key)
- *         value:
- * }
- * Job collection:
- * {
- *         _id:
- *         user:
- *         service:
- *         desc:
- *         progtype: ('percent', 'task', 'none')
- *         prog: (int)
- *         maxprog: (int, 100 for percent, user specified for task)
- *         status: (user supplied string)
- *         updated: (date)
- *         complete: (bool) (index on user/service/complete)
- *         error: (bool)
- *         result: {
- *                 shocknodes: (list of strings)
- *                 shockurl:
- *                 workspaceids: (list of strings)
- *                 workspaceurl:
- *         }
- * }
  * </pre>
  */
 public class UserAndJobStateServer extends JsonServerServlet {
@@ -436,20 +407,22 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @param   job   Original type "job_id" (A job id.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_status", tuple = true)
-    public Tuple5<String, String, Integer, Integer, Integer> getJobStatus(String job, AuthToken authPart) throws Exception {
+    public Tuple6<String, String, String, Integer, Integer, Integer> getJobStatus(String job, AuthToken authPart) throws Exception {
         String return1 = null;
         String return2 = null;
-        Integer return3 = null;
+        String return3 = null;
         Integer return4 = null;
         Integer return5 = null;
+        Integer return6 = null;
         //BEGIN get_job_status
         //END get_job_status
-        Tuple5<String, String, Integer, Integer, Integer> returnVal = new Tuple5<String, String, Integer, Integer, Integer>();
+        Tuple6<String, String, String, Integer, Integer, Integer> returnVal = new Tuple6<String, String, String, Integer, Integer, Integer>();
         returnVal.setE1(return1);
         returnVal.setE2(return2);
         returnVal.setE3(return3);
         returnVal.setE4(return4);
         returnVal.setE5(return5);
+        returnVal.setE6(return6);
         return returnVal;
     }
 
@@ -496,8 +469,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   Original type "job_info" (Information about a job. Note calls returning this structure will probably be slower than the more targeted calls.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_info")
-    public Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
-        Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> returnVal = null;
+    public Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
+        Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> returnVal = null;
         //BEGIN get_job_info
         //END get_job_info
         return returnVal;
@@ -512,8 +485,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @param   options   Original type "ListJobsOptions" (see {@link us.kbase.userandjobstate.ListJobsOptions ListJobsOptions} for details)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
-    public List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, ListJobsOptions options, AuthToken authPart) throws Exception {
-        List<Tuple11<String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
+    public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, ListJobsOptions options, AuthToken authPart) throws Exception {
+        List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
         //BEGIN list_jobs
         //END list_jobs
         return returnVal;

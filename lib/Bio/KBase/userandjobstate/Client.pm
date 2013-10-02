@@ -24,10 +24,7 @@ and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
 
-The service assumes other services are capable of simple math and does not
-throw errors if a progress bar overflows.
-
-Setting objects are limited to 1Mb.
+Setting objects are limited to 640Kb.
 
 There are two modes of operation for setting key values for a user: 
 1) no service authentication - an authorization token for a service is not 
@@ -46,6 +43,11 @@ service credentials safe).
 
 All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.
+
+The service assumes other services are capable of simple math and does not
+throw errors if a progress bar overflows.
+
+Jobs are automatically deleted after 30 days.
 
 Potential job process flows:
 
@@ -67,39 +69,6 @@ meanwhile, the UI periodically polls the job status server to get progress
         updates
 service call finishes, completes job, returns results
 UI thread joins
-
-mongodb structures:
-
-State collection:
-{
-        _id:
-        user:
-        service:
-        auth: (bool)
-        key: (unique index on user/service/auth/key)
-        value:
-}
-
-Job collection:
-{
-        _id:
-        user:
-        service:
-        desc:
-        progtype: ('percent', 'task', 'none')
-        prog: (int)
-        maxprog: (int, 100 for percent, user specified for task)
-        status: (user supplied string)
-        updated: (date)
-        complete: (bool) (index on user/service/complete)
-        error: (bool)
-        result: {
-                shocknodes: (list of strings)
-                shockurl:
-                workspaceids: (list of strings)
-                workspaceurl:
-        }
-}
 
 
 =cut
@@ -1324,7 +1293,7 @@ sub get_job_description
 
 =head2 get_job_status
 
-  $last_update, $status, $progress, $complete, $error = $obj->get_job_status($job)
+  $last_update, $stage, $status, $progress, $complete, $error = $obj->get_job_status($job)
 
 =over 4
 
@@ -1335,12 +1304,14 @@ sub get_job_description
 <pre>
 $job is a UserAndJobState.job_id
 $last_update is a UserAndJobState.timestamp
+$stage is a UserAndJobState.job_stage
 $status is a UserAndJobState.job_status
 $progress is a UserAndJobState.total_progress
 $complete is a UserAndJobState.boolean
 $error is a UserAndJobState.boolean
 job_id is a string
 timestamp is a string
+job_stage is a string
 job_status is a string
 total_progress is an int
 boolean is an int
@@ -1353,12 +1324,14 @@ boolean is an int
 
 $job is a UserAndJobState.job_id
 $last_update is a UserAndJobState.timestamp
+$stage is a UserAndJobState.job_stage
 $status is a UserAndJobState.job_status
 $progress is a UserAndJobState.total_progress
 $complete is a UserAndJobState.boolean
 $error is a UserAndJobState.boolean
 job_id is a string
 timestamp is a string
+job_stage is a string
 job_status is a string
 total_progress is an int
 boolean is an int
@@ -1636,19 +1609,21 @@ sub get_results
 $job is a UserAndJobState.job_id
 $info is a UserAndJobState.job_info
 job_id is a string
-job_info is a reference to a list containing 11 items:
+job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
-	2: (status) a UserAndJobState.job_status
-	3: (last_update) a UserAndJobState.timestamp
-	4: (prog) a UserAndJobState.total_progress
-	5: (max) a UserAndJobState.max_progress
-	6: (ptype) a UserAndJobState.progress_type
-	7: (complete) a UserAndJobState.boolean
-	8: (error) a UserAndJobState.boolean
-	9: (desc) a UserAndJobState.job_description
-	10: (res) a UserAndJobState.Results
+	2: (stage) a UserAndJobState.job_stage
+	3: (status) a UserAndJobState.job_status
+	4: (last_update) a UserAndJobState.timestamp
+	5: (prog) a UserAndJobState.total_progress
+	6: (max) a UserAndJobState.max_progress
+	7: (ptype) a UserAndJobState.progress_type
+	8: (complete) a UserAndJobState.boolean
+	9: (error) a UserAndJobState.boolean
+	10: (desc) a UserAndJobState.job_description
+	11: (res) a UserAndJobState.Results
 service_name is a string
+job_stage is a string
 job_status is a string
 timestamp is a string
 total_progress is an int
@@ -1671,19 +1646,21 @@ Results is a reference to a hash where the following keys are defined:
 $job is a UserAndJobState.job_id
 $info is a UserAndJobState.job_info
 job_id is a string
-job_info is a reference to a list containing 11 items:
+job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
-	2: (status) a UserAndJobState.job_status
-	3: (last_update) a UserAndJobState.timestamp
-	4: (prog) a UserAndJobState.total_progress
-	5: (max) a UserAndJobState.max_progress
-	6: (ptype) a UserAndJobState.progress_type
-	7: (complete) a UserAndJobState.boolean
-	8: (error) a UserAndJobState.boolean
-	9: (desc) a UserAndJobState.job_description
-	10: (res) a UserAndJobState.Results
+	2: (stage) a UserAndJobState.job_stage
+	3: (status) a UserAndJobState.job_status
+	4: (last_update) a UserAndJobState.timestamp
+	5: (prog) a UserAndJobState.total_progress
+	6: (max) a UserAndJobState.max_progress
+	7: (ptype) a UserAndJobState.progress_type
+	8: (complete) a UserAndJobState.boolean
+	9: (error) a UserAndJobState.boolean
+	10: (desc) a UserAndJobState.job_description
+	11: (res) a UserAndJobState.Results
 service_name is a string
+job_stage is a string
 job_status is a string
 timestamp is a string
 total_progress is an int
@@ -1776,19 +1753,21 @@ ListJobsOptions is a reference to a hash where the following keys are defined:
 	completed has a value which is a UserAndJobState.boolean
 	error_only has a value which is a UserAndJobState.boolean
 boolean is an int
-job_info is a reference to a list containing 11 items:
+job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
-	2: (status) a UserAndJobState.job_status
-	3: (last_update) a UserAndJobState.timestamp
-	4: (prog) a UserAndJobState.total_progress
-	5: (max) a UserAndJobState.max_progress
-	6: (ptype) a UserAndJobState.progress_type
-	7: (complete) a UserAndJobState.boolean
-	8: (error) a UserAndJobState.boolean
-	9: (desc) a UserAndJobState.job_description
-	10: (res) a UserAndJobState.Results
+	2: (stage) a UserAndJobState.job_stage
+	3: (status) a UserAndJobState.job_status
+	4: (last_update) a UserAndJobState.timestamp
+	5: (prog) a UserAndJobState.total_progress
+	6: (max) a UserAndJobState.max_progress
+	7: (ptype) a UserAndJobState.progress_type
+	8: (complete) a UserAndJobState.boolean
+	9: (error) a UserAndJobState.boolean
+	10: (desc) a UserAndJobState.job_description
+	11: (res) a UserAndJobState.Results
 job_id is a string
+job_stage is a string
 job_status is a string
 timestamp is a string
 total_progress is an int
@@ -1818,19 +1797,21 @@ ListJobsOptions is a reference to a hash where the following keys are defined:
 	completed has a value which is a UserAndJobState.boolean
 	error_only has a value which is a UserAndJobState.boolean
 boolean is an int
-job_info is a reference to a list containing 11 items:
+job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
-	2: (status) a UserAndJobState.job_status
-	3: (last_update) a UserAndJobState.timestamp
-	4: (prog) a UserAndJobState.total_progress
-	5: (max) a UserAndJobState.max_progress
-	6: (ptype) a UserAndJobState.progress_type
-	7: (complete) a UserAndJobState.boolean
-	8: (error) a UserAndJobState.boolean
-	9: (desc) a UserAndJobState.job_description
-	10: (res) a UserAndJobState.Results
+	2: (stage) a UserAndJobState.job_stage
+	3: (status) a UserAndJobState.job_status
+	4: (last_update) a UserAndJobState.timestamp
+	5: (prog) a UserAndJobState.total_progress
+	6: (max) a UserAndJobState.max_progress
+	7: (ptype) a UserAndJobState.progress_type
+	8: (complete) a UserAndJobState.boolean
+	9: (error) a UserAndJobState.boolean
+	10: (desc) a UserAndJobState.job_description
+	11: (res) a UserAndJobState.Results
 job_id is a string
+job_stage is a string
 job_status is a string
 timestamp is a string
 total_progress is an int
@@ -2380,6 +2361,38 @@ a string
 
 
 
+=head2 job_stage
+
+=over 4
+
+
+
+=item Description
+
+A string that describes the stage of processing of the job.
+One of 'created', 'started', 'completed', or 'error'.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a string
+</pre>
+
+=end html
+
+=begin text
+
+a string
+
+=end text
+
+=back
+
+
+
 =head2 job_status
 
 =over 4
@@ -2680,18 +2693,19 @@ probably be slower than the more targeted calls.
 =begin html
 
 <pre>
-a reference to a list containing 11 items:
+a reference to a list containing 12 items:
 0: (job) a UserAndJobState.job_id
 1: (service) a UserAndJobState.service_name
-2: (status) a UserAndJobState.job_status
-3: (last_update) a UserAndJobState.timestamp
-4: (prog) a UserAndJobState.total_progress
-5: (max) a UserAndJobState.max_progress
-6: (ptype) a UserAndJobState.progress_type
-7: (complete) a UserAndJobState.boolean
-8: (error) a UserAndJobState.boolean
-9: (desc) a UserAndJobState.job_description
-10: (res) a UserAndJobState.Results
+2: (stage) a UserAndJobState.job_stage
+3: (status) a UserAndJobState.job_status
+4: (last_update) a UserAndJobState.timestamp
+5: (prog) a UserAndJobState.total_progress
+6: (max) a UserAndJobState.max_progress
+7: (ptype) a UserAndJobState.progress_type
+8: (complete) a UserAndJobState.boolean
+9: (error) a UserAndJobState.boolean
+10: (desc) a UserAndJobState.job_description
+11: (res) a UserAndJobState.Results
 
 </pre>
 
@@ -2699,18 +2713,19 @@ a reference to a list containing 11 items:
 
 =begin text
 
-a reference to a list containing 11 items:
+a reference to a list containing 12 items:
 0: (job) a UserAndJobState.job_id
 1: (service) a UserAndJobState.service_name
-2: (status) a UserAndJobState.job_status
-3: (last_update) a UserAndJobState.timestamp
-4: (prog) a UserAndJobState.total_progress
-5: (max) a UserAndJobState.max_progress
-6: (ptype) a UserAndJobState.progress_type
-7: (complete) a UserAndJobState.boolean
-8: (error) a UserAndJobState.boolean
-9: (desc) a UserAndJobState.job_description
-10: (res) a UserAndJobState.Results
+2: (stage) a UserAndJobState.job_stage
+3: (status) a UserAndJobState.job_status
+4: (last_update) a UserAndJobState.timestamp
+5: (prog) a UserAndJobState.total_progress
+6: (max) a UserAndJobState.max_progress
+7: (ptype) a UserAndJobState.progress_type
+8: (complete) a UserAndJobState.boolean
+9: (error) a UserAndJobState.boolean
+10: (desc) a UserAndJobState.job_description
+11: (res) a UserAndJobState.Results
 
 
 =end text

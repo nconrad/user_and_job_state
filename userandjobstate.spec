@@ -103,6 +103,11 @@ module UserAndJobState {
 	/* A job id. */
 	typedef string job_id;
 	
+	/* A string that describes the stage of processing of the job.
+		One of 'created', 'started', 'completed', or 'error'.
+	*/
+	typedef string job_stage;
+	
 	/* A job status string supplied by the reporting service. No more than
 		200 characters. 
 	*/
@@ -187,8 +192,8 @@ module UserAndJobState {
 		If the progress type is 'none' total_progress will always be 0.
 	*/
 	funcdef get_job_status(job_id job) returns(timestamp last_update, 
-		job_status status, total_progress progress, boolean complete,
-		boolean error);
+		job_stage stage, job_status status, total_progress progress,
+		boolean complete, boolean error);
 	
 	/* Complete the job. After the job is completed, total_progress always
 		equals max_progress.
@@ -202,9 +207,9 @@ module UserAndJobState {
 	/* Information about a job. Note calls returning this structure will
 		probably be slower than the more targeted calls.
 	*/
-	typedef tuple<job_id job, service_name service, job_status status,
-		timestamp last_update, total_progress prog, max_progress max,
-		progress_type ptype, boolean complete, boolean error,
+	typedef tuple<job_id job, service_name service, job_stage stage, 
+		job_status status, timestamp last_update, total_progress prog,
+		max_progress max, progress_type ptype, boolean complete, boolean error,
 		job_description desc, Results res> job_info;
 	
 	/* Get information about a job. */

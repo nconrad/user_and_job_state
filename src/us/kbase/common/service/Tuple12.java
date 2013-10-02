@@ -5,7 +5,7 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
 import com.fasterxml.jackson.annotation.JsonAnySetter;
 
-public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
+public class Tuple12 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> {
     private T1 e1;
     private T2 e2;
     private T3 e3;
@@ -17,6 +17,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
     private T9 e9;
     private T10 e10;
     private T11 e11;
+    private T12 e12;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     public T1 getE1() {
@@ -27,7 +28,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e1 = e1;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE1(T1 e1) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE1(T1 e1) {
         this.e1 = e1;
         return this;
     }
@@ -40,7 +41,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e2 = e2;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE2(T2 e2) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE2(T2 e2) {
         this.e2 = e2;
         return this;
     }
@@ -53,7 +54,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e3 = e3;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE3(T3 e3) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE3(T3 e3) {
         this.e3 = e3;
         return this;
     }
@@ -66,7 +67,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e4 = e4;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE4(T4 e4) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE4(T4 e4) {
         this.e4 = e4;
         return this;
     }
@@ -79,7 +80,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e5 = e5;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE5(T5 e5) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE5(T5 e5) {
         this.e5 = e5;
         return this;
     }
@@ -92,7 +93,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e6 = e6;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE6(T6 e6) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE6(T6 e6) {
         this.e6 = e6;
         return this;
     }
@@ -105,7 +106,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e7 = e7;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE7(T7 e7) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE7(T7 e7) {
         this.e7 = e7;
         return this;
     }
@@ -118,7 +119,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e8 = e8;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE8(T8 e8) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE8(T8 e8) {
         this.e8 = e8;
         return this;
     }
@@ -131,7 +132,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e9 = e9;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE9(T9 e9) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE9(T9 e9) {
         this.e9 = e9;
         return this;
     }
@@ -144,7 +145,7 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e10 = e10;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE10(T10 e10) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE10(T10 e10) {
         this.e10 = e10;
         return this;
     }
@@ -157,8 +158,21 @@ public class Tuple11 <T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> {
         this.e11 = e11;
     }
 
-    public Tuple11<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11> withE11(T11 e11) {
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE11(T11 e11) {
         this.e11 = e11;
+        return this;
+    }
+
+    public T12 getE12() {
+        return e12;
+    }
+
+    public void setE12(T12 e12) {
+        this.e12 = e12;
+    }
+
+    public Tuple12<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12> withE12(T12 e12) {
+        this.e12 = e12;
         return this;
     }
 
