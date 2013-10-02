@@ -69,7 +69,6 @@ public class UserState { //TODO tests for all this
 		idx.put(KEY, 1);
 		final DBObject unique = new BasicDBObject();
 		unique.put(IDX_UNIQ, 1);
-		unique.put("unique", 1);
 		uscol.ensureIndex(idx, unique);
 	}
 
