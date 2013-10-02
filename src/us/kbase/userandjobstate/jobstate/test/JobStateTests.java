@@ -76,6 +76,14 @@ public class JobStateTests {
 					is(String.format("There is no job %s for user foo",
 					"a" + jobid.substring(1))));
 		}
+		try {
+			js.getJob("foo", "a" + jobid);
+			fail("Got a job with a bad id");
+		} catch (IllegalArgumentException iae) {
+			assertThat("correct exception", iae.getLocalizedMessage(),
+					is(String.format("Job ID %s is not a legal ID",
+					"a" + jobid)));
+		}
 		
 	}
 	

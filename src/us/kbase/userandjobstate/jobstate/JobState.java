@@ -29,6 +29,10 @@ public class JobState {
 	private final static String UPDATED = "updated";
 	private final static String COMPLETE = "complete";
 	
+	private final static String PROG_NONE = "none";
+	private final static String PROG_TASK = "task";
+	private final static String PROG_PERC = "percent";
+	
 	private final DBCollection jobcol;
 	private final MongoCollection jobjong;
 	
@@ -60,7 +64,7 @@ public class JobState {
 		
 	}
 	
-	public String createJob(String user) throws CommunicationException {
+	public String createJob(final String user) throws CommunicationException {
 		isNonEmptyString(user, "user");
 		final DBObject job = new BasicDBObject(USER, user);
 		job.put(UPDATED, new Date());
@@ -73,12 +77,25 @@ public class JobState {
 		return ((ObjectId) job.get("_id")).toString();
 	}
 	
-	public Job getJob(String user, String jobID)
+	private static ObjectId checkJobID(final String id) {
+		isNonEmptyString(id, "service");
+		final ObjectId oi;
+		try {
+			oi = new ObjectId(id);
+		} catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException(String.format(
+					"Job ID %s is not a legal ID", id));
+		}
+	}
+	
+	public Job getJob(final String user, final String jobID)
 			throws CommunicationException, NoSuchJobException {
+		isNonEmptyString(user, "user");
+		ObjectId oi = checkJobID(jobID);
 		final Job j;
 		try {
 			j = jobjong.findOne("{_id: #, user: #}",
-					new ObjectId(jobID), user).as(Job.class);
+					oi, user).as(Job.class);
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
@@ -88,6 +105,30 @@ public class JobState {
 					"There is no job %s for user %s", jobID, user));
 		}
 		return j;
+	}
+	
+	public void startJob(final String user, final String jobID,
+			final String service, final String status,
+			final String description) {
+		startJob(user, jobID, service, status, description, PROG_NONE, null);
+	}
+	
+	public void startJob(final String user, final String jobID,
+			final String service, final String status,
+			final String description, int maxProg) {
+		startJob(user, jobID, service, status, description, PROG_TASK, maxProg);
+	}
+	
+	public void startJobWithPercentProg(final String user, final String jobID,
+			final String service, final String status,
+			final String description) {
+		startJob(user, jobID, service, status, description, PROG_PERC, null);
+	}
+	
+	private void startJob(final String user, final String jobID,
+			final String service, final String status,
+			final String description, final String progType,
+			final Integer maxProg) {
 		
 	}
 }
