@@ -1,6 +1,6 @@
 package us.kbase.userandjobstate.userstate;
 
-import static us.kbase.common.utils.StringUtils.isNonEmptyString;
+import static us.kbase.common.utils.StringUtils.checkString;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -107,9 +107,9 @@ public class UserState {
 
 	private DBObject generateQuery(final String user, final String service,
 			final boolean auth, final String key) {
-		isNonEmptyString(user, "user");
+		checkString(user, "user");
 		checkServiceName(service);
-		isNonEmptyString(key, "key");
+		checkString(key, "key");
 		final DBObject query = new BasicDBObject();
 		query.put(USER, user);
 		query.put(SERVICE, service);
@@ -119,7 +119,7 @@ public class UserState {
 	}
 	
 	private static void checkServiceName(final String name) {
-		isNonEmptyString(name, "service");
+		checkString(name, "service");
 		final Matcher m = INVALID_SERV_NAMES.matcher(name);
 		if (m.find()) {
 			throw new IllegalArgumentException(String.format(
@@ -165,7 +165,7 @@ public class UserState {
 	public Set<String> listState(final String user, final String service,
 			final boolean auth)
 			throws CommunicationException, NoSuchKeyException {
-		isNonEmptyString(user, "user");
+		checkString(user, "user");
 		checkServiceName(service);
 		final DBObject query = new BasicDBObject();
 		query.put(USER, user);
@@ -199,7 +199,7 @@ public class UserState {
 
 	public Set<String> listServices(final String user, final boolean auth)
 			throws CommunicationException {
-		isNonEmptyString(user, "user");
+		checkString(user, "user");
 		final DBObject mfields = new BasicDBObject(USER, user);
 		mfields.put(AUTH, auth);
 		final DBObject match = new BasicDBObject("$match", mfields);

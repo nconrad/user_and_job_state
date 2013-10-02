@@ -1,6 +1,7 @@
 package us.kbase.userandjobstate.jobstate;
 
-import static us.kbase.common.utils.StringUtils.isNonEmptyString;
+import static us.kbase.common.utils.StringUtils.checkString;
+import static us.kbase.common.utils.StringUtils.checkMaxLen;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
@@ -25,9 +26,13 @@ import com.mongodb.WriteResult;
 
 public class JobState {
 
-	//TODO length limits on all incoming strings
-	
 	private final static int JOB_EXP = 30 * 24 * 60 * 60; // 30 days
+	
+	private final static int MAX_LEN_USER = 100;
+	private final static int MAX_LEN_SERVICE = 100;
+	private final static int MAX_LEN_STATUS = 200;
+	private final static int MAX_LEN_DESC = 1000;
+	
 	
 	private final static String CREATED = "created";
 	private final static String USER = "user";
@@ -83,7 +88,7 @@ public class JobState {
 	}
 	
 	public String createJob(final String user) throws CommunicationException {
-		isNonEmptyString(user, "user");
+		checkString(user, "user", MAX_LEN_USER);
 		final DBObject job = new BasicDBObject(USER, user);
 		final Date date = new Date();
 		job.put(CREATED, date);
@@ -99,7 +104,7 @@ public class JobState {
 	}
 	
 	private static ObjectId checkJobID(final String id) {
-		isNonEmptyString(id, "service");
+		checkString(id, "id");
 		final ObjectId oi;
 		try {
 			oi = new ObjectId(id);
@@ -115,7 +120,7 @@ public class JobState {
 	
 	public Job getJob(final String user, final String jobID)
 			throws CommunicationException, NoSuchJobException {
-		isNonEmptyString(user, "user");
+		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId oi = checkJobID(jobID);
 		final Job j;
 		try {
@@ -158,11 +163,13 @@ public class JobState {
 			final String description, final String progType,
 			final Integer maxProg)
 			throws CommunicationException, NoSuchJobException {
-		isNonEmptyString(user, "user");
+		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId oi = checkJobID(jobID);
 		//this is coming from an auth token so doesn't need much checking
 		//although if this is every really used as a lib (unlikely) will need better QA
-		isNonEmptyString(service, "service"); 
+		checkString(service, "service", MAX_LEN_SERVICE);
+		checkMaxLen(status, "status", MAX_LEN_STATUS);
+		checkMaxLen(description, "description", MAX_LEN_DESC);
 		if (maxProg != null && maxProg < 1) {
 			throw new IllegalArgumentException(
 					"The maximum progress for the job must be > 0"); 
@@ -187,6 +194,9 @@ public class JobState {
 		} else if (progType == PROG_PERC) {
 			prog = 0;
 			maxprog = 100;
+		} else if (progType != PROG_NONE) {
+			throw new IllegalArgumentException("Illegal progress type: " +
+					progType);
 		} else {
 			prog = null;
 			maxprog = null;

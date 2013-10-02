@@ -40,6 +40,23 @@ public class JobStateTests {
 	
 	private static final RegexMatcher OBJ_ID_MATCH = new RegexMatcher("[\\da-f]{24}");
 	
+	private static String long101;
+	private static String long201;
+	private static String long1001;
+	static {
+		for (int i = 0; i < 10; i++) {
+			long101 += "aaaaaaaaaabbbbbbbbbb";
+			long201 += long101 + long101;
+			for (int j = 0; j < 10; j++) {
+				long1001 += long201 + long201;
+			}
+		}
+		long101 += "f";
+		long201 += "f";
+		long1001 += "f";
+	}
+	
+	
 	@Test
 	public void createJob() throws Exception {
 		try {
@@ -106,7 +123,41 @@ public class JobStateTests {
 				new IllegalArgumentException("user cannot be null or the empty string"));
 		testStartJobBadArgs("", jobid, "serv2", "started job", "job desc",
 				new IllegalArgumentException("user cannot be null or the empty string"));
-		//TODO more start job tests, all prog types, bad args
+		testStartJobBadArgs(long101, jobid, "serv2", "started job", "job desc",
+				new IllegalArgumentException("user exceeds the maximum length of 100"));
+		testStartJobBadArgs("foo",  null, "serv2", "started job", "job desc",
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testStartJobBadArgs("foo", "", "serv2", "started job", "job desc",
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testStartJobBadArgs("foo", "afeaefafaefaefafeaf", "serv2", "started job", "job desc",
+				new IllegalArgumentException("Job ID afeaefafaefaefafeaf is not a legal ID"));
+		testStartJobBadArgs("foo", jobid, null, "started job", "job desc",
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testStartJobBadArgs("foo", jobid, "", "started job", "job desc",
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testStartJobBadArgs("foo", jobid, long101, "started job", "job desc",
+				new IllegalArgumentException("service exceeds the maximum length of 100"));
+		testStartJobBadArgs("foo", jobid, "serv2", long201, "job desc",
+				new IllegalArgumentException("status exceeds the maximum length of 200"));
+		testStartJobBadArgs("foo", jobid, "serv2", "started job", long1001,
+				new IllegalArgumentException("description exceeds the maximum length of 1000"));
+		try {
+			js.startJob("foo", jobid, "serv2", "started job", "job desc", 0);
+			fail("Started job with 0 for num tasks");
+		} catch (IllegalArgumentException iae) {
+			assertThat("correct exception", iae.getLocalizedMessage(),
+					is("The maximum progress for the job must be > 0"));
+		}
+		jobid = js.createJob("foo3");
+		js.startJob("foo3", jobid, "serv3", "start3", "desc3", 200);
+		j = js.getJob("foo3", jobid);
+		checkJob(j, jobid, "started", "foo3", "start3", "serv3", "desc3",
+				"task", 0, 200, false, false, null);
+		jobid = js.createJob("foo4");
+		js.startJobWithPercentProg("foo4", jobid, "serv4", "start4", "desc4");
+		j = js.getJob("foo4", jobid);
+		checkJob(j, jobid, "started", "foo4", "start4", "serv4", "desc4",
+				"percent", 0, 100, false, false, null);
 	}
 	
 	private void testStartJobBadArgs(String user, String jobid, String service,
