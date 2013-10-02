@@ -86,6 +86,7 @@ public class JobState {
 			throw new IllegalArgumentException(String.format(
 					"Job ID %s is not a legal ID", id));
 		}
+		return oi;
 	}
 	
 	public Job getJob(final String user, final String jobID)
