@@ -193,7 +193,7 @@ public class JobState {
 		}
 		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
 			throw new NoSuchJobException(String.format(
-					"There is no job %s for user %s", jobID, user));
+					"There is no unstarted job %s for user %s", jobID, user));
 		}
 	}
 }

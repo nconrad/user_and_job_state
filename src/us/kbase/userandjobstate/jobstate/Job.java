@@ -1,5 +1,7 @@
 package us.kbase.userandjobstate.jobstate;
 
+import static us.kbase.userandjobstate.jobstate.JobState.PROG_NONE;
+
 import java.util.Date;
 import java.util.Map;
 
@@ -43,10 +45,19 @@ public class Job {
 	}
 
 	public Integer getProgress() {
+		if (getProgType() == null || getProgType().equals(PROG_NONE)) {
+			return null;
+		}
+		if (isComplete() || getMaxProgress() < prog) {
+			return getMaxProgress();
+		}
 		return prog;
 	}
 
 	public Integer getMaxProgress() {
+		if (getProgType() == null || getProgType().equals(PROG_NONE)) {
+			return null;
+		}
 		return maxprog;
 	}
 
@@ -77,9 +88,10 @@ public class Job {
 	public String toString() {
 		return "Job [_id=" + _id + ", user=" + user + ", service=" + service
 				+ ", desc=" + desc + ", progtype=" + progtype + ", prog="
-				+ prog + ", maxprog=" + maxprog + ", status=" + getStatus()
-				+ ", updated=" + updated + ", complete=" + complete
-				+ ", error=" + error + ", results=" + results + "]";
+				+ getProgress() + ", maxprog=" + getMaxProgress() +
+				", status=" + getStatus() + ", updated=" + updated +
+				", complete=" + complete + ", error=" + error +
+				", results=" + results + "]";
 	}
 
 }

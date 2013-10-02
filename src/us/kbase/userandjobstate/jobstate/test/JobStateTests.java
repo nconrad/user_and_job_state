@@ -98,9 +98,41 @@ public class JobStateTests {
 			fail("Started an already started job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no job %s for user foo", jobid)));
+					is(String.format("There is no unstarted job %s for user foo", jobid)));
 		}
-		//TODO more start job tests, all prog types
+		try {
+			js.startJob("foo1", jobid, "serv2", "started job", "job desc");
+			fail("Started a non-existant job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception", nsje.getLocalizedMessage(),
+					is(String.format("There is no unstarted job %s for user foo1", jobid)));
+		}
+		try {
+			js.startJob("foo", "a" + jobid.substring(1), "serv2", "started job",
+					"job desc");
+			fail("Started a non-existant job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception", nsje.getLocalizedMessage(),
+					is(String.format("There is no unstarted job %s for user foo",
+							"a" + jobid.substring(1))));
+		}
+		try {
+			js.startJob(null, "a" + jobid.substring(1), "serv2", "started job",
+					"job desc");
+			fail("Started job with null user");
+		} catch (IllegalArgumentException iae) {
+			assertThat("correct exception", iae.getLocalizedMessage(),
+					is("user cannot be null or the empty string"));
+		}
+		try {
+			js.startJob("", "a" + jobid.substring(1), "serv2", "started job",
+					"job desc");
+			fail("Started job with null user");
+		} catch (IllegalArgumentException iae) {
+			assertThat("correct exception", iae.getLocalizedMessage(),
+					is("user cannot be null or the empty string"));
+		}
+		//TODO more start job tests, all prog types, bad args
 	}
 	
 	private void checkJob(Job j, String id, String user, String status,
