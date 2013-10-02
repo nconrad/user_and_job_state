@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.util.Date;
 import java.util.Map;
 
+import org.bson.types.ObjectId;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -148,6 +149,7 @@ public class JobStateTests {
 			assertThat("correct exception", iae.getLocalizedMessage(),
 					is("The maximum progress for the job must be > 0"));
 		}
+		
 		jobid = js.createJob("foo3");
 		js.startJob("foo3", jobid, "serv3", "start3", "desc3", 200);
 		j = js.getJob("foo3", jobid);
@@ -158,6 +160,23 @@ public class JobStateTests {
 		j = js.getJob("foo4", jobid);
 		checkJob(j, jobid, "started", "foo4", "start4", "serv4", "desc4",
 				"percent", 0, 100, false, false, null);
+		
+		jobid = js.createAndStartJob("fooc1", "servc1", "startc1", "desc_c1");
+		j = js.getJob("fooc1", jobid);
+		checkJob(j, jobid, "started", "fooc1", "startc1", "servc1", "desc_c1", "none",
+				null, null, false, false, null);
+		
+		jobid = js.createAndStartJob("fooc2", "servc2", "startc2", "desc_c2", 50);
+		j = js.getJob("fooc2", jobid);
+		checkJob(j, jobid, "started", "fooc2", "startc2", "servc2", "desc_c2",
+				"task", 0, 50, false, false, null);
+		
+		jobid = js.createAndStartJobWithPercentProg("fooc3", "servc3",
+				"startc3", "desc_c3");
+		j = js.getJob("fooc3", jobid);
+		checkJob(j, jobid, "started", "fooc3", "startc3", "servc3", "desc_c3",
+				"percent", 0, 100, false, false, null);
+		
 	}
 	
 	private void testStartJobBadArgs(String user, String jobid, String service,
@@ -189,7 +208,45 @@ public class JobStateTests {
 			assertThat("correct exception msg", e.getLocalizedMessage(),
 					is(exception.getLocalizedMessage()));
 		}
-		
+		if (!goodID(jobid) || exception instanceof NoSuchJobException) {
+			return;
+		}
+		try {
+			js.createAndStartJob(user, service, status, desc);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+		try {
+			js.createAndStartJobWithPercentProg(user, service, status, desc);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+		try {
+			js.createAndStartJob(user, service, status, desc, 6);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+	}
+	
+	private static boolean goodID(String jobid) {
+		try {
+			new ObjectId(jobid);
+			return true;
+		} catch (IllegalArgumentException iae) {
+			return false;
+		}
 	}
 	
 	private void checkJob(Job j, String id, String stage, String user,

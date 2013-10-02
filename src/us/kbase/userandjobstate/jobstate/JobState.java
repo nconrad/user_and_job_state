@@ -146,7 +146,7 @@ public class JobState {
 	
 	public void startJob(final String user, final String jobID,
 			final String service, final String status,
-			final String description, int maxProg) throws
+			final String description, final int maxProg) throws
 		CommunicationException, NoSuchJobException {
 		startJob(user, jobID, service, status, description, PROG_TASK, maxProg);
 	}
@@ -194,12 +194,12 @@ public class JobState {
 		} else if (progType == PROG_PERC) {
 			prog = 0;
 			maxprog = 100;
-		} else if (progType != PROG_NONE) {
-			throw new IllegalArgumentException("Illegal progress type: " +
-					progType);
-		} else {
+		} else if (progType == PROG_NONE) {
 			prog = null;
 			maxprog = null;
+		} else {
+			throw new IllegalArgumentException("Illegal progress type: " +
+					progType);
 		}
 		update.put(PROG, prog);
 		update.put(MAXPROG, maxprog);
@@ -215,5 +215,51 @@ public class JobState {
 			throw new NoSuchJobException(String.format(
 					"There is no unstarted job %s for user %s", jobID, user));
 		}
+	}
+	
+	public String createAndStartJob(final String user, final String service,
+			final String status, final String description)
+			throws CommunicationException {
+		return createAndStartJob(user, service, status, description, PROG_NONE,
+				null);
+	}
+	
+	public String createAndStartJob(final String user, final String service,
+			final String status, final String description, final int maxProg)
+			throws CommunicationException {
+		return createAndStartJob(user, service, status, description, PROG_TASK,
+				maxProg);
+	}
+	
+	public String createAndStartJobWithPercentProg(final String user,
+			final String service, final String status,
+			final String description)
+			throws CommunicationException {
+		return createAndStartJob(user, service, status, description, PROG_PERC,
+				null);
+	}
+	
+	private String createAndStartJob(final String user, final String service,
+			final String status, final String description,
+			final String progType, final Integer maxProg)
+			throws CommunicationException {
+		final String jobid = createJob(user);
+		try {
+			if (progType == PROG_NONE) {
+				startJob(user, jobid, service, status, description);
+			} else if (progType == PROG_TASK) {
+				startJob(user, jobid, service, status, description, maxProg);
+			} else if (progType == PROG_PERC) {
+				startJobWithPercentProg(user, jobid, service, status,
+						description);
+			} else {
+				throw new IllegalArgumentException("Illegal progress type: " +
+						progType);
+			}
+		} catch (NoSuchJobException nsje) {
+			throw new RuntimeException(
+					"Just created a job and it's already deleted", nsje);
+		}
+		return jobid;
 	}
 }
