@@ -59,7 +59,7 @@ public class JobStateTests {
 		String jobid = js.createJob("foo");
 		assertThat("get job id", jobid, OBJ_ID_MATCH);
 		Job j = js.getJob("foo", jobid);
-		checkJob(j, jobid, "foo", "created", null, null, null, null, null, null,
+		checkJob(j, jobid, "created", "foo", null, null, null, null, null, null, null,
 				null, null);
 		try {
 			js.getJob("foo1", jobid);
@@ -91,7 +91,7 @@ public class JobStateTests {
 		String jobid = js.createJob("foo");
 		js.startJob("foo", jobid, "serv1", "started job", "job desc");
 		Job j = js.getJob("foo", jobid);
-		checkJob(j, jobid, "foo", "started job", "serv1", "job desc", "none",
+		checkJob(j, jobid, "started", "foo", "started job", "serv1", "job desc", "none",
 				null, null, false, false, null);
 		try {
 			js.startJob("foo", jobid, "serv2", "started job", "job desc");
@@ -135,11 +135,12 @@ public class JobStateTests {
 		//TODO more start job tests, all prog types, bad args
 	}
 	
-	private void checkJob(Job j, String id, String user, String status,
-			String service, String desc, String progtype, Integer prog,
-			Integer maxproj, Boolean complete, Boolean error,
+	private void checkJob(Job j, String id, String stage, String user,
+			String status, String service, String desc, String progtype,
+			Integer prog, Integer maxproj, Boolean complete, Boolean error,
 			Map<String, Object> results) {
 		assertThat("job id ok", j.getID(), is(id));
+		assertThat("job stage ok", j.getStage(), is(stage));
 		assertThat("job user ok", j.getUser(), is(user));
 		assertThat("job service ok", j.getService(), is(service));
 		assertThat("job desc ok", j.getDescription(), is(desc));

@@ -10,7 +10,6 @@ import org.bson.types.ObjectId;
 public class Job {
 	
 	private ObjectId _id;
-	private Date created;
 	private String user;
 	private String service;
 	private String desc;
@@ -23,16 +22,30 @@ public class Job {
 	private Boolean error;
 	private Map<String, Object> results;
 	
+	private static final String CREATED = "created";
+	private static final String STARTED = "started"; 
+	private static final String COMPLETE = "complete";
+	private static final String ERROR = "error";
+	
 	private Job() {}
 
 	public String getID() {
 		return _id.toString();
 	}
 	
-	public Date getCreateDate() {
-		return created;
+	public String getStage() {
+		if (service == null) {
+			return CREATED;
+		}
+		if (!complete) {
+			return STARTED;
+		}
+		if (!error) {
+			return COMPLETE;
+		}
+		return ERROR;
 	}
-
+	
 	public String getUser() {
 		return user;
 	}
@@ -67,9 +80,6 @@ public class Job {
 	}
 
 	public String getStatus() {
-		if (service == null) {
-			return "created";
-		}
 		return status;
 	}
 
@@ -91,7 +101,7 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return "Job [_id=" + _id + ", created=" + created + ", user=" + user +
+		return "Job [_id=" + _id + ", user=" + user +
 				", service=" + service + ", desc=" + desc +
 				", progtype=" + progtype + ", prog=" + getProgress() +
 				", maxprog=" + getMaxProgress() + ", status=" + getStatus() +
