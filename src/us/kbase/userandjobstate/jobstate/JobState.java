@@ -26,7 +26,6 @@ import com.mongodb.WriteResult;
 public class JobState {
 
 	//TODO length limits on all incoming strings
-	//TODO job stage - create started complete error
 	
 	private final static int JOB_EXP = 30 * 24 * 60 * 60; // 30 days
 	

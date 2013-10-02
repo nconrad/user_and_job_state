@@ -93,46 +93,52 @@ public class JobStateTests {
 		Job j = js.getJob("foo", jobid);
 		checkJob(j, jobid, "started", "foo", "started job", "serv1", "job desc", "none",
 				null, null, false, false, null);
-		try {
-			js.startJob("foo", jobid, "serv2", "started job", "job desc");
-			fail("Started an already started job");
-		} catch (NoSuchJobException nsje) {
-			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no unstarted job %s for user foo", jobid)));
-		}
-		try {
-			js.startJob("foo1", jobid, "serv2", "started job", "job desc");
-			fail("Started a non-existant job");
-		} catch (NoSuchJobException nsje) {
-			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no unstarted job %s for user foo1", jobid)));
-		}
-		try {
-			js.startJob("foo", "a" + jobid.substring(1), "serv2", "started job",
-					"job desc");
-			fail("Started a non-existant job");
-		} catch (NoSuchJobException nsje) {
-			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no unstarted job %s for user foo",
-							"a" + jobid.substring(1))));
-		}
-		try {
-			js.startJob(null, "a" + jobid.substring(1), "serv2", "started job",
-					"job desc");
-			fail("Started job with null user");
-		} catch (IllegalArgumentException iae) {
-			assertThat("correct exception", iae.getLocalizedMessage(),
-					is("user cannot be null or the empty string"));
-		}
-		try {
-			js.startJob("", "a" + jobid.substring(1), "serv2", "started job",
-					"job desc");
-			fail("Started job with null user");
-		} catch (IllegalArgumentException iae) {
-			assertThat("correct exception", iae.getLocalizedMessage(),
-					is("user cannot be null or the empty string"));
-		}
+		testStartJobBadArgs("foo", jobid, "serv2", "started job", "job desc",
+				new NoSuchJobException(String.format(
+						"There is no unstarted job %s for user foo", jobid)));
+		testStartJobBadArgs("foo1", jobid, "serv2", "started job", "job desc",
+				new NoSuchJobException(String.format(
+						"There is no unstarted job %s for user foo1", jobid)));
+		testStartJobBadArgs("foo", "a" + jobid.substring(1), "serv2", "started job", "job desc",
+				new NoSuchJobException(String.format(
+						"There is no unstarted job %s for user foo", "a" + jobid.substring(1))));
+		testStartJobBadArgs(null, jobid, "serv2", "started job", "job desc",
+				new IllegalArgumentException("user cannot be null or the empty string"));
+		testStartJobBadArgs("", jobid, "serv2", "started job", "job desc",
+				new IllegalArgumentException("user cannot be null or the empty string"));
 		//TODO more start job tests, all prog types, bad args
+	}
+	
+	private void testStartJobBadArgs(String user, String jobid, String service,
+			String status, String desc, Exception exception) throws Exception {
+		try {
+			js.startJob(user, jobid, service, status, desc);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+		try {
+			js.startJobWithPercentProg(user, jobid, service, status, desc);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+		try {
+			js.startJob(user, jobid, service, status, desc, 6);
+			fail("Started job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+		
 	}
 	
 	private void checkJob(Job j, String id, String stage, String user,
