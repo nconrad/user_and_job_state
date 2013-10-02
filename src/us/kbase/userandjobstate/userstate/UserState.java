@@ -27,9 +27,10 @@ import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
 public class UserState {
 	
-	//TODO limits on all incoming string lengths
-	
-	private final static int MAX_VALUE_SIZE = 1000000;
+	private final static int MAX_LEN_VALUE = 1000000;
+	private final static int MAX_LEN_USER = 100;
+	private final static int MAX_LEN_SERVICE = 100;
+	private final static int MAX_LEN_KEY = 100;
 	
 	private final static String SERVICE = "service";
 	private final static String USER = "user";
@@ -75,7 +76,7 @@ public class UserState {
 	}
 
 	private static final String VAL_ERR = String.format(
-			"Value cannot be > %s bytes when serialized", MAX_VALUE_SIZE);
+			"Value cannot be > %s bytes when serialized", MAX_LEN_VALUE);
 	
 	public void setState(final String user, final String service,
 			final boolean auth, final String key, final Object value)
@@ -88,7 +89,7 @@ public class UserState {
 				throw new IllegalArgumentException(
 						"Unable to serialize value", jpe);
 			}
-			if (valueStr.length() > MAX_VALUE_SIZE) {
+			if (valueStr.length() > MAX_LEN_VALUE) {
 				throw new IllegalArgumentException(VAL_ERR);
 			}
 		}
@@ -107,9 +108,9 @@ public class UserState {
 
 	private DBObject generateQuery(final String user, final String service,
 			final boolean auth, final String key) {
-		checkString(user, "user");
+		checkString(user, "user", MAX_LEN_USER);
 		checkServiceName(service);
-		checkString(key, "key");
+		checkString(key, "key", MAX_LEN_KEY);
 		final DBObject query = new BasicDBObject();
 		query.put(USER, user);
 		query.put(SERVICE, service);
@@ -119,7 +120,7 @@ public class UserState {
 	}
 	
 	private static void checkServiceName(final String name) {
-		checkString(name, "service");
+		checkString(name, "service", MAX_LEN_SERVICE);
 		final Matcher m = INVALID_SERV_NAMES.matcher(name);
 		if (m.find()) {
 			throw new IllegalArgumentException(String.format(

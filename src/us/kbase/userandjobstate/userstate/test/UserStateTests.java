@@ -43,22 +43,33 @@ public class UserStateTests {
 		}
 	}
 	
+	private static String long101;
+	static {
+		for (int i = 0; i < 10; i++) {
+			long101 += "aaaaaaaaaabbbbbbbbbb";
+		}
+		long101 += "f";
+	}
+	
 	@Test
 	public void illegalArgs() throws Exception {
 		checkBadArgs(null, "foo", true, "key", "user cannot be null or the empty string");
 		checkBadArgs(null, "foo", false, "key", "user cannot be null or the empty string");
 		checkBadArgs("", "foo", true, "key", "user cannot be null or the empty string");
 		checkBadArgs("", "foo", false, "key", "user cannot be null or the empty string");
+		checkBadArgs(long101, "foo", false, "key", "user exceeds the maximum length of 100");
 		checkBadArgs("u", null, true, "key", "service cannot be null or the empty string");
 		checkBadArgs("u", null, false, "key", "service cannot be null or the empty string");
 		checkBadArgs("u", "", true, "key", "service cannot be null or the empty string");
 		checkBadArgs("u", "", false, "key", "service cannot be null or the empty string");
+		checkBadArgs("u", long101, false, "key", "service exceeds the maximum length of 100");
 		checkBadArgs("u", "afa)aafe", true, "key", "Illegal character in service name afa)aafe: )");
 		checkBadArgs("u", "afae-afa", false, "key", "Illegal character in service name afae-afa: -");
 		checkBadArgs("u", "foo", true, null, "key cannot be null or the empty string");
 		checkBadArgs("u", "foo", false, null, "key cannot be null or the empty string");
 		checkBadArgs("u", "foo", true, "", "key cannot be null or the empty string");
 		checkBadArgs("u", "foo", false, "", "key cannot be null or the empty string");
+		checkBadArgs("u", "foo", false, long101, "key exceeds the maximum length of 100");
 		checkListStateBadArgs(null, "foo", true, "user cannot be null or the empty string");
 		checkListStateBadArgs(null, "foo", false, "user cannot be null or the empty string");
 		checkListStateBadArgs("", "foo", true, "user cannot be null or the empty string");
