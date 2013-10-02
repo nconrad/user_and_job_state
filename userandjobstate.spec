@@ -4,9 +4,6 @@ and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
 
-The service assumes other services are capable of simple math and does not
-throw errors if a progress bar overflows.
-
 Setting objects are limited to 640Kb.
 
 There are two modes of operation for setting key values for a user: 
@@ -26,6 +23,11 @@ service credentials safe).
 
 All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.
+
+The service assumes other services are capable of simple math and does not
+throw errors if a progress bar overflows.
+
+Jobs are automatically deleted after 30 days.
 
 Potential job process flows:
 
@@ -48,38 +50,6 @@ meanwhile, the UI periodically polls the job status server to get progress
 service call finishes, completes job, returns results
 UI thread joins
 
-mongodb structures:
-
-State collection:
-{
-	_id:
-	user:
-	service:
-	auth: (bool)
-	key: (unique index on user/service/auth/key)
-	value:
-}
-
-Job collection:
-{
-	_id:
-	user:
-	service:
-	desc:
-	progtype: ('percent', 'task', 'none')
-	prog: (int)
-	maxprog: (int, 100 for percent, user specified for task)
-	status: (user supplied string)
-	updated: (date)
-	complete: (bool) (index on user/service/complete)
-	error: (bool)
-	result: {
-		shocknodes: (list of strings)
-		shockurl:
-		workspaceids: (list of strings)
-		workspaceurl:
-	}
-}
 */
 
 module UserAndJobState {

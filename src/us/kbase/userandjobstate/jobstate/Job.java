@@ -10,6 +10,7 @@ import org.bson.types.ObjectId;
 public class Job {
 	
 	private ObjectId _id;
+	private Date created;
 	private String user;
 	private String service;
 	private String desc;
@@ -26,6 +27,10 @@ public class Job {
 
 	public String getID() {
 		return _id.toString();
+	}
+	
+	public Date getCreateDate() {
+		return created;
 	}
 
 	public String getUser() {
@@ -86,12 +91,12 @@ public class Job {
 
 	@Override
 	public String toString() {
-		return "Job [_id=" + _id + ", user=" + user + ", service=" + service
-				+ ", desc=" + desc + ", progtype=" + progtype + ", prog="
-				+ getProgress() + ", maxprog=" + getMaxProgress() +
-				", status=" + getStatus() + ", updated=" + updated +
-				", complete=" + complete + ", error=" + error +
-				", results=" + results + "]";
+		return "Job [_id=" + _id + ", created=" + created + ", user=" + user +
+				", service=" + service + ", desc=" + desc +
+				", progtype=" + progtype + ", prog=" + getProgress() +
+				", maxprog=" + getMaxProgress() + ", status=" + getStatus() +
+				", updated=" + updated + ", complete=" + complete +
+				", error=" + error + ", results=" + results + "]";
 	}
 
 }

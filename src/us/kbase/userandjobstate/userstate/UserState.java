@@ -25,7 +25,9 @@ import us.kbase.common.mongo.exceptions.MongoAuthException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
-public class UserState { //TODO tests for all this
+public class UserState {
+	
+	//TODO limits on all incoming string lengths
 	
 	private final static int MAX_VALUE_SIZE = 1000000;
 	

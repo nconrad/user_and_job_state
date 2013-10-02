@@ -24,7 +24,13 @@ import com.mongodb.MongoException;
 import com.mongodb.WriteResult;
 
 public class JobState {
+
+	//TODO length limits on all incoming strings
+	//TODO job stage - create started complete error
 	
+	private final static int JOB_EXP = 30 * 24 * 60 * 60; // 30 days
+	
+	private final static String CREATED = "created";
 	private final static String USER = "user";
 	private final static String SERVICE = "service";
 	private final static String UPDATED = "updated";
@@ -71,13 +77,18 @@ public class JobState {
 		idx.put(SERVICE, 1);
 		idx.put(COMPLETE, 1);
 		jobcol.ensureIndex(idx);
+		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
+		final DBObject opts = new BasicDBObject("expireAfterSeconds", JOB_EXP);
+		jobcol.ensureIndex(ttlidx, opts);
 		
 	}
 	
 	public String createJob(final String user) throws CommunicationException {
 		isNonEmptyString(user, "user");
 		final DBObject job = new BasicDBObject(USER, user);
-		job.put(UPDATED, new Date());
+		final Date date = new Date();
+		job.put(CREATED, date);
+		job.put(UPDATED, date);
 		job.put(SERVICE, null);
 		try {
 			jobcol.insert(job);
