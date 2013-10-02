@@ -7,7 +7,7 @@ job status reporting.
 The service assumes other services are capable of simple math and does not
 throw errors if a progress bar overflows.
 
-Setting objects are limited to 1Mb.
+Setting objects are limited to 640Kb.
 
 There are two modes of operation for setting key values for a user: 
 1) no service authentication - an authorization token for a service is not 

@@ -84,7 +84,23 @@ public class JobStateTests {
 					is(String.format("Job ID %s is not a legal ID",
 					"a" + jobid)));
 		}
-		
+	}
+	
+	@Test
+	public void startJob() throws Exception {
+		String jobid = js.createJob("foo");
+		js.startJob("foo", jobid, "serv1", "started job", "job desc");
+		Job j = js.getJob("foo", jobid);
+		checkJob(j, jobid, "foo", "started job", "serv1", "job desc", "none",
+				null, null, false, false, null);
+		try {
+			js.startJob("foo", jobid, "serv2", "started job", "job desc");
+			fail("Started an already started job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception", nsje.getLocalizedMessage(),
+					is(String.format("There is no job %s for user foo", jobid)));
+		}
+		//TODO more start job tests, all prog types
 	}
 	
 	private void checkJob(Job j, String id, String user, String status,

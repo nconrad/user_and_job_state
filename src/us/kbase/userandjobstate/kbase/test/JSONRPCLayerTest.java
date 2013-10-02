@@ -27,11 +27,11 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 /*
  * These tests are specifically for testing the JSON-RPC communications between
- * the client, up to the invocation of the {@link us.kbase.workspace.workspaces.Workspaces}
- * methods. As such they do not test the full functionality of the Workspaces methods;
- * {@link us.kbase.workspace.workspaces.test.TestWorkspaces} handles that. This means
- * that only one backend (the simplest gridFS backend) is tested here, while TestWorkspaces
- * tests all backends and {@link us.kbase.workspace.database.Database} implementations.
+ * the client, up to the invocation of the {@link us.kbase.userandjobstate.userstate.UserState}
+ * and {@link us.kbase.userandjobstate.jobstate.JobState}
+ * methods. As such they do not test the full functionality of the methods;
+ * {@link us.kbase.userandjobstate.userstate.test.UserStateTests} and
+ * {@link us.kbase.userandjobstate.jobstate.test.JobStateTests} handles that.
  */
 public class JSONRPCLayerTest {
 	
