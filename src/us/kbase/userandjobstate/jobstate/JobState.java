@@ -34,7 +34,6 @@ public class JobState {
 	private final static int MAX_LEN_STATUS = 200;
 	private final static int MAX_LEN_DESC = 1000;
 	
-	
 	private final static String CREATED = "created";
 	private final static String USER = "user";
 	private final static String SERVICE = "service";
@@ -212,7 +211,7 @@ public class JobState {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
+		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
 					"There is no unstarted job %s for user %s", jobID, user));
 		}
@@ -278,7 +277,7 @@ public class JobState {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
+		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
 					"There is no uncompleted job %s for user %s started by service %s",
 					jobID, user, service));
@@ -307,7 +306,7 @@ public class JobState {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
+		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
 					"There is no uncompleted job %s for user %s started by service %s",
 					jobID, user, service));
@@ -324,5 +323,34 @@ public class JobState {
 		query.put(SERVICE, service);
 		query.put(COMPLETE, false);
 		return query;
+	}
+	
+	public void deleteJob(final String user, final String jobID)
+			throws NoSuchJobException, CommunicationException {
+		deleteJob(user, jobID, true);
+	}
+	
+	public void deleteJob(final String user, final String jobID,
+			final boolean completeRequired)
+			throws NoSuchJobException, CommunicationException {
+		checkString(user, "user", MAX_LEN_USER);
+		final ObjectId id = checkJobID(jobID);
+		final DBObject query = new BasicDBObject(USER, user);
+		query.put(MONGO_ID, id);
+		if (completeRequired) {
+			query.put(COMPLETE, true);
+		}
+		final WriteResult wr;
+		try {
+			wr = jobcol.remove(query);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if (wr.getN() != 1) {
+			throw new NoSuchJobException(String.format(
+					"There is no %sjob %s for user %s",
+					completeRequired ? "completed " : "", jobID, user));
+		}
 	}
 }

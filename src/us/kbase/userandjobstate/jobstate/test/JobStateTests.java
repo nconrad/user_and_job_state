@@ -41,6 +41,7 @@ public class JobStateTests {
 	}
 	
 	//TODO JSONRPC layer tests
+	//TODO test vs. auth'd mongo
 	
 	private static final RegexMatcher OBJ_ID_MATCH = new RegexMatcher("[\\da-f]{24}");
 	
@@ -512,5 +513,93 @@ public class JobStateTests {
 		assertTrue("date updated2 < complete", update2.compareTo(complete) == -1);
 	}
 	
-	//TODO test vs. auth'd mongo
+	@Test
+	public void deleteJob() throws Exception {
+		String jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		js.completeJob("delete", jobid, "serv1", "st", false, null);
+		Job j = js.getJob("delete", jobid); //should work
+		checkJob(j, jobid, "complete", "delete", "st", "serv1", "dsc", "none",
+				null, null, true, false, null);
+		succeedAtDeletingJob("delete", jobid);
+		failToDeleteJob("delete", jobid, true);
+		
+		jobid = js.createJob("delete");
+		failToDeleteJob("delete", jobid, true);
+		js.startJob("delete", jobid, "s", "s", "d");
+		failToDeleteJob("delete", jobid, true);
+		js.updateJob("delete", jobid, "s", "s", 1);
+		failToDeleteJob("delete", jobid, true);
+		failToDeleteJob("delete1", jobid, true);
+		failToDeleteJob("delete", "a" + jobid.substring(1), true);
+		
+		failToDeleteJob("delete1", jobid, false);
+		failToDeleteJob("delete", "a" + jobid.substring(1), false);
+		
+		jobid = js.createJob("delete");
+		succeedAtDeletingJob("delete", jobid, false);
+		failToDeleteJob("delete", jobid, false);
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		succeedAtDeletingJob("delete", jobid, false);
+		failToDeleteJob("delete", jobid, false);
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		js.updateJob("delete", jobid, "serv1", "st", null);
+		succeedAtDeletingJob("delete", jobid, false);
+		failToDeleteJob("delete", jobid, false);
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		js.completeJob("delete", jobid, "serv1", "st", false, null);
+		succeedAtDeletingJob("delete", jobid, false);
+		failToDeleteJob("delete", jobid, false);
+		
+	}
+	
+	private void succeedAtDeletingJob(String user, String jobid, boolean completed)
+			throws Exception {
+		js.deleteJob(user, jobid, completed);
+		try {
+			js.getJob(user, jobid);
+			fail("got deleted job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no job %s for user %s", jobid, user)));
+		}
+	}
+	
+	private void succeedAtDeletingJob(String user, String jobid)
+			throws Exception {
+		js.deleteJob(user, jobid);
+		try {
+			js.getJob(user, jobid);
+			fail("got deleted job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no job %s for user %s", jobid, user)));
+		}
+	}
+	
+	private void failToDeleteJob(String user, String jobid, boolean completed)
+			throws Exception {
+		try {
+			js.deleteJob(user, jobid, completed);
+			fail("deleted job when should've failed");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no %sjob %s for user %s",
+					completed ? "completed " : "", jobid, user)));
+		}
+		if (!completed) {
+			return;
+		}
+		try {
+			js.deleteJob(user, jobid);
+			fail("deleted job when should've failed");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no completed job %s for user %s",
+					jobid, user)));
+		}
+	}
 }

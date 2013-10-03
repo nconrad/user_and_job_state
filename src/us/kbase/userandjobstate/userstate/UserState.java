@@ -89,6 +89,7 @@ public class UserState {
 				throw new IllegalArgumentException(
 						"Unable to serialize value", jpe);
 			}
+			//strictly speaking, should convert to bytes as UTF-8, but hardly worth the trouble
 			if (valueStr.length() > MAX_LEN_VALUE) {
 				throw new IllegalArgumentException(VAL_ERR);
 			}
