@@ -5,10 +5,14 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.junit.BeforeClass;
@@ -601,5 +605,27 @@ public class JobStateTests {
 					"There is no completed job %s for user %s",
 					jobid, user)));
 		}
+	}
+	
+	@Test
+	public void listServices() throws Exception {
+		checkListServ("listserv", new ArrayList<String>());
+		String jobid = js.createJob("listserv");
+		checkListServ("listserv", new ArrayList<String>());
+		js.startJob("listserv", jobid, "serv1", null, null);
+		checkListServ("listserv", Arrays.asList("serv1"));
+		checkListServ("listserv2", new ArrayList<String>());
+		js.createAndStartJob("listserv", "serv2", null, null);
+		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
+		js.createAndStartJob("listserv2", "serv3", null, null);
+		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
+		checkListServ("listserv2", Arrays.asList("serv3"));
+		
+	}
+	
+	private void checkListServ(String user, List<String> expected) throws Exception {
+		Set<String> expc = new HashSet<String>(expected);
+		assertThat("get correct services", js.listServices(user),
+				is(expc));
 	}
 }

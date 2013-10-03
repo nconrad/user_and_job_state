@@ -6,7 +6,9 @@ import static us.kbase.common.utils.StringUtils.checkMaxLen;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import org.bson.types.ObjectId;
 import org.jongo.Jongo;
@@ -18,6 +20,7 @@ import us.kbase.common.mongo.exceptions.MongoAuthException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
 
+import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -352,5 +355,39 @@ public class JobState {
 					"There is no %sjob %s for user %s",
 					completeRequired ? "completed " : "", jobID, user));
 		}
+	}
+	
+	final static DBObject SERV_GROUP;
+	final static DBObject SERV_PROJ;
+	static {
+		final DBObject pfields = new BasicDBObject(SERVICE, 1);
+		pfields.put(MONGO_ID, 0);
+		SERV_PROJ = new BasicDBObject("$project", pfields);
+		SERV_GROUP = new BasicDBObject("$group",
+				new BasicDBObject(MONGO_ID, "$" + SERVICE));
+	}
+	
+	public Set<String> listServices(final String user)
+			throws CommunicationException {
+		checkString(user, "user");
+		final DBObject query = new BasicDBObject(USER, user);
+		query.put(SERVICE, new BasicDBObject("$ne", null));
+		final DBObject match = new BasicDBObject("$match",
+				new BasicDBObject(USER, user));
+		
+		final AggregationOutput mret;
+		try {
+			mret = jobcol.aggregate(match, SERV_PROJ, SERV_GROUP);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		final Set<String> services = new HashSet<String>();
+		for (DBObject o: mret.results()) {
+			if (o.get(MONGO_ID) != null) { //shouldn't be necessary, but...
+				services.add((String) o.get(MONGO_ID));
+			}
+		}
+		return services;
 	}
 }
