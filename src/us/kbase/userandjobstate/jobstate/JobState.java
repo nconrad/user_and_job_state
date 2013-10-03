@@ -195,7 +195,7 @@ public class JobState {
 			prog = 0;
 			maxprog = 100;
 		} else if (progType == PROG_NONE) {
-			prog = null;
+			prog = 0;
 			maxprog = null;
 		} else {
 			throw new IllegalArgumentException("Illegal progress type: " +
@@ -252,5 +252,37 @@ public class JobState {
 					"Just created a job and it's already deleted", nsje);
 		}
 		return jobid;
+	}
+	
+	public void updateJob(final String user, final String jobID,
+			final String service, final String status, final Integer progress)
+			throws CommunicationException, NoSuchJobException {
+		final ObjectId id = checkJobID(jobID);
+		checkMaxLen(status, "status", MAX_LEN_STATUS);
+		final DBObject query = new BasicDBObject(USER, user);
+		query.put(MONGO_ID, id);
+		query.put(SERVICE, service);
+		final DBObject update = new BasicDBObject("$set",
+				new BasicDBObject(STATUS, status));
+		if (progress != null) {
+			if (progress < 0) {
+				throw new IllegalArgumentException(
+						"progress cannot be negative");
+			}
+			update.put("$inc", new BasicDBObject(PROG, progress));
+		}
+		
+		final WriteResult wr;
+		try {
+			wr = jobcol.update(query, update);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
+			throw new NoSuchJobException(String.format(
+					"There is no job %s for user %s started by service %s",
+					jobID, user, service));
+		}
 	}
 }

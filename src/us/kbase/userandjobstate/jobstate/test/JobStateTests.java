@@ -266,4 +266,44 @@ public class JobStateTests {
 		assertThat("job complete ok", j.isComplete(), is(complete));
 		assertThat("job error ok", j.hasError(), is(error));
 	}
+	
+	@Test
+	public void updateJob() throws Exception {
+		String jobid = js.createAndStartJob("bar", "service1", "st", "de", 33);
+		Job j = js.getJob("bar", jobid);
+		checkJob(j, jobid, "started", "bar", "st", "service1", "de",
+				"task", 0, 33, false, false, null);
+		
+		js.updateJob("bar", jobid, "service1", "new st", 4);
+		j = js.getJob("bar", jobid);
+		checkJob(j, jobid, "started", "bar", "new st", "service1", "de",
+				"task", 4, 33, false, false, null);
+		
+		js.updateJob("bar", jobid, "service1", "new st2", 16);
+		j = js.getJob("bar", jobid);
+		checkJob(j, jobid, "started", "bar", "new st2", "service1", "de",
+				"task", 20, 33, false, false, null);
+		
+		js.updateJob("bar", jobid, "service1", "this really should be done", 16);
+		j = js.getJob("bar", jobid);
+		checkJob(j, jobid, "started", "bar", "this really should be done",
+				"service1", "de", "task", 33, 33, false, false, null);
+		
+		jobid = js.createAndStartJob("bar2", "service2", "st2", "de2");
+		j = js.getJob("bar2", jobid);
+		checkJob(j, jobid, "started", "bar2", "st2", "service2", "de2",
+				"none", null, null, false, false, null);
+		
+		js.updateJob("bar2", jobid, "service2", "st2-2", null);
+		j = js.getJob("bar2", jobid);
+		checkJob(j, jobid, "started", "bar2", "st2-2", "service2", "de2",
+				"none", null, null, false, false, null);
+		
+		js.updateJob("bar2", jobid, "service2", "st2-3", 6);
+		j = js.getJob("bar2", jobid);
+		checkJob(j, jobid, "started", "bar2", "st2-3", "service2", "de2",
+				"none", null, null, false, false, null);
+		
+		//TODO finish update job tests
+	}
 }
