@@ -4,8 +4,6 @@ and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
 
-Setting objects are limited to 640Kb.
-
 There are two modes of operation for setting key values for a user: 
 1) no service authentication - an authorization token for a service is not 
 	required, and any service with the user token can write to any other
@@ -20,6 +18,8 @@ that is writable by all other services (no auth) and the same key that was
 set with auth to which only the workspace service can write (or any other
 service that has access to a workspace service account token, so keep your
 service credentials safe).
+
+Setting objects are limited to 640Kb.
 
 All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.

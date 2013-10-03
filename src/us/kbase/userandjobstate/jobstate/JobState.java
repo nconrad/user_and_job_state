@@ -257,7 +257,9 @@ public class JobState {
 	public void updateJob(final String user, final String jobID,
 			final String service, final String status, final Integer progress)
 			throws CommunicationException, NoSuchJobException {
+		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId id = checkJobID(jobID);
+		checkString(service, "service", MAX_LEN_SERVICE);
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
 		final DBObject query = new BasicDBObject(USER, user);
 		query.put(MONGO_ID, id);

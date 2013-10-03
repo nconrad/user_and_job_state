@@ -120,6 +120,18 @@ public class JSONRPCLayerTest {
 	}
 	
 	@Test
+	public void unicode() throws Exception {
+		int[] char1 = {11614};
+		String uni = new String(char1, 0, 1);
+		CLIENT1.setState("uni", "key", new UObject(uni));
+		assertThat("get unicode back",
+				CLIENT1.getState("uni", "key", 0)
+				.asClassInstance(Object.class),
+				is((Object) uni));
+		CLIENT1.removeState("uni", "key");
+	}
+	
+	@Test
 	public void getSetListStateService() throws Exception {
 		List<Integer> data = Arrays.asList(1, 2, 3, 5, 8, 13);
 		List<Integer> data2 = Arrays.asList(42);

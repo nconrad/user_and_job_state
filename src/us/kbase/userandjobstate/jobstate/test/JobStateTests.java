@@ -149,6 +149,13 @@ public class JobStateTests {
 			assertThat("correct exception", iae.getLocalizedMessage(),
 					is("The maximum progress for the job must be > 0"));
 		}
+		int[] char1 = {11614};
+		String uni = new String(char1, 0, 1);
+		jobid = js.createJob("unicode");
+		js.startJob("unicode", jobid, "serv3", uni, "desc3", 200);
+		j = js.getJob("unicode", jobid);
+		checkJob(j, jobid, "started", "unicode", uni, "serv3", "desc3",
+				"task", 0, 200, false, false, null);
 		
 		jobid = js.createJob("foo3");
 		js.startJob("foo3", jobid, "serv3", "start3", "desc3", 200);
@@ -269,6 +276,7 @@ public class JobStateTests {
 	
 	@Test
 	public void updateJob() throws Exception {
+		//task based progress
 		String jobid = js.createAndStartJob("bar", "service1", "st", "de", 33);
 		Job j = js.getJob("bar", jobid);
 		checkJob(j, jobid, "started", "bar", "st", "service1", "de",
@@ -289,6 +297,7 @@ public class JobStateTests {
 		checkJob(j, jobid, "started", "bar", "this really should be done",
 				"service1", "de", "task", 33, 33, false, false, null);
 		
+		//no progress tracking
 		jobid = js.createAndStartJob("bar2", "service2", "st2", "de2");
 		j = js.getJob("bar2", jobid);
 		checkJob(j, jobid, "started", "bar2", "st2", "service2", "de2",
@@ -304,6 +313,75 @@ public class JobStateTests {
 		checkJob(j, jobid, "started", "bar2", "st2-3", "service2", "de2",
 				"none", null, null, false, false, null);
 		
+		//percentage based tracking
+		jobid = js.createAndStartJobWithPercentProg("bar3", "service3", "st3", "de3");
+		j = js.getJob("bar3", jobid);
+		checkJob(j, jobid, "started", "bar3", "st3", "service3", "de3",
+				"percent", 0, 100, false, false, null);
+		
+		js.updateJob("bar3", jobid, "service3", "st3-2", 30);
+		j = js.getJob("bar3", jobid);
+		checkJob(j, jobid, "started", "bar3", "st3-2", "service3", "de3",
+				"percent", 30, 100, false, false, null);
+		
+		js.updateJob("bar3", jobid, "service3", "st3-3", 2);
+		j = js.getJob("bar3", jobid);
+		checkJob(j, jobid, "started", "bar3", "st3-3", "service3", "de3",
+				"percent", 32, 100, false, false, null);
+		
+		js.updateJob("bar3", jobid, "service3", "st3-4", 80);
+		j = js.getJob("bar3", jobid);
+		checkJob(j, jobid, "started", "bar3", "st3-4", "service3", "de3",
+				"percent", 100, 100, false, false, null);
+		
+		testUpdateJobBadArgs("bar3", jobid, "service2", "stat", null,
+				new NoSuchJobException(String.format(
+						"There is no job %s for user bar3 started by service service2",
+						jobid)));
+		testUpdateJobBadArgs("bar2", jobid, "service3", "stat", null,
+				new NoSuchJobException(String.format(
+						"There is no job %s for user bar2 started by service service3",
+						jobid)));
+		testUpdateJobBadArgs("bar2", "a" + jobid.substring(1), "service2", "stat", null,
+				new NoSuchJobException(String.format(
+						"There is no job %s for user bar2 started by service service2",
+						"a" + jobid.substring(1))));
+		testUpdateJobBadArgs(null, jobid, "serv2", "started job", 1,
+				new IllegalArgumentException("user cannot be null or the empty string"));
+		testUpdateJobBadArgs("", jobid, "serv2", "started job", 1,
+				new IllegalArgumentException("user cannot be null or the empty string"));
+		testUpdateJobBadArgs(long101, jobid, "serv2", "started job", 1,
+				new IllegalArgumentException("user exceeds the maximum length of 100"));
+		testUpdateJobBadArgs("foo",  null, "serv2", "started job", 1,
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testUpdateJobBadArgs("foo", "", "serv2", "started job", 1,
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testUpdateJobBadArgs("foo", "afeaefafaefaefafeaf", "serv2", "started job", 1,
+				new IllegalArgumentException("Job ID afeaefafaefaefafeaf is not a legal ID"));
+		testUpdateJobBadArgs("foo", jobid, null, "started job", 1,
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testUpdateJobBadArgs("foo", jobid, "", "started job", 1,
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testUpdateJobBadArgs("foo", jobid, long101, "started job", 1,
+				new IllegalArgumentException("service exceeds the maximum length of 100"));
+		testUpdateJobBadArgs("foo", jobid, "serv2", long201, 1,
+				new IllegalArgumentException("status exceeds the maximum length of 200"));
+		testUpdateJobBadArgs("foo", jobid, "serv2", "started job", -1,
+				new IllegalArgumentException("progress cannot be negative"));
 		//TODO finish update job tests
+	}
+	
+	private void testUpdateJobBadArgs(String user, String jobid, String service,
+			String status, Integer progress, Exception exception) throws Exception {
+		try {
+			js.updateJob(user, jobid, service, status, progress);
+			fail("updated job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+			
+		}
 	}
 }
