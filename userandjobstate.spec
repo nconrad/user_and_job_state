@@ -204,9 +204,7 @@ module UserAndJobState {
 	/* Get the job results. */
 	funcdef get_results(job_id job) returns(Results res);
 	
-	/* Information about a job. Note calls returning this structure will
-		probably be slower than the more targeted calls.
-	*/
+	/* Information about a job. */
 	typedef tuple<job_id job, service_name service, job_stage stage, 
 		job_status status, timestamp last_update, total_progress prog,
 		max_progress max, progress_type ptype, boolean complete, boolean error,

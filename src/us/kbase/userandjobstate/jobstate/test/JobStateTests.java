@@ -2,9 +2,12 @@ package us.kbase.userandjobstate.jobstate.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
@@ -336,15 +339,15 @@ public class JobStateTests {
 		
 		testUpdateJobBadArgs("bar3", jobid, "service2", "stat", null,
 				new NoSuchJobException(String.format(
-						"There is no job %s for user bar3 started by service service2",
+						"There is no uncompleted job %s for user bar3 started by service service2",
 						jobid)));
 		testUpdateJobBadArgs("bar2", jobid, "service3", "stat", null,
 				new NoSuchJobException(String.format(
-						"There is no job %s for user bar2 started by service service3",
+						"There is no uncompleted job %s for user bar2 started by service service3",
 						jobid)));
 		testUpdateJobBadArgs("bar2", "a" + jobid.substring(1), "service2", "stat", null,
 				new NoSuchJobException(String.format(
-						"There is no job %s for user bar2 started by service service2",
+						"There is no uncompleted job %s for user bar2 started by service service2",
 						"a" + jobid.substring(1))));
 		testUpdateJobBadArgs(null, jobid, "serv2", "started job", 1,
 				new IllegalArgumentException("user cannot be null or the empty string"));
@@ -368,7 +371,19 @@ public class JobStateTests {
 				new IllegalArgumentException("status exceeds the maximum length of 200"));
 		testUpdateJobBadArgs("foo", jobid, "serv2", "started job", -1,
 				new IllegalArgumentException("progress cannot be negative"));
-		//TODO finish update job tests
+		
+		//fail on updating a completed or unstarted job
+		jobid = js.createJob("foobar");
+		testUpdateJobBadArgs("foobar", jobid, "serv2", "stat", 1,
+				new NoSuchJobException(String.format(
+				"There is no uncompleted job %s for user foobar started by service serv2",
+				jobid)));
+		jobid = js.createAndStartJob("foobar", "serv2", "stat", "desc");
+		js.completeJob("foobar", jobid, "serv2", "stat", false, null);
+		testUpdateJobBadArgs("foobar", jobid, "serv2", "stat", 1,
+				new NoSuchJobException(String.format(
+				"There is no uncompleted job %s for user foobar started by service serv2",
+				jobid)));
 	}
 	
 	private void testUpdateJobBadArgs(String user, String jobid, String service,
@@ -381,7 +396,121 @@ public class JobStateTests {
 					is(exception.getClass()));
 			assertThat("correct exception msg", e.getLocalizedMessage(),
 					is(exception.getLocalizedMessage()));
-			
 		}
 	}
+	
+	@Test
+	public void completeJob() throws Exception {
+		String jobid = js.createAndStartJob("comp", "cserv1", "cstat1", "cdesc1", 5);
+		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 2);
+		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 6);
+		Map<String, Object> res = new HashMap<String, Object>();
+		res.put("shocknodes", Arrays.asList("node1", "node2"));
+		js.completeJob("comp", jobid, "cserv1", "cstat1-3", true, res);
+		Job j = js.getJob("comp", jobid);
+		checkJob(j, jobid, "error", "comp", "cstat1-3", "cserv1", "cdesc1",
+				"task", 5, 5, true, true, res);
+		try {
+			js.completeJob("comp", jobid, "cserv1", "cstat1-4", false, res);
+			fail("completed a completed job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no uncompleted job %s for user comp started by service cserv1",
+					jobid)));
+		}
+		
+		jobid = js.createAndStartJobWithPercentProg("comp", "cserv2", "cstat2", "cdesc2");
+		js.updateJob("comp", jobid, "cserv2", "cstat2-2", 25);
+		js.updateJob("comp", jobid, "cserv2", "cstat2-3", 50);
+		js.completeJob("comp", jobid, "cserv2", "cstat2-3", false, res);
+		j = js.getJob("comp", jobid);
+		checkJob(j, jobid, "complete", "comp", "cstat2-3", "cserv2", "cdesc2",
+				"percent", 100, 100, true, false, res);
+		
+		jobid = js.createJob("comp");
+		try {
+			js.completeJob("comp", jobid, "cserv2", "badstat", false, res);
+			fail("completed an unstarted job");
+		} catch (NoSuchJobException nsje) {
+			assertThat("correct exception msg", nsje.getLocalizedMessage(),
+					is(String.format(
+					"There is no uncompleted job %s for user comp started by service cserv2",
+					jobid)));
+		}
+		
+		jobid = js.createAndStartJob("comp", "service2", "stat", "desc");
+		
+		testCompleteJobBadArgs("comp1", jobid, "service2", "stat",
+				new NoSuchJobException(String.format(
+						"There is no uncompleted job %s for user comp1 started by service service2",
+						jobid)));
+		testCompleteJobBadArgs("comp", jobid, "service3", "stat",
+				new NoSuchJobException(String.format(
+						"There is no uncompleted job %s for user comp started by service service3",
+						jobid)));
+		testCompleteJobBadArgs("comp", "a" + jobid.substring(1), "service2", "stat",
+				new NoSuchJobException(String.format(
+						"There is no uncompleted job %s for user comp started by service service2",
+						"a" + jobid.substring(1))));
+		testCompleteJobBadArgs(null, jobid, "service2", "started job",
+				new IllegalArgumentException("user cannot be null or the empty string"));
+		testCompleteJobBadArgs("", jobid, "service2", "started job",
+				new IllegalArgumentException("user cannot be null or the empty string"));
+		testCompleteJobBadArgs(long101, jobid, "service2", "started job",
+				new IllegalArgumentException("user exceeds the maximum length of 100"));
+		testCompleteJobBadArgs("comp",  null, "service2", "started job",
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testCompleteJobBadArgs("comp", "", "service2", "started job",
+				new IllegalArgumentException("id cannot be null or the empty string"));
+		testCompleteJobBadArgs("comp", "afeaefafaefaefafeaf", "service2", "started job",
+				new IllegalArgumentException("Job ID afeaefafaefaefafeaf is not a legal ID"));
+		testCompleteJobBadArgs("comp", jobid, null, "started job",
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testCompleteJobBadArgs("comp", jobid, "", "started job",
+				new IllegalArgumentException("service cannot be null or the empty string"));
+		testCompleteJobBadArgs("comp", jobid, long101, "started job",
+				new IllegalArgumentException("service exceeds the maximum length of 100"));
+		testCompleteJobBadArgs("comp", jobid, "service2", long201,
+				new IllegalArgumentException("status exceeds the maximum length of 200"));
+	}
+	
+	private void testCompleteJobBadArgs(String user, String jobid, String service,
+			String status, Exception exception) throws Exception {
+		try {
+			js.completeJob(user, jobid, service, status, false, null);
+			fail("updated job with bad args");
+		} catch (Exception e) {
+			assertThat("correct exception type", e,
+					is(exception.getClass()));
+			assertThat("correct exception msg", e.getLocalizedMessage(),
+					is(exception.getLocalizedMessage()));
+		}
+	}
+	
+	@Test
+	public void checkDateUpdates() throws Exception {
+		String jobid = js.createJob("date");
+		Job j = js.getJob("date", jobid);
+		Date create = j.getLastUpdated();
+		js.startJob("date", jobid, "serv1", "stat", "desc");
+		j = js.getJob("date", jobid);
+		Date start = j.getLastUpdated();
+		js.updateJob("date", jobid, "serv1", "stat", null);
+		j = js.getJob("date", jobid);
+		Date update = j.getLastUpdated();
+		js.updateJob("date", jobid, "serv1", "stat", null);
+		j = js.getJob("date", jobid);
+		Date update2 = j.getLastUpdated();
+		js.completeJob("date", jobid, "serv1", "stat", false, null);
+		j = js.getJob("date", jobid);
+		Date complete = j.getLastUpdated();
+		
+		assertTrue("date created < started", create.compareTo(start) == -1);
+		assertTrue("date started < updated", start.compareTo(update) == -1);
+		assertTrue("date updated < updated2", update.compareTo(update2) == -1);
+		assertTrue("date updated2 < complete", update2.compareTo(complete) == -1);
+	}
+	
+	//TODO test vs. auth'd mongo
 }

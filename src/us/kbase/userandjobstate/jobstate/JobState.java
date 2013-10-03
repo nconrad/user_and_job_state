@@ -6,6 +6,7 @@ import static us.kbase.common.utils.StringUtils.checkMaxLen;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Date;
+import java.util.Map;
 
 import org.bson.types.ObjectId;
 import org.jongo.Jongo;
@@ -257,15 +258,11 @@ public class JobState {
 	public void updateJob(final String user, final String jobID,
 			final String service, final String status, final Integer progress)
 			throws CommunicationException, NoSuchJobException {
-		checkString(user, "user", MAX_LEN_USER);
-		final ObjectId id = checkJobID(jobID);
-		checkString(service, "service", MAX_LEN_SERVICE);
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
-		final DBObject query = new BasicDBObject(USER, user);
-		query.put(MONGO_ID, id);
-		query.put(SERVICE, service);
-		final DBObject update = new BasicDBObject("$set",
-				new BasicDBObject(STATUS, status));
+		final DBObject query = buildStartedJobQuery(user, jobID, service);
+		final DBObject set = new BasicDBObject(STATUS, status);
+		set.put(UPDATED, new Date());
+		final DBObject update = new BasicDBObject("$set", set);
 		if (progress != null) {
 			if (progress < 0) {
 				throw new IllegalArgumentException(
@@ -283,8 +280,49 @@ public class JobState {
 		}
 		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
 			throw new NoSuchJobException(String.format(
-					"There is no job %s for user %s started by service %s",
+					"There is no uncompleted job %s for user %s started by service %s",
 					jobID, user, service));
 		}
+	}
+	
+	
+	public void completeJob(final String user, final String jobID,
+			final String service, final String status, final boolean error,
+			final Map<String, Object> results)
+			throws CommunicationException, NoSuchJobException {
+		checkMaxLen(status, "status", MAX_LEN_STATUS);
+		final DBObject query = buildStartedJobQuery(user, jobID, service);
+		final DBObject set = new BasicDBObject(UPDATED, new Date());
+		set.put(COMPLETE, true);
+		set.put(ERROR, error);
+		set.put(STATUS, status);
+		//if anyone is stupid enough to store 16mb of results will need to
+		//check size first, or at least catch error and report.
+		set.put(RESULT, results);
+		
+		final WriteResult wr;
+		try {
+			wr = jobcol.update(query, new BasicDBObject("$set", set));
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if(!(Boolean) wr.getField("updatedExisting")) { //seriously 10gen? Seriously?
+			throw new NoSuchJobException(String.format(
+					"There is no uncompleted job %s for user %s started by service %s",
+					jobID, user, service));
+		}
+	}
+
+	private DBObject buildStartedJobQuery(final String user, final String jobID,
+			final String service) {
+		checkString(user, "user", MAX_LEN_USER);
+		final ObjectId id = checkJobID(jobID);
+		checkString(service, "service", MAX_LEN_SERVICE);
+		final DBObject query = new BasicDBObject(USER, user);
+		query.put(MONGO_ID, id);
+		query.put(SERVICE, service);
+		query.put(COMPLETE, false);
+		return query;
 	}
 }
