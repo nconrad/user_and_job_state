@@ -241,7 +241,7 @@ module UserAndJobState {
 	/* List all job services. */
 	funcdef list_job_services() returns(list<service_name> services);
 	
-	/* Delete a job. Will error out if the job is not complete. */
+	/* Delete a job. Will silently fail if the job is not complete. */
 	funcdef delete_job(job_id job) returns();
 	
 	/* Force delete a job - will always succeed, regardless of job state. */
