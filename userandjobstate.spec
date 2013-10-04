@@ -213,27 +213,20 @@ module UserAndJobState {
 	/* Get information about a job. */
 	funcdef get_job_info(job_id job) returns(job_info info);
 
-	/* Options for list_jobs command. 
-		
-		boolean oldest_first - return jobs with an ascending sort based on the
-			creation date.
-		int limit - limit the results to X jobs.
-		int offset - skip the first X jobs.
-		boolean completed - true to return only completed jobs, false to
-			return only incomplete jobs.
-		boolean error_only - true to return only jobs that errored out. 
-			Overrides the completed option.
+	/* A string-based filter for listing jobs.
+	
+		If the string contains:
+			'R' - running (created or started) jobs are returned.
+			'C' - completed jobs are returned.
+			'E' - jobs that errored out are returned.
+		The string can contain any combination of these codes in any order.
+		If the string contains none of the codes or is null, all jobs are
+		returned.
 	*/
-	typedef structure {
-		boolean oldest_first;
-		int limit;
-		int offset;
-		boolean completed;
-		boolean error_only;
-	} ListJobsOptions;
+	typedef string job_filter;
 	
 	/* List jobs. */
-	funcdef list_jobs(service_name service, ListJobsOptions options)
+	funcdef list_jobs(service_name service, job_filter filter)
 		returns(list<job_info> jobs);
 	
 	/* List all job services. */

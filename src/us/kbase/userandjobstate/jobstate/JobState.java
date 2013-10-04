@@ -7,6 +7,8 @@ import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -389,5 +391,41 @@ public class JobState {
 			}
 		}
 		return services;
+	}
+	
+	public List<Job> listJobs(final String user, final String service,
+			final boolean running, final boolean complete,
+			final boolean error)
+			throws CommunicationException {
+		checkString(user, "user");
+		checkString(service, "service", MAX_LEN_SERVICE);
+		String query = String.format("{%s: %s, %s: %s, ", USER, user,
+				SERVICE, service); 
+		//this seems dumb.
+		if (running && !complete && !error) {
+			query += COMPLETE + ": false}";
+		} else if (!running && complete && !error) {
+			query += COMPLETE + ": true, " + ERROR + ": false}";
+		} else if (!running && !complete && error) {
+			query += ERROR + ": true}";
+		} else if (running && complete && !error) {
+			query += ERROR + ": false}";
+		} else if (!running && complete && error) {
+			query += COMPLETE + ": true}";
+		} else if (running && !complete && !error) {
+			query += " $or: [{" + COMPLETE + ": false}, {" + ERROR + ": true}]}";
+		}
+		final Iterable<Job> j;
+		try {
+			j = jobjong.find(query).as(Job.class);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		final List<Job> jobs = new LinkedList<Job>();
+		for (final Job job: j) {
+			jobs.add(job);
+		}
+		return jobs;
 	}
 }

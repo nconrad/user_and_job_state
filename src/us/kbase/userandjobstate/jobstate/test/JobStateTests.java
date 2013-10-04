@@ -628,4 +628,9 @@ public class JobStateTests {
 		assertThat("get correct services", js.listServices(user),
 				is(expc));
 	}
+	
+	@Test
+	public void listJobs() throws Exception {
+		//TODO list jobs tests
+	}
 }
