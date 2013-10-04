@@ -216,12 +216,12 @@ module UserAndJobState {
 	/* A string-based filter for listing jobs.
 	
 		If the string contains:
-			'R' - running (created or started) jobs are returned.
+			'R' - running jobs are returned.
 			'C' - completed jobs are returned.
 			'E' - jobs that errored out are returned.
 		The string can contain any combination of these codes in any order.
-		If the string contains none of the codes or is null, all jobs are
-		returned.
+		If the string contains none of the codes or is null, all jobs that have
+		been started are returned.
 	*/
 	typedef string job_filter;
 	

@@ -631,6 +631,46 @@ public class JobStateTests {
 	
 	@Test
 	public void listJobs() throws Exception {
+		String lj = "listjobs";
+		List<FakeJob> empty = new ArrayList<FakeJob>();
+		checkListJobs(empty, js.listJobs(lj, "serv1", true, true, true));
+		String jobid = js.createJob(lj);
+		checkListJobs(empty, js.listJobs(lj, "serv1", true, true, true));
+		
+		jobid = js.createAndStartJob(lj, "serv1", "lst", "ldsc", 42);
+		FakeJob started = new FakeJob(jobid, lj, "serv1", "started", "ldsc", "task",
+				0, 42, "lst", false, false, null);
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", true, true, true));
+		checkListJobs(empty, js.listJobs(lj, "serv2", true, true, true));
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", false, false, false));
+		
+		jobid = js.createAndStartJob(lj, "serv1", "comp-st", "comp-dsc");
+		js.completeJob(lj, jobid, "serv1", "comp-st1", false, null);
+		FakeJob complete = new FakeJob(jobid, lj, "serv1", "complete",
+				"comp-dsc", "none", null, null, "comp-st1", true, false, null);
+		
+		jobid = js.createAndStartJobWithPercentProg(lj, "serv1", "err-st", "err-dsc");
+		js.completeJob(lj, jobid, "serv1", "err-st1", true, null);
+		FakeJob error = new FakeJob(jobid, lj, "serv1", "error",
+				"err-dsc", "percent", 100, 100, "err-st1", true, true, null);
+		
+		List<FakeJob> all = Arrays.asList(started, complete, error);
+		checkListJobs(all, js.listJobs(lj, "serv1", true, true, true));
+		checkListJobs(all, js.listJobs(lj, "serv1", false, false, false));
+		
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, "serv1", true, false, false));
+		
+		
 		//TODO list jobs tests
+	}
+	
+	private void checkListJobs(List<FakeJob> expected, List<Job> result)
+		throws Exception {
+		HashSet<FakeJob> res = new HashSet<FakeJob>();
+		for (Job j: result) {
+			res.add(new FakeJob(j));
+		}
+		assertThat("got expected jobs back", res, is(new HashSet<FakeJob>(expected)));
 	}
 }

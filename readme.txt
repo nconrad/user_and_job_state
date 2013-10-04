@@ -6,12 +6,6 @@ Service to maintain global user state and job status
 RUNTIME REQUIREMENTS:
 mongo 2.4.3+ required. KBase-v22 has 2.0.something
 
-COMPILATION REQUIREMENTS:
-typecomp dev-prototypes branch
-java_type_generator dev branch
-
-For now, all compiled files are checked in.
-
 SETUP
 
 1) A mongodb instance must be up and running.

@@ -399,21 +399,23 @@ public class JobState {
 			throws CommunicationException {
 		checkString(user, "user");
 		checkString(service, "service", MAX_LEN_SERVICE);
-		String query = String.format("{%s: %s, %s: %s, ", USER, user,
+		String query = String.format("{%s: '%s', %s: '%s'", USER, user,
 				SERVICE, service); 
 		//this seems dumb.
 		if (running && !complete && !error) {
-			query += COMPLETE + ": false}";
+			query += ", " + COMPLETE + ": false}";
 		} else if (!running && complete && !error) {
-			query += COMPLETE + ": true, " + ERROR + ": false}";
+			query += ", " + COMPLETE + ": true, " + ERROR + ": false}";
 		} else if (!running && !complete && error) {
-			query += ERROR + ": true}";
+			query += ", " + ERROR + ": true}";
 		} else if (running && complete && !error) {
-			query += ERROR + ": false}";
+			query += ", " + ERROR + ": false}";
 		} else if (!running && complete && error) {
-			query += COMPLETE + ": true}";
+			query += ", " + COMPLETE + ": true}";
 		} else if (running && !complete && !error) {
-			query += " $or: [{" + COMPLETE + ": false}, {" + ERROR + ": true}]}";
+			query += ", $or: [{" + COMPLETE + ": false}, {" + ERROR + ": true}]}";
+		} else {
+			query += "}";
 		}
 		final Iterable<Job> j;
 		try {
