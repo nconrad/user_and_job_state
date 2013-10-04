@@ -412,7 +412,7 @@ public class JobState {
 			query += ", " + ERROR + ": false}";
 		} else if (!running && complete && error) {
 			query += ", " + COMPLETE + ": true}";
-		} else if (running && !complete && !error) {
+		} else if (running && !complete && error) {
 			query += ", $or: [{" + COMPLETE + ": false}, {" + ERROR + ": true}]}";
 		} else {
 			query += "}";

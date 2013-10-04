@@ -654,15 +654,26 @@ public class JobStateTests {
 		FakeJob error = new FakeJob(jobid, lj, "serv1", "error",
 				"err-dsc", "percent", 100, 100, "err-st1", true, true, null);
 		
+		//all 3
 		List<FakeJob> all = Arrays.asList(started, complete, error);
 		checkListJobs(all, js.listJobs(lj, "serv1", true, true, true));
 		checkListJobs(all, js.listJobs(lj, "serv1", false, false, false));
 		
+		//1 of 3
 		checkListJobs(Arrays.asList(started),
 				js.listJobs(lj, "serv1", true, false, false));
+		checkListJobs(Arrays.asList(complete),
+				js.listJobs(lj, "serv1", false, true, false));
+		checkListJobs(Arrays.asList(error),
+				js.listJobs(lj, "serv1", false, false, true));
 		
-		
-		//TODO list jobs tests
+		//2 of 3
+		checkListJobs(Arrays.asList(started, complete),
+				js.listJobs(lj, "serv1", true, true, false));
+		checkListJobs(Arrays.asList(complete, error),
+				js.listJobs(lj, "serv1", false, true, true));
+		checkListJobs(Arrays.asList(started, error),
+				js.listJobs(lj, "serv1", true, false, true));
 	}
 	
 	private void checkListJobs(List<FakeJob> expected, List<Job> result)
