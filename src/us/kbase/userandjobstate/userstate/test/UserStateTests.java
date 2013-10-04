@@ -219,6 +219,15 @@ public class UserStateTests {
 		checkListServ("foo1", false, new ArrayList<String>());
 		checkListServ("foo", true, Arrays.asList("authserv1", "authserv2"));
 		checkListServ("foo1", true, new ArrayList<String>());
+		
+		us.setState("foo", "nullserv", false, "null", null);
+		us.setState("foo", "nullserv", true, "null", null);
+		assertThat("got correct data back",
+				us.getState("foo", "nullserv", true, "null"),
+				is((Object) null));
+		assertThat("got correct data back",
+				us.getState("foo", "nullserv", false, "null"),
+				is((Object) null));
 	}
 	
 	private void checkListServ(String user, boolean auth,
