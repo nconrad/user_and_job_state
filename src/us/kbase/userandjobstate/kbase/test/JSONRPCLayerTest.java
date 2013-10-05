@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,9 +21,12 @@ import org.junit.Test;
 
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
+import us.kbase.common.service.Tuple12;
 import us.kbase.common.service.UObject;
+import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
+import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 /*
@@ -228,4 +232,51 @@ public class JSONRPCLayerTest {
 		}*/
 	}
 	
+	@Test
+	public void createJob() throws Exception {
+		String jobid = CLIENT1.createJob();
+		Tuple12<String, String, String, String, String, Integer, Integer,
+				String, Integer, Integer, String, Results> ret =
+				CLIENT1.getJobInfo(jobid);
+		checkJob(ret, jobid, "created", null, null, null, null, null,
+				null, null, null, null);
+	}
+	
+	private void checkJob(Tuple12<String, String, String, String, String,
+			Integer, Integer, String, Integer, Integer, String, Results> ret,
+			String id, String stage, String status,
+			String service, String desc, String progtype, Integer prog,
+			Integer maxproj, Integer complete, Integer error,
+			Results results)
+			throws Exception {
+		assertThat("job id ok", ret.getE1(), is(id));
+		assertThat("job stage ok", ret.getE3(), is(stage));
+		assertThat("job service ok", ret.getE2(), is(service));
+		assertThat("job desc ok", ret.getE11(), is(desc));
+		assertThat("job progtype ok", ret.getE8(), is(progtype));
+		assertThat("job prog ok", ret.getE6(), is(prog));
+		assertThat("job maxprog ok", ret.getE7(), is(maxproj));
+		assertThat("job status ok", ret.getE4(), is(status));
+		assertThat("job updated ok", ret.getE5(), is(String.class)); //TODO parse date
+		assertThat("job complete ok", ret.getE9(), is(complete));
+		assertThat("job error ok", ret.getE10(), is(error));
+		assertThat("job results ok", ret.getE12(), is(results));
+		checkResults(ret.getE12(), results);
+	}
+	
+	private void checkResults(Results got, Results expected) throws Exception {
+		if (got == null & expected == null) {
+			return;
+		}
+		if (got == null ^ expected == null) {
+			fail("got null for results when expected real results or vice versa: " 
+					+ got + " " + expected);
+		}
+		assertThat("shock ids same", got.getShocknodes(), is(expected.getShocknodes()));
+		assertThat("shock url same", got.getShockurl(), is(expected.getShockurl()));
+		assertThat("ws ids same", got.getWorkspaceids(), is(expected.getWorkspaceids()));
+		assertThat("ws url same", got.getWorkspaceurl(), is(expected.getWorkspaceurl()));
+	}
+	
+	//TODO ServerError toString doesn't seem to work check this
 }

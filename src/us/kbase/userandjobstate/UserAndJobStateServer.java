@@ -1,5 +1,6 @@
 package us.kbase.userandjobstate;
 
+import java.text.SimpleDateFormat;
 import java.util.List;
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
@@ -13,6 +14,7 @@ import us.kbase.common.service.UObject;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -22,6 +24,8 @@ import us.kbase.auth.TokenExpiredException;
 import us.kbase.auth.TokenFormatException;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
 import us.kbase.common.mongo.exceptions.MongoAuthException;
+import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
 //END_HEADER
 
@@ -86,8 +90,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	private static Map<String, String> ujConfig = null;
 	
 	private static final String USER_COLLECTION = "userstate";
+	private static final String JOB_COLLECTION = "jobstate";
+	
+	private static final SimpleDateFormat DATE_FORMAT =
+			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	
 	private final UserState us;
+	private final JobState js;
 	
 	private UserState getUserState(final String host, final String dbs,
 			final String user, final String pwd) {
@@ -112,13 +121,36 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return null;
 	}
 	
+	private JobState getJobState(final String host, final String dbs,
+			final String user, final String pwd) {
+		try {
+			if (user != null) {
+				return new JobState(host, dbs, JOB_COLLECTION, user, pwd);
+			} else {
+				return new JobState(host, dbs, JOB_COLLECTION);
+			}
+		} catch (UnknownHostException uhe) {
+			fail("Couldn't find mongo host " + host + ": " +
+					uhe.getLocalizedMessage());
+		} catch (IOException io) {
+			fail("Couldn't connect to mongo host " + host + ": " +
+					io.getLocalizedMessage());
+		} catch (MongoAuthException ae) {
+			fail("Not authorized: " + ae.getLocalizedMessage());
+		} catch (InvalidHostException ihe) {
+			fail(host + " is an invalid database host: "  +
+					ihe.getLocalizedMessage());
+		}
+		return null;
+	}
+	
 	private void fail(final String error) {
 		logErr(error);
 		System.err.println(error);
 		startupFailed();
 	}
 	
-	private String getServiceName(String serviceToken)
+	private static String getServiceName(String serviceToken)
 			throws TokenFormatException, TokenExpiredException, IOException {
 		if (serviceToken == null || serviceToken.isEmpty()) {
 			throw new IllegalArgumentException(
@@ -129,6 +161,45 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			throw new IllegalArgumentException("Service token is invalid");
 		}
 		return t.getUserName();
+	}
+	
+	private static Tuple12<String, String, String, String, String, Integer,
+			Integer, String, Integer, Integer, String, Results> jobToJobInfo(
+			final Job j) {
+		return new Tuple12<String, String, String, String, String, Integer,
+				Integer, String, Integer, Integer, String, Results>()
+				.withE1(j.getID())
+				.withE2(j.getService())
+				.withE3(j.getStage())
+				.withE4(j.getStatus())
+				.withE5(formatDate(j.getLastUpdated()))
+				.withE6(j.getProgress())
+				.withE7(j.getMaxProgress())
+				.withE8(j.getProgType())
+				//TODO clean these two up
+				.withE9(j.isComplete() == null ? null : (j.isComplete() ? 1 : 0))
+				.withE10(j.hasError() == null ? null : (j.hasError()? 1 : 0))
+				.withE11(j.getDescription())
+				.withE12(makeResults(j.getResults()));
+	}
+	
+	@SuppressWarnings("unchecked")
+	private static Results makeResults(Map<String, Object> res) {
+		if (res == null) {
+			return null;
+		}
+		return new Results()
+				.withShocknodes((List<String>) res.get("shocknodes"))
+				.withShockurl((String)res.get("shockurl"))
+				.withWorkspaceids((List<String>) res.get("workspaceids"))
+				.withWorkspaceurl((String) res.get("workspaceurl"));
+	}
+
+	public static String formatDate(final Date d) {
+		if (d == null) {
+			return null;
+		}
+		return DATE_FORMAT.format(d);
 	}
     //END_CLASS_HEADER
 
@@ -162,6 +233,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		if (failed) {
 			fail("Server startup failed - all calls will error out.");
 			us = null;
+			js = null;
 		} else {
 			final String user = ujConfig.get(USER);
 			final String pwd = ujConfig.get(PWD);
@@ -177,6 +249,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			System.out.println("Using connection parameters:\n" + params);
 			logInfo("Using connection parameters:\n" + params);
 			us = getUserState(host, dbs, user, pwd);
+			js = getJobState(host, dbs, user, pwd);
 		}
         //END_CONSTRUCTOR
     }
@@ -304,6 +377,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public String createJob(AuthToken authPart) throws Exception {
         String returnVal = null;
         //BEGIN create_job
+		returnVal = js.createJob(authPart.getUserName());
         //END create_job
         return returnVal;
     }
@@ -471,11 +545,12 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
         Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> returnVal = null;
         //BEGIN get_job_info
+		returnVal = jobToJobInfo(js.getJob(authPart.getUserName(), job));
         //END get_job_info
         return returnVal;
     }
 
-    /**
+	/**
      * <p>Original spec-file function name: list_jobs</p>
      * <pre>
      * List jobs.
