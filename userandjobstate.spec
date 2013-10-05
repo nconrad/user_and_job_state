@@ -118,8 +118,8 @@ module UserAndJobState {
 	*/
 	typedef string job_description;
 	
-	/* The amount of progress the job has made since the last update, summed
-		to the total progress so far. */
+	/* The amount of progress the job has made since the last update. This will
+		be summed to the total progress so far. */
 	typedef int progress;
 	
 	/* The total progress of a job. */
@@ -188,9 +188,7 @@ module UserAndJobState {
 	funcdef get_job_description(job_id job) returns(service_name service,
 		progress_type ptype, max_progress max, job_description desc);
 	
-	/* Get the status of a job. 
-		If the progress type is 'none' total_progress will always be 0.
-	*/
+	/* Get the status of a job. */
 	funcdef get_job_status(job_id job) returns(timestamp last_update, 
 		job_stage stage, job_status status, total_progress progress,
 		boolean complete, boolean error);

@@ -24,8 +24,6 @@ and storing job status so that a) long JSON RPC calls can report status and
 UI elements can receive updates, and b) there's a centralized location for 
 job status reporting.
 
-Setting objects are limited to 640Kb.
-
 There are two modes of operation for setting key values for a user: 
 1) no service authentication - an authorization token for a service is not 
         required, and any service with the user token can write to any other
@@ -40,6 +38,8 @@ that is writable by all other services (no auth) and the same key that was
 set with auth to which only the workspace service can write (or any other
 service that has access to a workspace service account token, so keep your
 service credentials safe).
+
+Setting objects are limited to 640Kb.
 
 All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.
@@ -1341,8 +1341,7 @@ boolean is an int
 
 =item Description
 
-Get the status of a job. 
-If the progress type is 'none' total_progress will always be 0.
+Get the status of a job.
 
 =back
 
@@ -1733,7 +1732,7 @@ sub get_job_info
 
 =head2 list_jobs
 
-  $jobs = $obj->list_jobs($service, $options)
+  $jobs = $obj->list_jobs($service, $filter)
 
 =over 4
 
@@ -1743,16 +1742,10 @@ sub get_job_info
 
 <pre>
 $service is a UserAndJobState.service_name
-$options is a UserAndJobState.ListJobsOptions
+$filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
-ListJobsOptions is a reference to a hash where the following keys are defined:
-	oldest_first has a value which is a UserAndJobState.boolean
-	limit has a value which is an int
-	offset has a value which is an int
-	completed has a value which is a UserAndJobState.boolean
-	error_only has a value which is a UserAndJobState.boolean
-boolean is an int
+job_filter is a string
 job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
@@ -1773,6 +1766,7 @@ timestamp is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
+boolean is an int
 job_description is a string
 Results is a reference to a hash where the following keys are defined:
 	shocknodes has a value which is a reference to a list where each element is a string
@@ -1787,16 +1781,10 @@ Results is a reference to a hash where the following keys are defined:
 =begin text
 
 $service is a UserAndJobState.service_name
-$options is a UserAndJobState.ListJobsOptions
+$filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
-ListJobsOptions is a reference to a hash where the following keys are defined:
-	oldest_first has a value which is a UserAndJobState.boolean
-	limit has a value which is an int
-	offset has a value which is an int
-	completed has a value which is a UserAndJobState.boolean
-	error_only has a value which is a UserAndJobState.boolean
-boolean is an int
+job_filter is a string
 job_info is a reference to a list containing 12 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
@@ -1817,6 +1805,7 @@ timestamp is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
+boolean is an int
 job_description is a string
 Results is a reference to a hash where the following keys are defined:
 	shocknodes has a value which is a reference to a list where each element is a string
@@ -1847,11 +1836,11 @@ sub list_jobs
 							       "Invalid argument count for function list_jobs (received $n, expecting 2)");
     }
     {
-	my($service, $options) = @args;
+	my($service, $filter) = @args;
 
 	my @_bad_arguments;
         (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
-        (ref($options) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 2 \"options\" (value was \"$options\")");
+        (!ref($filter)) or push(@_bad_arguments, "Invalid type for argument 2 \"filter\" (value was \"$filter\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to list_jobs:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1979,7 +1968,7 @@ job_id is a string
 
 =item Description
 
-Delete a job. Will error out if the job is not complete.
+Delete a job. Will fail if the job is not complete.
 
 =back
 
@@ -2465,8 +2454,8 @@ a string
 
 =item Description
 
-The amount of progress the job has made since the last update, summed
-to the total progress so far.
+The amount of progress the job has made since the last update. This will
+be summed to the total progress so far.
 
 
 =item Definition
@@ -2684,8 +2673,7 @@ workspaceurl has a value which is a string
 
 =item Description
 
-Information about a job. Note calls returning this structure will
-probably be slower than the more targeted calls.
+Information about a job.
 
 
 =item Definition
@@ -2734,7 +2722,7 @@ a reference to a list containing 12 items:
 
 
 
-=head2 ListJobsOptions
+=head2 job_filter
 
 =over 4
 
@@ -2742,16 +2730,15 @@ a reference to a list containing 12 items:
 
 =item Description
 
-Options for list_jobs command. 
+A string-based filter for listing jobs.
 
-boolean oldest_first - return jobs with an ascending sort based on the
-        creation date.
-int limit - limit the results to X jobs.
-int offset - skip the first X jobs.
-boolean completed - true to return only completed jobs, false to
-        return only incomplete jobs.
-boolean error_only - true to return only jobs that errored out. 
-        Overrides the completed option.
+        If the string contains:
+                'R' - running jobs are returned.
+                'C' - completed jobs are returned.
+                'E' - jobs that errored out are returned.
+        The string can contain any combination of these codes in any order.
+        If the string contains none of the codes or is null, all jobs that have
+        been started are returned.
 
 
 =item Definition
@@ -2759,26 +2746,14 @@ boolean error_only - true to return only jobs that errored out.
 =begin html
 
 <pre>
-a reference to a hash where the following keys are defined:
-oldest_first has a value which is a UserAndJobState.boolean
-limit has a value which is an int
-offset has a value which is an int
-completed has a value which is a UserAndJobState.boolean
-error_only has a value which is a UserAndJobState.boolean
-
+a string
 </pre>
 
 =end html
 
 =begin text
 
-a reference to a hash where the following keys are defined:
-oldest_first has a value which is a UserAndJobState.boolean
-limit has a value which is an int
-offset has a value which is an int
-completed has a value which is a UserAndJobState.boolean
-error_only has a value which is a UserAndJobState.boolean
-
+a string
 
 =end text
 

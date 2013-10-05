@@ -32,7 +32,6 @@ import us.kbase.userandjobstate.userstate.UserState;
  * and storing job status so that a) long JSON RPC calls can report status and
  * UI elements can receive updates, and b) there's a centralized location for 
  * job status reporting.
- * Setting objects are limited to 640Kb.
  * There are two modes of operation for setting key values for a user: 
  * 1) no service authentication - an authorization token for a service is not 
  *         required, and any service with the user token can write to any other
@@ -47,6 +46,7 @@ import us.kbase.userandjobstate.userstate.UserState;
  * set with auth to which only the workspace service can write (or any other
  * service that has access to a workspace service account token, so keep your
  * service credentials safe).
+ * Setting objects are limited to 640Kb.
  * All job writes require service authentication. No reads, either for key/value
  * pairs or jobs, require service authentication.
  * The service assumes other services are capable of simple math and does not
@@ -352,7 +352,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @param   job   Original type "job_id" (A job id.)
      * @param   token   Original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   Original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
-     * @param   prog   Original type "progress" (The amount of progress the job has made since the last update, summed to the total progress so far.)
+     * @param   prog   Original type "progress" (The amount of progress the job has made since the last update. This will be summed to the total progress so far.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.update_job_progress")
     public void updateJobProgress(String job, String token, String status, Integer prog, AuthToken authPart) throws Exception {
@@ -401,8 +401,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: get_job_status</p>
      * <pre>
-     * Get the status of a job. 
-     * If the progress type is 'none' total_progress will always be 0.
+     * Get the status of a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
      */
@@ -466,7 +465,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Get information about a job.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
-     * @return   Original type "job_info" (Information about a job. Note calls returning this structure will probably be slower than the more targeted calls.)
+     * @return   Original type "job_info" (Information about a job.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_info")
     public Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
@@ -482,10 +481,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * List jobs.
      * </pre>
      * @param   service   Original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
-     * @param   options   Original type "ListJobsOptions" (see {@link us.kbase.userandjobstate.ListJobsOptions ListJobsOptions} for details)
+     * @param   filter   Original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all jobs that have been started are returned.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
-    public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, ListJobsOptions options, AuthToken authPart) throws Exception {
+    public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
         List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
         //BEGIN list_jobs
         //END list_jobs
@@ -509,7 +508,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: delete_job</p>
      * <pre>
-     * Delete a job. Will error out if the job is not complete.
+     * Delete a job. Will fail if the job is not complete.
      * </pre>
      * @param   job   Original type "job_id" (A job id.)
      */
