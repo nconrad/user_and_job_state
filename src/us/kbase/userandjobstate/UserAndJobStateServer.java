@@ -176,11 +176,17 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withE6(j.getProgress())
 				.withE7(j.getMaxProgress())
 				.withE8(j.getProgType())
-				//TODO clean these two up
-				.withE9(j.isComplete() == null ? null : (j.isComplete() ? 1 : 0))
-				.withE10(j.hasError() == null ? null : (j.hasError()? 1 : 0))
+				.withE9(boolToInt(j.isComplete()))
+				.withE10(boolToInt(j.hasError()))
 				.withE11(j.getDescription())
 				.withE12(makeResults(j.getResults()));
+	}
+	
+	private static Integer boolToInt(final Boolean b) {
+		if (b == null) {
+			return null;
+		}
+		return b ? 1 : 0;
 	}
 	
 	@SuppressWarnings("unchecked")

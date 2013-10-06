@@ -7,8 +7,8 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -26,7 +26,6 @@ import us.kbase.common.service.UObject;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
-import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 /*
@@ -235,12 +234,12 @@ public class JSONRPCLayerTest {
 	@Test
 	public void createJob() throws Exception {
 		String jobid = CLIENT1.createJob();
-		Tuple12<String, String, String, String, String, Integer, Integer,
-				String, Integer, Integer, String, Results> ret =
-				CLIENT1.getJobInfo(jobid);
-		checkJob(ret, jobid, "created", null, null, null, null, null,
-				null, null, null, null);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "created", null, null, null,
+				null, null, null, null, null, null);
 	}
+	
+	private static SimpleDateFormat DATE_FORMAT =
+			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	
 	private void checkJob(Tuple12<String, String, String, String, String,
 			Integer, Integer, String, Integer, Integer, String, Results> ret,
@@ -257,7 +256,7 @@ public class JSONRPCLayerTest {
 		assertThat("job prog ok", ret.getE6(), is(prog));
 		assertThat("job maxprog ok", ret.getE7(), is(maxproj));
 		assertThat("job status ok", ret.getE4(), is(status));
-		assertThat("job updated ok", ret.getE5(), is(String.class)); //TODO parse date
+		DATE_FORMAT.parse(ret.getE5()); //should throw error if bad format
 		assertThat("job complete ok", ret.getE9(), is(complete));
 		assertThat("job error ok", ret.getE10(), is(error));
 		assertThat("job results ok", ret.getE12(), is(results));
