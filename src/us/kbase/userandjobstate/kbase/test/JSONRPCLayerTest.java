@@ -391,4 +391,88 @@ public class JSONRPCLayerTest {
 					jobid)));
 		}
 	}
+	
+	@Test
+	public void updateJob() throws Exception {
+		String jobid = CLIENT1.createAndStartJob(token2, "up stat", "up desc",
+				new InitProgress().withPtype("none"));
+		CLIENT1.updateJob(jobid, token2, "up stat2");
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat2", USER2,
+				"up desc", "none", null, null, 0, 0, null);
+		CLIENT1.updateJobProgress(jobid, token2, "up stat3", 40);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat3", USER2,
+				"up desc", "none", null, null, 0, 0, null);
+		CLIENT1.updateJobProgress(jobid, token2, "up stat3", null);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat3", USER2,
+				"up desc", "none", null, null, 0, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "up2 stat", "up2 desc",
+				new InitProgress().withPtype("percent"));
+		CLIENT1.updateJobProgress(jobid, token2, "up2 stat2", 40);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat2", USER2,
+				"up2 desc", "percent", 40, 100, 0, 0, null);
+		CLIENT1.updateJob(jobid, token2, "up2 stat3");
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat3", USER2,
+				"up2 desc", "percent", 40, 100, 0, 0, null);
+		CLIENT1.updateJobProgress(jobid, token2, "up2 stat4", 70);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat4", USER2,
+				"up2 desc", "percent", 100, 100, 0, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "up3 stat", "up3 desc",
+				new InitProgress().withPtype("task").withMax(42));
+		CLIENT1.updateJobProgress(jobid, token2, "up3 stat2", 30);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat2", USER2,
+				"up3 desc", "task", 30, 42, 0, 0, null);
+		CLIENT1.updateJob(jobid, token2, "up3 stat3");
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat3", USER2,
+				"up3 desc", "task", 30, 42, 0, 0, null);
+		CLIENT1.updateJobProgress(jobid, token2, "up3 stat4", 15);
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat4", USER2,
+				"up3 desc", "task", 42, 42, 0, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "up4 stat", "up4 desc",
+				new InitProgress().withPtype("none"));
+		testUpdateJob(jobid, token2, "up4 stat2", -1, "progress cannot be negative");
+		
+		testUpdateJob(null, token2, "s",
+				"id cannot be null or the empty string");
+		testUpdateJob("", token2, "s",
+				"id cannot be null or the empty string");
+		testUpdateJob("aaaaaaaaaaaaaaaaaaaa", token2, "s",
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+		
+		testUpdateJob(jobid, null, "s",
+				"Service token cannot be null or the empty string");
+		testUpdateJob(jobid, "foo", "s",
+				"Auth token is in the incorrect format, near 'foo'");
+		//TODO restore when auth service is fixed
+//		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
+//				"id cannot be null or the empty string");
+	}
+	
+	private void testUpdateJob(String jobid, String token, String status,
+			Integer prog, String exception) throws Exception {
+		try {
+			CLIENT1.updateJobProgress(jobid, token, status, prog);
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	private void testUpdateJob(String jobid, String token, String status,
+			String exception) throws Exception {
+		try {
+			CLIENT1.updateJob(jobid, token, status);
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			CLIENT1.updateJobProgress(jobid, token, status, 1);
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
 }

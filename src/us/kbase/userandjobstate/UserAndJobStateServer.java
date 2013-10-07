@@ -478,6 +478,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.update_job_progress")
     public void updateJobProgress(String job, String token, String status, Integer prog, AuthToken authPart) throws Exception {
         //BEGIN update_job_progress
+		js.updateJob(authPart.getUserName(), job, getServiceName(token),
+				status, prog);
         //END update_job_progress
     }
 
@@ -493,6 +495,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.update_job")
     public void updateJob(String job, String token, String status, AuthToken authPart) throws Exception {
         //BEGIN update_job
+		js.updateJob(authPart.getUserName(), job, getServiceName(token),
+				status, null);
         //END update_job
     }
 
