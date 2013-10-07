@@ -436,6 +436,31 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public String createAndStartJob(String token, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
         String returnVal = null;
         //BEGIN create_and_start_job
+		//could combine with above, but it'd be a huge mess
+		if (progress == null) {
+			throw new IllegalArgumentException("InitProgress cannot be null");
+		}
+		checkAddlArgs(progress.getAdditionalProperties(), InitProgress.class);
+		if (progress.getPtype() == null) {
+			throw new IllegalArgumentException("Progress type cannot be null");
+		}
+		if (progress.getPtype().equals(JobState.PROG_NONE)) {
+			returnVal = js.createAndStartJob(authPart.getUserName(),
+					getServiceName(token), status, desc);
+		} else if (progress.getPtype().equals(JobState.PROG_PERC)) {
+			returnVal = js.createAndStartJobWithPercentProg(authPart.getUserName(),
+					getServiceName(token), status, desc);
+		} else if (progress.getPtype().equals(JobState.PROG_TASK)) {
+			if (progress.getMax() == null) {
+				throw new IllegalArgumentException(
+						"Max progress cannot be null for task based progress");
+			}
+			returnVal = js.createAndStartJob(authPart.getUserName(),
+					getServiceName(token), status, desc, progress.getMax());
+		} else {
+			throw new IllegalArgumentException("No such progress type: " +
+					progress.getPtype());
+		}
         //END create_and_start_job
         return returnVal;
     }

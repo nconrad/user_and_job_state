@@ -255,12 +255,12 @@ public class JSONRPCLayerTest {
 				"ne desc3", "task", 0, 5, 0, 0, null);
 		
 		testStartJob(null, token2, "s", "d", new InitProgress().withPtype("none"),
-				"id cannot be null or the empty string");
+				"id cannot be null or the empty string", true);
 		testStartJob("", token2, "s", "d", new InitProgress().withPtype("none"),
-				"id cannot be null or the empty string");
+				"id cannot be null or the empty string", true);
 		testStartJob("aaaaaaaaaaaaaaaaaaaa", token2, "s", "d",
 				new InitProgress().withPtype("none"),
-				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID", true);
 		
 		jobid = CLIENT1.createJob();
 		testStartJob(jobid, null, "s", "d", new InitProgress().withPtype("none"),
@@ -284,12 +284,43 @@ public class JSONRPCLayerTest {
 		testStartJob(jobid, token2, "s", "d", new InitProgress().withPtype("task")
 				.withMax(null),
 				"Max progress cannot be null for task based progress");
+		
+		
+		jobid = CLIENT1.createAndStartJob(token2, "cs stat", "cs desc",
+				new InitProgress().withPtype("none"));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat", USER2,
+				"cs desc", "none", null, null, 0, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "cs stat2", "cs desc2",
+				new InitProgress().withPtype("percent"));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat2", USER2,
+				"cs desc2", "percent", 0, 100, 0, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "cs stat3", "cs desc3",
+				new InitProgress().withPtype("task").withMax(5));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat3", USER2,
+				"cs desc3", "task", 0, 5, 0, 0, null);
 	}
 	
 	private void testStartJob(String jobid, String token, String stat, String desc,
 			InitProgress prog, String exception) throws Exception {
+		testStartJob(jobid, token, stat, desc, prog, exception, false);
+	}
+	
+	private void testStartJob(String jobid, String token, String stat, String desc,
+			InitProgress prog, String exception, boolean badid) throws Exception {
 		try {
 			CLIENT1.startJob(jobid, token, stat, desc, prog);
+			fail("started job w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		if (badid) {
+			return;
+		}
+		try {
+			CLIENT1.createAndStartJob(token, stat, desc, prog);
 			fail("started job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
