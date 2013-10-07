@@ -23,6 +23,7 @@ import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple12;
 import us.kbase.common.service.UObject;
+import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
@@ -232,10 +233,68 @@ public class JSONRPCLayerTest {
 	}
 	
 	@Test
-	public void createJob() throws Exception {
+	public void createAndStartJob() throws Exception {
 		String jobid = CLIENT1.createJob();
 		checkJob(CLIENT1.getJobInfo(jobid), jobid, "created", null, null, null,
 				null, null, null, null, null, null);
+		CLIENT1.startJob(jobid, token2, "new stat", "ne desc",
+				new InitProgress().withPtype("none"));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat", USER2,
+				"ne desc", "none", null, null, 0, 0, null);
+		
+		jobid = CLIENT1.createJob();
+		CLIENT1.startJob(jobid, token2, "new stat2", "ne desc2",
+				new InitProgress().withPtype("percent"));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat2", USER2,
+				"ne desc2", "percent", 0, 100, 0, 0, null);
+		
+		jobid = CLIENT1.createJob();
+		CLIENT1.startJob(jobid, token2, "new stat3", "ne desc3",
+				new InitProgress().withPtype("task").withMax(5));
+		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat3", USER2,
+				"ne desc3", "task", 0, 5, 0, 0, null);
+		
+		testStartJob(null, token2, "s", "d", new InitProgress().withPtype("none"),
+				"id cannot be null or the empty string");
+		testStartJob("", token2, "s", "d", new InitProgress().withPtype("none"),
+				"id cannot be null or the empty string");
+		testStartJob("aaaaaaaaaaaaaaaaaaaa", token2, "s", "d",
+				new InitProgress().withPtype("none"),
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+		
+		jobid = CLIENT1.createJob();
+		testStartJob(jobid, null, "s", "d", new InitProgress().withPtype("none"),
+				"Service token cannot be null or the empty string");
+		testStartJob(jobid, "foo", "s", "d", new InitProgress().withPtype("none"),
+				"Auth token is in the incorrect format, near 'foo'");
+		//TODO restore when auth service is fixed
+//		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
+//				"id cannot be null or the empty string");
+		
+		testStartJob(jobid, token2, "s", "d", null,
+				"InitProgress cannot be null");
+		InitProgress ip = new InitProgress().withPtype("none");
+		ip.setAdditionalProperties("foo", "bar");
+		testStartJob(jobid, token2, "s", "d", ip,
+				"Unexpected arguments in InitProgress: foo");
+		testStartJob(jobid, token2, "s", "d", new InitProgress().withPtype(null),
+				"Progress type cannot be null");
+		testStartJob(jobid, token2, "s", "d", new InitProgress().withPtype("foo"),
+				"No such progress type: foo");
+		testStartJob(jobid, token2, "s", "d", new InitProgress().withPtype("task")
+				.withMax(null),
+				"Max progress cannot be null for task based progress");
+	}
+	
+	private void testStartJob(String jobid, String token, String stat, String desc,
+			InitProgress prog, String exception) throws Exception {
+		try {
+			CLIENT1.startJob(jobid, token, stat, desc, prog);
+			fail("started job w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
 	}
 	
 	private static SimpleDateFormat DATE_FORMAT =
@@ -277,5 +336,28 @@ public class JSONRPCLayerTest {
 		assertThat("ws url same", got.getWorkspaceurl(), is(expected.getWorkspaceurl()));
 	}
 	
-	//TODO ServerError toString doesn't seem to work check this
+	@Test
+	public void getJobInfoBadArgs() throws Exception {
+		String jobid = CLIENT1.createJob();
+		try {
+			CLIENT1.getJobInfo("foo");
+			fail("started job with nonsense id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Job ID foo is not a legal ID"));
+		}
+		if (jobid.charAt(0) == 'a') {
+			jobid = "b" + jobid.substring(1);
+		} else {
+			jobid = "a" + jobid.substring(1);
+		}
+		try {
+			CLIENT1.getJobInfo(jobid);
+			fail("started job with non-existant id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(String.format("There is no job %s for user kbasetest",
+					jobid)));
+		}
+	}
 }

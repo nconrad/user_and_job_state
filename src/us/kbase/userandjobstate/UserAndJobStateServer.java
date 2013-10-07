@@ -1,6 +1,5 @@
 package us.kbase.userandjobstate;
 
-import java.text.SimpleDateFormat;
 import java.util.List;
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
@@ -11,10 +10,12 @@ import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 
 //BEGIN_HEADER
+import static us.kbase.common.utils.ServiceUtils.formatDate;
+import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
+
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -91,9 +92,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	
 	private static final String USER_COLLECTION = "userstate";
 	private static final String JOB_COLLECTION = "jobstate";
-	
-	private static final SimpleDateFormat DATE_FORMAT =
-			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	
 	private final UserState us;
 	private final JobState js;
@@ -201,12 +199,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withWorkspaceurl((String) res.get("workspaceurl"));
 	}
 
-	public static String formatDate(final Date d) {
-		if (d == null) {
-			return null;
-		}
-		return DATE_FORMAT.format(d);
-	}
     //END_CLASS_HEADER
 
     public UserAndJobStateServer() throws Exception {
@@ -402,6 +394,30 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.start_job")
     public void startJob(String job, String token, String status, String desc, InitProgress progress, AuthToken authPart) throws Exception {
         //BEGIN start_job
+		if (progress == null) {
+			throw new IllegalArgumentException("InitProgress cannot be null");
+		}
+		checkAddlArgs(progress.getAdditionalProperties(), InitProgress.class);
+		if (progress.getPtype() == null) {
+			throw new IllegalArgumentException("Progress type cannot be null");
+		}
+		if (progress.getPtype().equals(JobState.PROG_NONE)) {
+			js.startJob(authPart.getUserName(), job, getServiceName(token),
+					status, desc);
+		} else if (progress.getPtype().equals(JobState.PROG_PERC)) {
+			js.startJobWithPercentProg(authPart.getUserName(), job,
+					getServiceName(token), status, desc);
+		} else if (progress.getPtype().equals(JobState.PROG_TASK)) {
+			if (progress.getMax() == null) {
+				throw new IllegalArgumentException(
+						"Max progress cannot be null for task based progress");
+			}
+			js.startJob(authPart.getUserName(), job, getServiceName(token),
+					status, desc, progress.getMax());
+		} else {
+			throw new IllegalArgumentException("No such progress type: " +
+					progress.getPtype());
+		}
         //END start_job
     }
 
