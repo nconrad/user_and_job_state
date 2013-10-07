@@ -607,6 +607,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public Results getResults(String job, AuthToken authPart) throws Exception {
         Results returnVal = null;
         //BEGIN get_results
+		returnVal = makeResults(js.getJob(authPart.getUserName(), job)
+				.getResults());
         //END get_results
         return returnVal;
     }

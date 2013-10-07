@@ -369,6 +369,8 @@ public class JSONRPCLayerTest {
 		assertThat("job progress ok", jobstat.getE4(), is(prog));
 		assertThat("job complete ok", jobstat.getE5(), is(complete));
 		assertThat("job error ok", jobstat.getE6(), is(error));
+		
+		checkResults(CLIENT1.getResults(id), results);
 	}
 	
 	private void checkResults(Results got, Results expected) throws Exception {
@@ -387,6 +389,8 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void getJobInfoBadArgs() throws Exception {
+		testGetJobBadArgs(null, "id cannot be null or the empty string");
+		testGetJobBadArgs("", "id cannot be null or the empty string");
 		testGetJobBadArgs("foo", "Job ID foo is not a legal ID");
 		
 		String jobid = CLIENT1.createJob();
@@ -403,21 +407,28 @@ public class JSONRPCLayerTest {
 			throws Exception {
 		try {
 			CLIENT1.getJobInfo(jobid);
-			fail("started job with bad id");
+			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
 			CLIENT1.getJobDescription(jobid);
-			fail("started job with bad id");
+			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
 			CLIENT1.getJobStatus(jobid);
-			fail("started job with bad id");
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			CLIENT1.getResults(jobid);
+			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
@@ -565,6 +576,4 @@ public class JSONRPCLayerTest {
 					is(exception));
 		}
 	}
-	
-	//TODO tests for complete job, get job status/desc
 }
