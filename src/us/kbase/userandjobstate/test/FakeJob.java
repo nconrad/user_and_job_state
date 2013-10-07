@@ -1,4 +1,4 @@
-package us.kbase.userandjobstate.jobstate.test;
+package us.kbase.userandjobstate.test;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -12,8 +12,6 @@ import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
 
 public class FakeJob {
-	
-	//TODO move to common
 	
 	private final String id;
 	private final String user;

@@ -32,7 +32,7 @@ import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
-import us.kbase.userandjobstate.jobstate.test.FakeJob;
+import us.kbase.userandjobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 /*

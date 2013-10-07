@@ -22,6 +22,7 @@ import us.kbase.common.test.RegexMatcher;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
+import us.kbase.userandjobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 public class JobStateTests {
@@ -44,7 +45,6 @@ public class JobStateTests {
 		}
 	}
 	
-	//TODO JSONRPC layer tests
 	//TODO test vs. auth'd mongo
 	
 	private static final RegexMatcher OBJ_ID_MATCH = new RegexMatcher("[\\da-f]{24}");
