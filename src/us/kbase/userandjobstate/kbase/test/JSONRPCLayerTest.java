@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -672,5 +673,21 @@ public class JSONRPCLayerTest {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
+	}
+	
+	@Test
+	public void listServices() throws Exception {
+		checkListServices(CLIENT2, new HashSet<String>());
+		InitProgress noprog = new InitProgress().withPtype("none");
+		CLIENT1.createAndStartJob(token2, "ls stat", "ls desc", noprog);
+		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER2)));
+		CLIENT1.createAndStartJob(token1, "ls2 stat", "ls2 desc", noprog);
+		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER1, USER2)));
+	}
+	
+	private void checkListServices(UserAndJobStateClient client,
+			Set<String> service) throws Exception {
+		assertThat("got correct services", new HashSet<String>(client.listJobServices()),
+				is(service));
 	}
 }

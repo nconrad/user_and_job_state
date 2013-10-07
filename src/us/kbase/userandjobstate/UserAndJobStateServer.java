@@ -15,6 +15,7 @@ import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -656,6 +657,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<String> listJobServices(AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_job_services
+		returnVal = new ArrayList<String>(js.listServices(
+				authPart.getUserName()));
         //END list_job_services
         return returnVal;
     }
