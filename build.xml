@@ -40,10 +40,15 @@
     <include name="mongo/mongo-java-driver-2.11.2.jar"/>
   </fileset>
 
+  <fileset dir="${jardir}" id="commonlib">
+    <include name="apache_commons/commons-lang3-3.1.jar"/>
+  </fileset>
+
   <union id="serverside">
     <fileset refid="serverlib"/>
     <fileset refid="clientserverlib"/>
     <fileset refid="applicationlib"/>
+    <fileset refid="commonlib"/>
   </union>
 
   <fileset id="client-jdoc-files" dir="${src}/us/kbase" defaultexcludes="yes">

@@ -207,7 +207,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		ret.put("shocknodes", res.getShocknodes());
 		ret.put("shockurl", res.getShockurl());
 		ret.put("workspaceids", res.getWorkspaceids());
-		ret.put("workspaceul", res.getWorkspaceurl());
+		ret.put("workspaceurl", res.getWorkspaceurl());
 		return ret;
 	}
 

@@ -50,7 +50,7 @@ public class JobState {
 	private final static String PROG = "prog";
 	private final static String MAXPROG = "maxprog";
 	private final static String STATUS = "status";
-	private final static String RESULT = "result";
+	private final static String RESULT = "results";
 	
 	private final static String MONGO_ID = "_id";
 	
@@ -189,7 +189,7 @@ public class JobState {
 		update.put(UPDATED, new Date());
 		update.put(COMPLETE, false);
 		update.put(ERROR, false);
-		update.put(RESULT, false);
+		update.put(RESULT, null);
 		
 		final Integer prog;
 		final Integer maxprog;

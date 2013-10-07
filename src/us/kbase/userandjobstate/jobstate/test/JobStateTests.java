@@ -280,6 +280,7 @@ public class JobStateTests {
 		assertThat("job updated ok", j.getLastUpdated(), is(Date.class));
 		assertThat("job complete ok", j.isComplete(), is(complete));
 		assertThat("job error ok", j.hasError(), is(error));
+		assertThat("job results ok", j.getResults(), is(results));
 	}
 	
 	@Test

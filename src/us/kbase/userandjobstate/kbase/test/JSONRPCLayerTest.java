@@ -352,7 +352,6 @@ public class JSONRPCLayerTest {
 		DATE_FORMAT.parse(ret.getE5()); //should throw error if bad format
 		assertThat("job complete ok", ret.getE9(), is(complete));
 		assertThat("job error ok", ret.getE10(), is(error));
-		assertThat("job results ok", ret.getE12(), is(results));
 		checkResults(ret.getE12(), results);
 		
 		Tuple4<String, String, Integer, String> jobdesc =
@@ -478,6 +477,11 @@ public class JSONRPCLayerTest {
 				"Service token cannot be null or the empty string");
 		testUpdateJob(jobid, "foo", "s",
 				"Auth token is in the incorrect format, near 'foo'");
+		testUpdateJob(jobid, token1, "s", String.format(
+				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
+				jobid, USER1, USER1));
+		
+		
 		//TODO restore when auth service is fixed
 //		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
 //				"id cannot be null or the empty string");
@@ -503,6 +507,59 @@ public class JSONRPCLayerTest {
 		}
 		try {
 			CLIENT1.updateJobProgress(jobid, token, status, 1);
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	@Test
+	public void completeJob() throws Exception {
+		String jobid = CLIENT1.createAndStartJob(token2, "c stat", "c desc",
+				new InitProgress().withPtype("none"));
+		CLIENT1.completeJob(jobid, token2, "c stat2", 0, null);
+		checkJob(jobid, "complete", "c stat2", USER2, "c desc", "none", null,
+				null, 1, 0, null);
+		
+		jobid = CLIENT1.createAndStartJob(token2, "c2 stat", "c2 desc",
+				new InitProgress().withPtype("percent"));
+		CLIENT1.updateJobProgress(jobid, token2, "c2 stat2", 40);
+		CLIENT1.completeJob(jobid, token2, "c2 stat3", 1, new Results());
+		checkJob(jobid, "error", "c2 stat3", USER2, "c2 desc", "percent",
+				100, 100, 1, 1, new Results());
+		
+		jobid = CLIENT1.createAndStartJob(token2, "c3 stat", "c3 desc",
+				new InitProgress().withPtype("task").withMax(37));
+		CLIENT1.updateJobProgress(jobid, token2, "c3 stat2", 15);
+		Results res = new Results()
+						.withShocknodes(Arrays.asList("node1", "node3"))
+						.withShockurl("surl")
+						.withWorkspaceids(Arrays.asList("ws1", "ws3"))
+						.withWorkspaceurl("wurl");
+		CLIENT1.completeJob(jobid, token2, "c3 stat3", 0, res);
+		checkJob(jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
+				37, 37, 1, 0, res);
+		
+		testCompleteJob(null, token2, "s", 0, null,
+				"id cannot be null or the empty string");
+		testCompleteJob("", token2, "s", 0, null,
+				"id cannot be null or the empty string");
+		testCompleteJob("aaaaaaaaaaaaaaaaaaaa", token2, "s", 0, null,
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+		
+		testCompleteJob(jobid, null, "s", 0, null,
+				"Service token cannot be null or the empty string");
+		testCompleteJob(jobid, "foo", "s", 0, null,
+				"Auth token is in the incorrect format, near 'foo'");
+		testCompleteJob(jobid, token1, "s", 0, null, String.format(
+				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
+				jobid, USER1, USER1));
+	}
+	
+	private void testCompleteJob(String jobid, String token, String status,
+			Integer error, Results res, String exception) throws Exception {
+		try {
+			CLIENT1.completeJob(jobid, token, status, error, res);
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
