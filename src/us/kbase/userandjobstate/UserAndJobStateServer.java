@@ -670,6 +670,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.delete_job")
     public void deleteJob(String job, AuthToken authPart) throws Exception {
         //BEGIN delete_job
+		js.deleteJob(authPart.getUserName(), job);
         //END delete_job
     }
 
@@ -684,6 +685,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.force_delete_job")
     public void forceDeleteJob(String token, String job, AuthToken authPart) throws Exception {
         //BEGIN force_delete_job
+		js.deleteJob(authPart.getUserName(), job, getServiceName(token));
         //END force_delete_job
     }
 

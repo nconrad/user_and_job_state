@@ -91,7 +91,6 @@ public class JSONRPCLayerTest {
 		ws.add("mongodb-database", UserJobStateTestCommon.getDB());
 		ws.add("mongodb-user", UserJobStateTestCommon.getMongoUser());
 		ws.add("mongodb-pwd", UserJobStateTestCommon.getMongoPwd());
-		ws.add("backend-secret", "");
 		ini.store(iniFile);
 		
 		//set up env
@@ -576,4 +575,6 @@ public class JSONRPCLayerTest {
 					is(exception));
 		}
 	}
+	
+	//TODO delete job tests
 }

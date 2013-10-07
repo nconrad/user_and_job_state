@@ -233,6 +233,9 @@ module UserAndJobState {
 	/* Delete a job. Will fail if the job is not complete. */
 	funcdef delete_job(job_id job) returns();
 	
-	/* Force delete a job - will always succeed, regardless of job state. */
+	/* Force delete a job - will succeed unless the job has not been started.
+		In that case, the service must start the job and then delete it, since
+		a job is not "owned" by any service until it is started.
+	*/
 	funcdef force_delete_job(service_token token, job_id job) returns();
 };

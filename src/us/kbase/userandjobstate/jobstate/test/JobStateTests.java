@@ -526,40 +526,40 @@ public class JobStateTests {
 		checkJob(j, jobid, "complete", "delete", "st", "serv1", "dsc", "none",
 				null, null, true, false, null);
 		succeedAtDeletingJob("delete", jobid);
-		failToDeleteJob("delete", jobid, true);
+		failToDeleteJob("delete", jobid, null);
 		
 		jobid = js.createJob("delete");
-		failToDeleteJob("delete", jobid, true);
+		failToDeleteJob("delete", jobid, null);
 		js.startJob("delete", jobid, "s", "s", "d");
-		failToDeleteJob("delete", jobid, true);
+		failToDeleteJob("delete", jobid, null);
 		js.updateJob("delete", jobid, "s", "s", 1);
-		failToDeleteJob("delete", jobid, true);
-		failToDeleteJob("delete1", jobid, true);
-		failToDeleteJob("delete", "a" + jobid.substring(1), true);
+		failToDeleteJob("delete", jobid, null);
+		failToDeleteJob("delete1", jobid, null);
+		failToDeleteJob("delete", "a" + jobid.substring(1), null);
 		
-		failToDeleteJob("delete1", jobid, false);
-		failToDeleteJob("delete", "a" + jobid.substring(1), false);
+		failToDeleteJob("delete1", jobid, "serv1");
+		failToDeleteJob("delete", "a" + jobid.substring(1), "serv1");
 		
 		jobid = js.createJob("delete");
-		succeedAtDeletingJob("delete", jobid, false);
-		failToDeleteJob("delete", jobid, false);
+//		succeedAtDeletingJob("delete", jobid, "serv1");
+		failToDeleteJob("delete", jobid, "serv1");
 		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
-		succeedAtDeletingJob("delete", jobid, false);
-		failToDeleteJob("delete", jobid, false);
+		succeedAtDeletingJob("delete", jobid, "serv1");
+		failToDeleteJob("delete", jobid, "serv1");
 		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
 		js.updateJob("delete", jobid, "serv1", "st", null);
-		succeedAtDeletingJob("delete", jobid, false);
-		failToDeleteJob("delete", jobid, false);
+		succeedAtDeletingJob("delete", jobid, "serv1");
+		failToDeleteJob("delete", jobid, "serv1");
 		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
 		js.completeJob("delete", jobid, "serv1", "st", false, null);
-		succeedAtDeletingJob("delete", jobid, false);
-		failToDeleteJob("delete", jobid, false);
+		succeedAtDeletingJob("delete", jobid, "serv1");
+		failToDeleteJob("delete", jobid, "serv1");
 		
 	}
 	
-	private void succeedAtDeletingJob(String user, String jobid, boolean completed)
+	private void succeedAtDeletingJob(String user, String jobid, String service)
 			throws Exception {
-		js.deleteJob(user, jobid, completed);
+		js.deleteJob(user, jobid, service);
 		try {
 			js.getJob(user, jobid);
 			fail("got deleted job");
@@ -583,18 +583,19 @@ public class JobStateTests {
 		}
 	}
 	
-	private void failToDeleteJob(String user, String jobid, boolean completed)
+	private void failToDeleteJob(String user, String jobid, String service)
 			throws Exception {
 		try {
-			js.deleteJob(user, jobid, completed);
+			js.deleteJob(user, jobid, service);
 			fail("deleted job when should've failed");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
 					is(String.format(
 					"There is no %sjob %s for user %s",
-					completed ? "completed " : "", jobid, user)));
+					service == null ? "completed " : "", jobid, user +
+					(service == null ? "" : " and service " + service))));
 		}
-		if (!completed) {
+		if (service != null) {
 			return;
 		}
 		try {

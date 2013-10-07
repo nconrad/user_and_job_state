@@ -332,18 +332,20 @@ public class JobState {
 	
 	public void deleteJob(final String user, final String jobID)
 			throws NoSuchJobException, CommunicationException {
-		deleteJob(user, jobID, true);
+		deleteJob(user, jobID, null);
 	}
 	
 	public void deleteJob(final String user, final String jobID,
-			final boolean completeRequired)
+			final String service)
 			throws NoSuchJobException, CommunicationException {
 		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId id = checkJobID(jobID);
 		final DBObject query = new BasicDBObject(USER, user);
 		query.put(MONGO_ID, id);
-		if (completeRequired) {
+		if (service == null) {
 			query.put(COMPLETE, true);
+		} else {
+			query.put(SERVICE, service);
 		}
 		final WriteResult wr;
 		try {
@@ -355,7 +357,8 @@ public class JobState {
 		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
 					"There is no %sjob %s for user %s",
-					completeRequired ? "completed " : "", jobID, user));
+					service == null ? "completed " : "", jobID, user +
+					(service == null ? "" : " and service " + service)));
 		}
 	}
 	
