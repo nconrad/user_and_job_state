@@ -576,5 +576,101 @@ public class JSONRPCLayerTest {
 		}
 	}
 	
-	//TODO delete job tests
+	@Test
+	public void deleteJob() throws Exception {
+		InitProgress noprog = new InitProgress().withPtype("none");
+		String jobid = CLIENT1.createAndStartJob(token2, "d stat", "d desc", noprog);
+		CLIENT1.completeJob(jobid, token2, "d stat2", 0, null);
+		CLIENT1.deleteJob(jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createAndStartJob(token2, "e stat", "e desc", noprog);
+		CLIENT1.completeJob(jobid, token2, "e stat2", 1, null);
+		CLIENT1.deleteJob(jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createAndStartJob(token2, "d2 stat", "d2 desc", noprog);
+		CLIENT1.forceDeleteJob(token2, jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createAndStartJob(token2, "d3 stat", "d3 desc", noprog);
+		CLIENT1.updateJobProgress(jobid, token2, "d3 stat2", 3);
+		CLIENT1.forceDeleteJob(token2, jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createAndStartJob(token2, "d4 stat", "d4 desc", noprog);
+		CLIENT1.completeJob(jobid, token2, "d4 stat2", 0, null);
+		CLIENT1.forceDeleteJob(token2, jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createAndStartJob(token2, "d5 stat", "d5 desc", noprog);
+		CLIENT1.completeJob(jobid, token2, "d5 stat2", 1, null);
+		CLIENT1.forceDeleteJob(token2, jobid);
+		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
+				jobid, USER1));
+		
+		jobid = CLIENT1.createJob();
+		failToDeleteJob(jobid, String.format(
+				"There is no completed job %s for user %s", jobid, USER1));
+		failToDeleteJob(jobid, token2, String.format(
+				"There is no job %s for user %s and service %s",
+				jobid, USER1, USER2));
+		CLIENT1.startJob(jobid, token2, "d6 stat", "d6 desc", noprog);
+		failToDeleteJob(jobid, String.format(
+				"There is no completed job %s for user %s", jobid, USER1));
+		CLIENT1.updateJobProgress(jobid, token2, "d6 stat2", 3);
+		failToDeleteJob(jobid, String.format(
+				"There is no completed job %s for user %s", jobid, USER1));
+		
+		failToDeleteJob(null, "id cannot be null or the empty string");
+		failToDeleteJob("", "id cannot be null or the empty string");
+		failToDeleteJob("aaaaaaaaaaaaaaaaaaaa",
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+		
+		failToDeleteJob(null, token2,
+				"id cannot be null or the empty string");
+		failToDeleteJob("", token2,
+				"id cannot be null or the empty string");
+		failToDeleteJob("aaaaaaaaaaaaaaaaaaaa", token2,
+				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
+		
+		failToDeleteJob(jobid, null,
+				"Service token cannot be null or the empty string", true);
+		failToDeleteJob(jobid, "foo",
+				"Auth token is in the incorrect format, near 'foo'");
+		failToDeleteJob(jobid, token1, String.format(
+				"There is no job %s for user kbasetest and service kbasetest",
+				jobid, USER1, USER1));
+	}
+	
+	private void failToDeleteJob(String jobid, String exception)
+			throws Exception {
+		failToDeleteJob(jobid, null, exception, false);
+	}
+	
+	private void failToDeleteJob(String jobid, String token, String exception)
+			throws Exception {
+		failToDeleteJob(jobid, token, exception, false);
+	}
+	
+	private void failToDeleteJob(String jobid, String token, String exception,
+			boolean usenulltoken)
+			throws Exception {
+		try {
+			if (!usenulltoken && token == null) {
+				CLIENT1.deleteJob(jobid);
+			} else {
+				CLIENT1.forceDeleteJob(token, jobid);
+			}
+			fail("deleted job with bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
 }
