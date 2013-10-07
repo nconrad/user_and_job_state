@@ -8,7 +8,9 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +32,7 @@ import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
+import us.kbase.userandjobstate.jobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 /*
@@ -683,11 +686,215 @@ public class JSONRPCLayerTest {
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER2)));
 		CLIENT1.createAndStartJob(token1, "ls2 stat", "ls2 desc", noprog);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER1, USER2)));
+		
 	}
 	
 	private void checkListServices(UserAndJobStateClient client,
 			Set<String> service) throws Exception {
 		assertThat("got correct services", new HashSet<String>(client.listJobServices()),
 				is(service));
+	}
+	
+	@Test
+	public void listJobs() throws Exception {
+		//NOTE: all jobs must be deleted from CLIENT2 or other tests may fail
+		InitProgress noprog = new InitProgress().withPtype("none");
+		Set<FakeJob> empty = new HashSet<FakeJob>();
+		
+		checkListJobs(USER1, null, empty);
+		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RCEX", empty);
+		
+		String jobid = CLIENT2.createJob();
+		checkListJobs(USER1, null, empty);
+		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RXCE", empty);
+		
+		CLIENT2.startJob(jobid, token1, "lj stat", "lj desc", noprog);
+		FakeJob started = new FakeJob(jobid, null, USER1, "started", "lj desc",
+				"none", null, null, "lj stat", false, false, null);
+		Set<FakeJob> setstarted = new HashSet<FakeJob>(Arrays.asList(started));
+		checkListJobs(USER1, null, setstarted);
+		checkListJobs(USER1, "", setstarted);
+		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", setstarted);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RCE", setstarted);
+		checkListJobs(USER1, "!RCE", setstarted);
+		
+		jobid = CLIENT2.createAndStartJob(token1, "lj2 stat", "lj2 desc",
+				new InitProgress().withPtype("percent"));
+		CLIENT2.updateJobProgress(jobid, token1, "lj2 stat2", 42);
+		FakeJob started2 = new FakeJob(jobid, null, USER1, "started",
+				"lj2 desc", "percent", 42, 100, "lj2 stat2", false, false, null);
+		setstarted.add(started2);
+		checkListJobs(USER1, null, setstarted);
+		checkListJobs(USER1, "", setstarted);
+		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", setstarted);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RCE", setstarted);
+		checkListJobs(USER1, "RCwE", setstarted);
+		
+		CLIENT2.completeJob(jobid, token1, "lj2 stat3", 0, 
+				new Results().withShocknodes(Arrays.asList("node1", "node2")));
+		setstarted.remove(started2);
+		started2 = null;
+		Map<String, Object> res = new HashMap<String, Object>();
+		res.put("shocknodes", Arrays.asList("node1", "node2"));
+		res.put("shockurl", null);
+		res.put("workspaceids", new ArrayList<String>());
+		res.put("workspaceurl", null);
+		FakeJob complete = new FakeJob(jobid, null, USER1, "complete",
+				"lj2 desc", "percent", 100, 100, "lj2 stat3", true, false, res);
+		Set<FakeJob> setcomplete = new HashSet<FakeJob>(Arrays.asList(complete));
+		Set<FakeJob> setstartcomp = new HashSet<FakeJob>();
+		setstartcomp.addAll(setstarted);
+		setstartcomp.addAll(setcomplete);
+		checkListJobs(USER1, null, setstartcomp);
+		checkListJobs(USER1, "", setstartcomp);
+		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "C0", setcomplete);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", setstartcomp);
+		checkListJobs(USER1, "CE", setcomplete);
+		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RCE", setstartcomp);
+		
+		jobid = CLIENT2.createAndStartJob(token1, "lj3 stat", "lj3 desc",
+				new InitProgress().withPtype("task").withMax(55));
+		CLIENT2.updateJobProgress(jobid, token1, "lj3 stat2", 40);
+		started2 = new FakeJob(jobid, null, USER1, "started",
+				"lj3 desc", "task", 40, 55, "lj3 stat2", false, false, null);
+		setstarted.add(started2);
+		setstartcomp.add(started2);
+		checkListJobs(USER1, null, setstartcomp);
+		checkListJobs(USER1, "", setstartcomp);
+		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", setstartcomp);
+		checkListJobs(USER1, "CE", setcomplete);
+		checkListJobs(USER1, "C#E", setcomplete);
+		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RCE", setstartcomp);
+		
+		CLIENT2.completeJob(jobid, token1, "lj3 stat3", 1, 
+				new Results().withWorkspaceids(Arrays.asList("wss1", "wss2")));
+		setstarted.remove(started2);
+		setstartcomp.remove(started2);
+		started2 = null;
+		Map<String, Object> res2 = new HashMap<String, Object>();
+		res2.put("shocknodes", new ArrayList<String>());
+		res2.put("shockurl", null);
+		res2.put("workspaceids", Arrays.asList("wss1", "wss2"));
+		res2.put("workspaceurl", null);
+		FakeJob error = new FakeJob(jobid, null, USER1, "error",
+				"lj3 desc", "task", 55, 55, "lj3 stat3", true, true, res2);
+		Set<FakeJob> seterr = new HashSet<FakeJob>(Arrays.asList(error));
+		Set<FakeJob> all = new HashSet<FakeJob>(
+				Arrays.asList(started, complete, error));
+		checkListJobs(USER1, null, all);
+		checkListJobs(USER1, "", all);
+		checkListJobs(USER1, "x", all);
+		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "E", seterr);
+		checkListJobs(USER1, "RC", setstartcomp);
+		checkListJobs(USER1, "CE", new HashSet<FakeJob>(
+				Arrays.asList(complete, error)));
+		checkListJobs(USER1, "RE", new HashSet<FakeJob>(
+				Arrays.asList(started, error)));
+		checkListJobs(USER1, "RCE", all);
+		
+		CLIENT2.forceDeleteJob(token1, started.getID());
+		all.remove(started);
+		checkListJobs(USER1, null, all);
+		checkListJobs(USER1, "", all);
+		checkListJobs(USER1, "goodness this is odd input", all);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "E", seterr);
+		checkListJobs(USER1, "cE", seterr);
+		checkListJobs(USER1, "RC", setcomplete);
+		checkListJobs(USER1, "CE", new HashSet<FakeJob>(
+				Arrays.asList(complete, error)));
+		checkListJobs(USER1, "RE", seterr);
+		checkListJobs(USER1, "RCE", all);
+		
+		CLIENT2.deleteJob(complete.getID());
+		checkListJobs(USER1, null, seterr);
+		checkListJobs(USER1, "", seterr);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", seterr);
+		checkListJobs(USER1, "e", seterr);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "CE", seterr);
+		checkListJobs(USER1, "RE", seterr);
+		checkListJobs(USER1, "RCE", seterr);
+		
+		CLIENT2.deleteJob(error.getID());
+		checkListJobs(USER1, null, empty);
+		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RCE", empty);
+		
+		testListJobsWithBadArgs(null,
+				"service cannot be null or the empty string");
+		testListJobsWithBadArgs("",
+				"service cannot be null or the empty string");
+		testListJobsWithBadArgs("abcdefghijklmnopqrst" + "abcdefghijklmnopqrst"
+				+ "abcdefghijklmnopqrst" + "abcdefghijklmnopqrst" +
+				"abcdefghijklmnopqrst" + "a",
+				"service exceeds the maximum length of 100");
+	}
+	
+	private void checkListJobs(String service, String filter,
+			Set<FakeJob> expected) throws Exception {
+		Set<FakeJob> got = new HashSet<FakeJob>();
+		for (Tuple12<String, String, String, String, String, Integer, Integer,
+				String, Integer, Integer, String, Results> ji: 
+					CLIENT2.listJobs(service, filter)) {
+			got.add(new FakeJob(ji));
+		}
+		assertThat("got the correct jobs", got, is(expected));
+	}
+	
+	public void testListJobsWithBadArgs(String service, String exception)
+			throws Exception{
+		try {
+			CLIENT2.listJobs(service, "RCE");
+			fail("list jobs worked w/ bad service");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
 	}
 }

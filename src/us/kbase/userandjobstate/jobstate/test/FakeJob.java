@@ -4,11 +4,16 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
+import us.kbase.common.service.Tuple12;
+import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
 
 public class FakeJob {
+	
+	//TODO move to common
 	
 	private final String id;
 	private final String user;
@@ -56,6 +61,36 @@ public class FakeJob {
 		this.complete = complete;
 		this.error = error;
 		this.results = results;
+	}
+
+	public FakeJob(Tuple12<String, String, String, String, String, Integer,
+			Integer, String, Integer, Integer, String, Results> ji) {
+		this.user = null;
+		this.id = ji.getE1();
+		this.service = ji.getE2();
+		this.stage = ji.getE3();
+		this.status = ji.getE4();
+		this.prog = ji.getE6();
+		this.maxprog = ji.getE7();
+		this.progtype = ji.getE8();
+		this.complete = ji.getE9() != 0;
+		this.error = ji.getE10() != 0;
+		this.desc = ji.getE11();
+		if (ji.getE12() == null) {
+			this.results = null;
+		} else {
+			Results r = ji.getE12();
+			Map<String, Object> res = new HashMap<String, Object>();
+			res.put("shocknodes", r.getShocknodes());
+			res.put("shockurl", r.getShockurl());
+			res.put("workspaceids", r.getWorkspaceids());
+			res.put("workspaceurl", r.getWorkspaceurl());
+			this.results = res;
+		}
+	}
+	
+	public String getID() {
+		return id;
 	}
 
 	@Override

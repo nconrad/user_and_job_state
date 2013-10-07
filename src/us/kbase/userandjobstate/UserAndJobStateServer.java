@@ -643,6 +643,27 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
         List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
         //BEGIN list_jobs
+		boolean running = false;
+		boolean complete = false;
+		boolean error = false;
+		if (filter != null) {
+			if (filter.indexOf("R") > -1) {
+				running = true;
+			}
+			if (filter.indexOf("C") > -1) {
+				complete = true;
+			}
+			if (filter.indexOf("E") > -1) {
+				error = true;
+			}
+		}
+		returnVal = new LinkedList<Tuple12<String, String, String, String,
+				String, Integer, Integer, String, Integer, Integer, String,
+				Results>>();
+		for (final Job j: js.listJobs(authPart.getUserName(), service,
+				running, complete, error)) {
+			returnVal.add(jobToJobInfo(j));
+		}
         //END list_jobs
         return returnVal;
     }
