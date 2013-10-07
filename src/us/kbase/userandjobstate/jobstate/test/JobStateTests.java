@@ -45,8 +45,6 @@ public class JobStateTests {
 		}
 	}
 	
-	//TODO test vs. auth'd mongo
-	
 	private static final RegexMatcher OBJ_ID_MATCH = new RegexMatcher("[\\da-f]{24}");
 	
 	private static String long101;
