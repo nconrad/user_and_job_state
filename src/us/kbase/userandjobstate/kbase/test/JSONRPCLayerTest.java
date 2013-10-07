@@ -22,6 +22,8 @@ import org.junit.Test;
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple12;
+import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
@@ -222,7 +224,7 @@ public class JSONRPCLayerTest {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is("Auth token is in the incorrect format, near 'boogabooga'"));
 		}
-		/* TODO restore when the auth service is fixed
+		/* TODO restore when auth service is fixed
 		try {
 			CLIENT1.setStateAuth(token2 + "a", "key", new UObject("foo"));
 			fail("set state w/ bad token");
@@ -235,23 +237,23 @@ public class JSONRPCLayerTest {
 	@Test
 	public void createAndStartJob() throws Exception {
 		String jobid = CLIENT1.createJob();
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "created", null, null, null,
+		checkJob(jobid, "created", null, null, null,
 				null, null, null, null, null, null);
 		CLIENT1.startJob(jobid, token2, "new stat", "ne desc",
 				new InitProgress().withPtype("none"));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat", USER2,
+		checkJob(jobid, "started", "new stat", USER2,
 				"ne desc", "none", null, null, 0, 0, null);
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, token2, "new stat2", "ne desc2",
 				new InitProgress().withPtype("percent"));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat2", USER2,
+		checkJob(jobid, "started", "new stat2", USER2,
 				"ne desc2", "percent", 0, 100, 0, 0, null);
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, token2, "new stat3", "ne desc3",
 				new InitProgress().withPtype("task").withMax(5));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "new stat3", USER2,
+		checkJob(jobid, "started", "new stat3", USER2,
 				"ne desc3", "task", 0, 5, 0, 0, null);
 		
 		testStartJob(null, token2, "s", "d", new InitProgress().withPtype("none"),
@@ -288,17 +290,17 @@ public class JSONRPCLayerTest {
 		
 		jobid = CLIENT1.createAndStartJob(token2, "cs stat", "cs desc",
 				new InitProgress().withPtype("none"));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat", USER2,
+		checkJob(jobid, "started", "cs stat", USER2,
 				"cs desc", "none", null, null, 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(token2, "cs stat2", "cs desc2",
 				new InitProgress().withPtype("percent"));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat2", USER2,
+		checkJob( jobid, "started", "cs stat2", USER2,
 				"cs desc2", "percent", 0, 100, 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(token2, "cs stat3", "cs desc3",
 				new InitProgress().withPtype("task").withMax(5));
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "cs stat3", USER2,
+		checkJob(jobid, "started", "cs stat3", USER2,
 				"cs desc3", "task", 0, 5, 0, 0, null);
 	}
 	
@@ -331,26 +333,43 @@ public class JSONRPCLayerTest {
 	private static SimpleDateFormat DATE_FORMAT =
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
 	
-	private void checkJob(Tuple12<String, String, String, String, String,
-			Integer, Integer, String, Integer, Integer, String, Results> ret,
-			String id, String stage, String status,
+	private void checkJob(String id, String stage, String status,
 			String service, String desc, String progtype, Integer prog,
-			Integer maxproj, Integer complete, Integer error,
+			Integer maxprog, Integer complete, Integer error,
 			Results results)
 			throws Exception {
+		Tuple12<String, String, String, String, String,
+				Integer, Integer, String, Integer, Integer, String, Results> ret 
+				= CLIENT1.getJobInfo(id);
 		assertThat("job id ok", ret.getE1(), is(id));
 		assertThat("job stage ok", ret.getE3(), is(stage));
 		assertThat("job service ok", ret.getE2(), is(service));
 		assertThat("job desc ok", ret.getE11(), is(desc));
 		assertThat("job progtype ok", ret.getE8(), is(progtype));
 		assertThat("job prog ok", ret.getE6(), is(prog));
-		assertThat("job maxprog ok", ret.getE7(), is(maxproj));
+		assertThat("job maxprog ok", ret.getE7(), is(maxprog));
 		assertThat("job status ok", ret.getE4(), is(status));
 		DATE_FORMAT.parse(ret.getE5()); //should throw error if bad format
 		assertThat("job complete ok", ret.getE9(), is(complete));
 		assertThat("job error ok", ret.getE10(), is(error));
 		assertThat("job results ok", ret.getE12(), is(results));
 		checkResults(ret.getE12(), results);
+		
+		Tuple4<String, String, Integer, String> jobdesc =
+				CLIENT1.getJobDescription(id);
+		assertThat("job service ok", jobdesc.getE1(), is(service));
+		assertThat("job progtype ok", jobdesc.getE2(), is(progtype));
+		assertThat("job maxprog ok", jobdesc.getE3(), is(maxprog));
+		assertThat("job desc ok", jobdesc.getE4(), is(desc));
+		
+		Tuple6<String, String, String, Integer, Integer, Integer> jobstat =
+				CLIENT1.getJobStatus(id);
+		DATE_FORMAT.parse(jobstat.getE1()); //should throw error if bad format
+		assertThat("job stage ok", jobstat.getE2(), is(stage));
+		assertThat("job status ok", jobstat.getE3(), is(status));
+		assertThat("job progress ok", jobstat.getE4(), is(prog));
+		assertThat("job complete ok", jobstat.getE5(), is(complete));
+		assertThat("job error ok", jobstat.getE6(), is(error));
 	}
 	
 	private void checkResults(Results got, Results expected) throws Exception {
@@ -369,26 +388,40 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void getJobInfoBadArgs() throws Exception {
+		testGetJobBadArgs("foo", "Job ID foo is not a legal ID");
+		
 		String jobid = CLIENT1.createJob();
-		try {
-			CLIENT1.getJobInfo("foo");
-			fail("started job with nonsense id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is("Job ID foo is not a legal ID"));
-		}
 		if (jobid.charAt(0) == 'a') {
 			jobid = "b" + jobid.substring(1);
 		} else {
 			jobid = "a" + jobid.substring(1);
 		}
+		testGetJobBadArgs(jobid, String.format(
+				"There is no job %s for user kbasetest", jobid));
+	}
+	
+	private void testGetJobBadArgs(String jobid, String exception)
+			throws Exception {
 		try {
 			CLIENT1.getJobInfo(jobid);
-			fail("started job with non-existant id");
+			fail("started job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
-					is(String.format("There is no job %s for user kbasetest",
-					jobid)));
+					is(exception));
+		}
+		try {
+			CLIENT1.getJobDescription(jobid);
+			fail("started job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			CLIENT1.getJobStatus(jobid);
+			fail("started job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
 		}
 	}
 	
@@ -397,37 +430,37 @@ public class JSONRPCLayerTest {
 		String jobid = CLIENT1.createAndStartJob(token2, "up stat", "up desc",
 				new InitProgress().withPtype("none"));
 		CLIENT1.updateJob(jobid, token2, "up stat2");
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat2", USER2,
+		checkJob(jobid, "started", "up stat2", USER2,
 				"up desc", "none", null, null, 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, token2, "up stat3", 40);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat3", USER2,
+		checkJob(jobid, "started", "up stat3", USER2,
 				"up desc", "none", null, null, 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, token2, "up stat3", null);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up stat3", USER2,
+		checkJob(jobid, "started", "up stat3", USER2,
 				"up desc", "none", null, null, 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(token2, "up2 stat", "up2 desc",
 				new InitProgress().withPtype("percent"));
 		CLIENT1.updateJobProgress(jobid, token2, "up2 stat2", 40);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat2", USER2,
+		checkJob(jobid, "started", "up2 stat2", USER2,
 				"up2 desc", "percent", 40, 100, 0, 0, null);
 		CLIENT1.updateJob(jobid, token2, "up2 stat3");
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat3", USER2,
+		checkJob(jobid, "started", "up2 stat3", USER2,
 				"up2 desc", "percent", 40, 100, 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, token2, "up2 stat4", 70);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up2 stat4", USER2,
+		checkJob(jobid, "started", "up2 stat4", USER2,
 				"up2 desc", "percent", 100, 100, 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(token2, "up3 stat", "up3 desc",
 				new InitProgress().withPtype("task").withMax(42));
 		CLIENT1.updateJobProgress(jobid, token2, "up3 stat2", 30);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat2", USER2,
+		checkJob(jobid, "started", "up3 stat2", USER2,
 				"up3 desc", "task", 30, 42, 0, 0, null);
 		CLIENT1.updateJob(jobid, token2, "up3 stat3");
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat3", USER2,
+		checkJob( jobid, "started", "up3 stat3", USER2,
 				"up3 desc", "task", 30, 42, 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, token2, "up3 stat4", 15);
-		checkJob(CLIENT1.getJobInfo(jobid), jobid, "started", "up3 stat4", USER2,
+		checkJob(jobid, "started", "up3 stat4", USER2,
 				"up3 desc", "task", 42, 42, 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(token2, "up4 stat", "up4 desc",
@@ -475,4 +508,6 @@ public class JSONRPCLayerTest {
 					is(exception));
 		}
 	}
+	
+	//TODO tests for complete job, get job status/desc
 }

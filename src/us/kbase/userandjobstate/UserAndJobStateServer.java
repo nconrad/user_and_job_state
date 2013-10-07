@@ -198,6 +198,18 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withWorkspaceids((List<String>) res.get("workspaceids"))
 				.withWorkspaceurl((String) res.get("workspaceurl"));
 	}
+	
+	private static Map<String, Object> unmakeResults(Results res) {
+		if (res == null) {
+			return null;
+		}
+		final Map<String, Object> ret = new HashMap<String, Object>();
+		ret.put("shocknodes", res.getShocknodes());
+		ret.put("shockurl", res.getShockurl());
+		ret.put("workspaceids", res.getWorkspaceids());
+		ret.put("workspaceul", res.getWorkspaceurl());
+		return ret;
+	}
 
     //END_CLASS_HEADER
 
@@ -514,6 +526,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Integer return3 = null;
         String return4 = null;
         //BEGIN get_job_description
+		final Job j = js.getJob(authPart.getUserName(), job);
+		return1 = j.getService();
+		return2 = j.getProgType();
+		return3 = j.getMaxProgress();
+		return4 = j.getDescription();
         //END get_job_description
         Tuple4<String, String, Integer, String> returnVal = new Tuple4<String, String, Integer, String>();
         returnVal.setE1(return1);
@@ -539,6 +556,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Integer return5 = null;
         Integer return6 = null;
         //BEGIN get_job_status
+		final Job j = js.getJob(authPart.getUserName(), job);
+		return1 = formatDate(j.getLastUpdated());
+		return2 = j.getStage();
+		return3 = j.getStatus();
+		return4 = j.getProgress();
+		return5 = boolToInt(j.isComplete());
+		return6 = boolToInt(j.hasError());
         //END get_job_status
         Tuple6<String, String, String, Integer, Integer, Integer> returnVal = new Tuple6<String, String, String, Integer, Integer, Integer>();
         returnVal.setE1(return1);
@@ -565,6 +589,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.complete_job")
     public void completeJob(String job, String token, String status, Integer error, Results res, AuthToken authPart) throws Exception {
         //BEGIN complete_job
+		js.completeJob(authPart.getUserName(), job, getServiceName(token),
+				status, error == null ? false : error != 0,
+				unmakeResults(res));
         //END complete_job
     }
 
