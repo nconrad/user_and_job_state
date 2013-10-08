@@ -22,12 +22,14 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple12;
 import us.kbase.common.service.Tuple4;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
+import us.kbase.common.test.TestException;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
@@ -115,8 +117,18 @@ public class JSONRPCLayerTest {
 		CLIENT2 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER2, p2);
 		CLIENT1.setAuthAllowedForHttp(true);
 		CLIENT2.setAuthAllowedForHttp(true);
-		token1 = AuthService.login(USER1, p1).getTokenString();
-		token2 = AuthService.login(USER2, p2).getTokenString();
+		try {
+			token1 = AuthService.login(USER1, p1).getTokenString();
+		} catch (AuthException ae) {
+			throw new TestException("Unable to login with test.user1: " + USER1 +
+					"Please check the credentials in the test configuration.", ae);
+		}
+		try {
+			token2 = AuthService.login(USER2, p2).getTokenString();
+		} catch (AuthException ae) {
+			throw new TestException("Unable to login with test.user2: " + USER2 +
+					"Please check the credentials in the test configuration.", ae);
+		}
 	}
 	
 	@AfterClass
