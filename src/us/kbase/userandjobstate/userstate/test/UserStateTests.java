@@ -4,6 +4,7 @@ import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -11,8 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import javax.swing.JFrame;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -247,7 +246,8 @@ public class UserStateTests {
 	@Test
 	public void setUnserializable() throws Exception {
 		try {
-			us.setState("foo", "unserializable", false, "a", new JFrame());
+			us.setState("foo", "unserializable", false, "a",
+					new StringReader("foo"));
 			fail("saved unserializable object");
 		} catch (IllegalArgumentException iae) {
 			assertThat("correct exception", iae.getLocalizedMessage(),
