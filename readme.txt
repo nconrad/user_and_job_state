@@ -16,3 +16,7 @@ SETUP
 4b) make test
 5) make deploy
 6) /kb/deployment/services/user_and_job_state/start_service
+
+If the server doesn't start up correctly, check /var/log/syslog and
+/kb/runtime/glassfish3/glassfish/domains/domain1/logs/server.log 
+for debugging information.

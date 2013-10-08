@@ -18,10 +18,8 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.ServletException;
@@ -55,7 +53,6 @@ public class JsonServerServlet extends HttpServlet {
 	final private static String KB_DEP = "KB_DEPLOYMENT_CONFIG";
 	final private static String KB_SERVNAME = "KB_SERVICE_NAME";
 	protected Map<String, String> config = new HashMap<String, String>();
-	private static ThreadLocal<RpcInfo> rpcInfo = new ThreadLocal<RpcInfo>();
 	private Server jettyServer = null;
 	private Integer jettyPort = null;
 	private boolean startupFailed = false;
@@ -196,9 +193,11 @@ public class JsonServerServlet extends HttpServlet {
 	}
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		JsonServerSyslog.RpcInfo info = JsonServerSyslog.getCurrentRpcInfo().reset();
+		info.setIp(request.getRemoteAddr());
 		response.setContentType(APP_JSON);
 		OutputStream output	= response.getOutputStream();
-		getCurrentRpcInfo().reset();
+		JsonServerSyslog.getCurrentRpcInfo().reset();
 		if (startupFailed) {
 			writeError(response, -32603, "The server did not start up properly. Please check the log files for the cause.", output);
 			return;
@@ -207,9 +206,10 @@ public class JsonServerServlet extends HttpServlet {
 	}
 
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		JsonServerSyslog.RpcInfo info = JsonServerSyslog.getCurrentRpcInfo().reset();
+		info.setIp(request.getRemoteAddr());
 		response.setContentType(APP_JSON);
 		OutputStream output	= response.getOutputStream();
-		RpcInfo info = getCurrentRpcInfo().reset();
 		String rpcName = null;
 		AuthToken userProfile = null;
 		try {
@@ -223,17 +223,17 @@ public class JsonServerServlet extends HttpServlet {
 			}
 			JsonNode idNode = node.get("id");
 			try {
-				info.id = idNode == null || node.isNull() ? null : idNode.asText();
+				info.setId(idNode == null || node.isNull() ? null : idNode.asText());
 			} catch (Exception ex) {}
 			JsonNode methodNode = node.get("method");
 			ArrayNode paramsNode = (ArrayNode)node.get("params");
 			rpcName = (methodNode!=null && !methodNode.isNull()) ? methodNode.asText() : null;
 			if (rpcName.contains(".")) {
 				int pos = rpcName.indexOf('.');
-				info.module = rpcName.substring(0, pos);
-				info.method = rpcName.substring(pos + 1);
+				info.setModule(rpcName.substring(0, pos));
+				info.setMethod(rpcName.substring(pos + 1));
 			} else {
-				info.method = rpcName;
+				info.setMethod(rpcName);
 			}
 			Method rpcMethod = rpcCache.get(rpcName);
 			if (rpcMethod == null) {
@@ -248,7 +248,7 @@ public class JsonServerServlet extends HttpServlet {
 					try {
 						userProfile = validateToken(token);
 						if (userProfile != null)
-							info.user = userProfile.getClientId();
+							info.setUser(userProfile.getClientId());
 					} catch (Throwable ex) {
 						writeError(response, -32400, "Token validation failed: " + ex.getMessage(), output);
 						return;
@@ -303,16 +303,7 @@ public class JsonServerServlet extends HttpServlet {
 			writeError(response, -32400, "Unexpected internal error (" + ex.getMessage() + ")", output);	
 		}
 	}
-	
-	public static RpcInfo getCurrentRpcInfo() {
-		RpcInfo ret = rpcInfo.get();
-		if (ret == null) {
-			ret = new RpcInfo();
-			rpcInfo.set(ret);
-		}
-		return ret;
-	}
-	
+		
 	private static AuthToken validateToken(String token) throws Exception {
 		if (token == null)
 			throw new IllegalStateException("Token is not defined in http request header");
@@ -350,7 +341,7 @@ public class JsonServerServlet extends HttpServlet {
 		error.put("error", data);
 		ret.put("version", "1.1");
 		ret.put("error", error);
-		String id = getCurrentRpcInfo().getId();
+		String id = JsonServerSyslog.getCurrentRpcInfo().getId();
 		if (id != null)
 			ret.put("id", id);
 		try {
@@ -482,37 +473,6 @@ public class JsonServerServlet extends HttpServlet {
 			if (isClosed)
 				return;
 			inner.write(b, off, len);
-		}
-	}
-	
-	public static class RpcInfo {
-		private String id;
-		private String module;
-		private String method;
-		private String user;
-		
-		private RpcInfo reset() {
-			id = null;
-			module = null;
-			method = null;
-			user = null;
-			return this;
-		}
-		
-		public String getId() {
-			return id;
-		}
-		
-		public String getModule() {
-			return module;
-		}
-		
-		public String getMethod() {
-			return method;
-		}
-		
-		public String getUser() {
-			return user;
 		}
 	}
 }

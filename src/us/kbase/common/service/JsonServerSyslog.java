@@ -27,7 +27,6 @@ public class JsonServerSyslog {
 	private PrintWriter currentWriter = null;
 	private SyslogOutput output = defaultSyslogOutput;
 	private int logLevel = -1;
-	private String systemIP;
 
 	public static final int LOG_LEVEL_ERR = SyslogConstants.LEVEL_ERROR;
 	public static final int LOG_LEVEL_INFO = SyslogConstants.LEVEL_INFO;
@@ -36,6 +35,7 @@ public class JsonServerSyslog {
 	public static final int LOG_LEVEL_DEBUG3 = SyslogConstants.LEVEL_DEBUG + 2;
 
 	private static ThreadLocal<SimpleDateFormat> sdf = new ThreadLocal<SimpleDateFormat>();
+	private static ThreadLocal<RpcInfo> rpcInfo = new ThreadLocal<RpcInfo>();
 
 	private static String systemLogin = nn(System.getProperty("user.name"));
 	private static String pid = getPID();
@@ -58,18 +58,12 @@ public class JsonServerSyslog {
 		log = new UnixSocketSyslog();
 		log.initialize(SyslogConstants.UNIX_SOCKET, cfg);
 		this.config = new Config(configFileParam, serviceName);
-		try {
-			systemIP = InetAddress.getLocalHost().getHostAddress();
-		} catch (UnknownHostException ignore) {
-			systemIP = "127.0.0.1";
-		}
 	}
 
 	public JsonServerSyslog(JsonServerSyslog otherLog) {
 		this.serviceName = otherLog.serviceName;
 		this.log = otherLog.log;
 		this.config = otherLog.config;
-		this.systemIP = otherLog.systemIP;
 	}
 
 	public void changeOutput(SyslogOutput output) {
@@ -137,7 +131,7 @@ public class JsonServerSyslog {
 		}
 		String errorPrefix = err.getClass().equals(Exception.class) ? "Error: " :
 			(err.getClass().getName() + ": ");
-		messages.add(errorPrefix + err.getMessage());
+		messages.add(0, errorPrefix + err.getMessage());
 		log(LOG_LEVEL_ERR, caller, messages.toArray(new String[messages.size()]));
 	}
 	
@@ -169,12 +163,20 @@ public class JsonServerSyslog {
 		throw new IllegalStateException();
 	}
 
-	
+	static RpcInfo getCurrentRpcInfo() {
+		RpcInfo ret = rpcInfo.get();
+		if (ret == null) {
+			ret = new RpcInfo();
+			rpcInfo.set(ret);
+		}
+		return ret;
+	}
+
 	private String getFullMessage(int level, String caller, String message) {
 		String levelText = level == LOG_LEVEL_ERR ? "ERR" : (level == LOG_LEVEL_INFO ? "INFO" : "DEBUG");
-		JsonServerServlet.RpcInfo info = JsonServerServlet.getCurrentRpcInfo();
+		RpcInfo info = getCurrentRpcInfo();
 		return "[" + serviceName + "] [" + levelText + "] [" + getCurrentMicro() + "] [" + systemLogin + "] " +
-				"[" + caller + "] [" + pid + "] [" + systemIP + "] [" + nn(info.getUser()) + "] " +
+				"[" + caller + "] [" + pid + "] [" + nn(info.getIp()) + "] [" + nn(info.getUser()) + "] " +
 				"[" + nn(info.getModule()) + "] [" + nn(info.getMethod()) + "] [" + nn(info.getId()) + "]: " + message;
 	}
 	
@@ -294,8 +296,10 @@ public class JsonServerSyslog {
 		public void logToSystem(SyslogIF log, int level, String message) {
 			try {
 				log.log(level, message);
-				log.flush();
-			} catch (Throwable ignore) {}
+				//log.flush();
+			} catch (Throwable ex) {
+				System.out.println("JsonServerSyslog: Error writing to syslog (" + ex.getMessage() + "), see user defined log-file instead of syslog.");
+			}
 		}
 		
 		public PrintWriter logToFile(File f, PrintWriter pw, int level, String message) throws Exception {
@@ -305,6 +309,62 @@ public class JsonServerSyslog {
 				pw.println(message);
 			} catch (Throwable ignore) {}
 			return pw;
+		}
+	}
+	
+	public static class RpcInfo {
+		private String id;
+		private String module;
+		private String method;
+		private String user;
+		private String ip;
+		
+		RpcInfo reset() {
+			id = null;
+			module = null;
+			method = null;
+			user = null;
+			return this;
+		}
+		
+		String getId() {
+			return id;
+		}
+		
+		void setId(String id) {
+			this.id = id;
+		}
+		
+		String getModule() {
+			return module;
+		}
+		
+		void setModule(String module) {
+			this.module = module;
+		}
+		
+		String getMethod() {
+			return method;
+		}
+		
+		void setMethod(String method) {
+			this.method = method;
+		}
+		
+		String getUser() {
+			return user;
+		}
+		
+		void setUser(String user) {
+			this.user = user;
+		}
+		
+		String getIp() {
+			return ip;
+		}
+		
+		void setIp(String ip) {
+			this.ip = ip;
 		}
 	}
 }
