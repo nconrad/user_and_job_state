@@ -121,13 +121,13 @@ public class JSONRPCLayerTest {
 			token1 = AuthService.login(USER1, p1).getTokenString();
 		} catch (AuthException ae) {
 			throw new TestException("Unable to login with test.user1: " + USER1 +
-					"Please check the credentials in the test configuration.", ae);
+					"\nPlease check the credentials in the test configuration.", ae);
 		}
 		try {
 			token2 = AuthService.login(USER2, p2).getTokenString();
 		} catch (AuthException ae) {
 			throw new TestException("Unable to login with test.user2: " + USER2 +
-					"Please check the credentials in the test configuration.", ae);
+					"\nPlease check the credentials in the test configuration.", ae);
 		}
 	}
 	
