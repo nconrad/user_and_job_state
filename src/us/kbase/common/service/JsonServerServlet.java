@@ -160,68 +160,25 @@ public class JsonServerServlet extends HttpServlet {
 	}
 	
 	public void logErr(String message) {
-		logErr(new Exception(message), findCaller());
+		userLogger.logErr(message);
 	}
 
 	public void logErr(Throwable err) {
-		logErr(err, findCaller());
-	}
-	
-	private void logErr(Throwable err, String caller) {
-		List<String> messages = new ArrayList<String>();
-		StackTraceElement[] st = err.getStackTrace();
-		int firstPos = 0;
-		String packageName = "us.kbase";
-		String className = JsonServerServlet.class.getName();
-		for (; firstPos < st.length; firstPos++) {
-			if (st[firstPos].getClassName().equals(className))
-				continue;
-			break;
-		}
-		int lastPos = st.length - 1;
-		for (; lastPos > firstPos; lastPos--) {
-			if (st[lastPos].getClassName().startsWith(packageName) && 
-					!st[lastPos].getClassName().equals(className))
-				break;
-		}
-		messages.add("Traceback (most recent call last):");
-		for (int pos = lastPos; pos >= firstPos; pos--) {
-			messages.add("Class \"" + st[pos].getClassName() + "\", file \"" + st[pos].getFileName() + 
-					"\", line " + st[pos].getLineNumber() + ", in " + st[pos].getMethodName());
-		}
-		String errorPrefix = err.getClass().equals(Exception.class) ? "Error: " :
-			(err.getClass().getName() + ": ");
-		messages.add(errorPrefix + err.getMessage());
-		userLogger.log(LOG_LEVEL_ERR, caller, messages.toArray(new String[messages.size()]));
+		userLogger.logErr(err);
 	}
 	
 	public void logInfo(String message) {
-		userLogger.log(LOG_LEVEL_INFO, findCaller(), message);
+		userLogger.logInfo(message);
 	}
 	
 	public void logDebug(String message) {
-		userLogger.log(LOG_LEVEL_DEBUG, findCaller(), message);
+		userLogger.logDebug(message);
 	}
 	
 	public void logDebug(String message, int debugLevelFrom1to3) {
-		if (debugLevelFrom1to3 < 1 || debugLevelFrom1to3 > 3)
-			throw new IllegalStateException("Wrong debug log level, it should be between 1 and 3");
-		userLogger.log(LOG_LEVEL_DEBUG + (debugLevelFrom1to3 - 1), findCaller(), message);
+		userLogger.logDebug(message, debugLevelFrom1to3);
 	}
 
-	public static String findCaller() {
-		StackTraceElement[] st = Thread.currentThread().getStackTrace();
-		String packageName = "us.kbase";
-		String className = JsonServerServlet.class.getName();
-		for (int pos = 0; pos < st.length; pos++) {
-			if (st[pos].getClassName().equals(className) ||
-					!st[pos].getClassName().startsWith(packageName))
-				continue;
-			return st[pos].getClassName();
-		}
-		throw new IllegalStateException();
-	}
-	
 	public int getLogLevel() {
 		return userLogger.getLogLevel();
 	}
@@ -329,7 +286,7 @@ public class JsonServerServlet extends HttpServlet {
 				if (ex instanceof InvocationTargetException && ex.getCause() != null) {
 					ex = ex.getCause();
 				}
-				logErr(ex, getClass().getName());
+				sysLogger.logErr(ex, getClass().getName());
 				writeError(response, -32500, ex, output);
 				return;
 			}

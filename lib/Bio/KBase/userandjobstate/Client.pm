@@ -2052,7 +2052,9 @@ job_id is a string
 
 =item Description
 
-Force delete a job - will always succeed, regardless of job state.
+Force delete a job - will succeed unless the job has not been started.
+In that case, the service must start the job and then delete it, since
+a job is not "owned" by any service until it is started.
 
 =back
 

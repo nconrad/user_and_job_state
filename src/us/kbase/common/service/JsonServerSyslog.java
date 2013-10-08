@@ -5,8 +5,12 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import org.ini4j.Ini;
@@ -23,6 +27,7 @@ public class JsonServerSyslog {
 	private PrintWriter currentWriter = null;
 	private SyslogOutput output = defaultSyslogOutput;
 	private int logLevel = -1;
+	private String systemIP;
 
 	public static final int LOG_LEVEL_ERR = SyslogConstants.LEVEL_ERROR;
 	public static final int LOG_LEVEL_INFO = SyslogConstants.LEVEL_INFO;
@@ -53,12 +58,18 @@ public class JsonServerSyslog {
 		log = new UnixSocketSyslog();
 		log.initialize(SyslogConstants.UNIX_SOCKET, cfg);
 		this.config = new Config(configFileParam, serviceName);
+		try {
+			systemIP = InetAddress.getLocalHost().getHostAddress();
+		} catch (UnknownHostException ignore) {
+			systemIP = "127.0.0.1";
+		}
 	}
 
 	public JsonServerSyslog(JsonServerSyslog otherLog) {
 		this.serviceName = otherLog.serviceName;
 		this.log = otherLog.log;
 		this.config = otherLog.config;
+		this.systemIP = otherLog.systemIP;
 	}
 
 	public void changeOutput(SyslogOutput output) {
@@ -86,17 +97,85 @@ public class JsonServerSyslog {
 			level = LOG_LEVEL_DEBUG;
 		for (String message : messages)
 			output.logToSystem(log, level, getFullMessage(level, caller, message));
-		//log.flush();
 		logToFile(level, caller, messages);
 		config.addPrintedLines(messages.length);
 	}
+	
+	public void logErr(String message) {
+		logErr(new Exception(message), findCaller());
+	}
+
+	public void logErr(Throwable err) {
+		logErr(err, findCaller());
+	}
+	
+	public void logErr(Throwable err, String caller) {
+		List<String> messages = new ArrayList<String>();
+		StackTraceElement[] st = err.getStackTrace();
+		int firstPos = 0;
+		String packageName = "us.kbase";
+		String className = JsonServerServlet.class.getName();
+		String className2 = JsonServerSyslog.class.getName();
+		for (; firstPos < st.length; firstPos++) {
+			if (st[firstPos].getClassName().equals(className) || st[firstPos].getClassName().equals(className2))
+				continue;
+			break;
+		}
+		if (firstPos == st.length)
+			firstPos = 0;
+		int lastPos = st.length - 1;
+		for (; lastPos > firstPos; lastPos--) {
+			if (st[lastPos].getClassName().startsWith(packageName) && 
+					(!st[lastPos].getClassName().equals(className)) &&
+					(!st[lastPos].getClassName().equals(className2)))
+				break;
+		}
+		messages.add("Traceback (most recent call last):");
+		for (int pos = lastPos; pos >= firstPos; pos--) {
+			messages.add("Class \"" + st[pos].getClassName() + "\", file \"" + st[pos].getFileName() + 
+					"\", line " + st[pos].getLineNumber() + ", in " + st[pos].getMethodName());
+		}
+		String errorPrefix = err.getClass().equals(Exception.class) ? "Error: " :
+			(err.getClass().getName() + ": ");
+		messages.add(errorPrefix + err.getMessage());
+		log(LOG_LEVEL_ERR, caller, messages.toArray(new String[messages.size()]));
+	}
+	
+	public void logInfo(String message) {
+		log(LOG_LEVEL_INFO, findCaller(), message);
+	}
+	
+	public void logDebug(String message) {
+		log(LOG_LEVEL_DEBUG, findCaller(), message);
+	}
+	
+	public void logDebug(String message, int debugLevelFrom1to3) {
+		if (debugLevelFrom1to3 < 1 || debugLevelFrom1to3 > 3)
+			throw new IllegalStateException("Wrong debug log level, it should be between 1 and 3");
+		log(LOG_LEVEL_DEBUG + (debugLevelFrom1to3 - 1), findCaller(), message);
+	}
+
+	public static String findCaller() {
+		StackTraceElement[] st = Thread.currentThread().getStackTrace();
+		String packageName = "us.kbase";
+		String className = JsonServerServlet.class.getName();
+		String className2 = JsonServerSyslog.class.getName();
+		for (int pos = 0; pos < st.length; pos++) {
+			if (st[pos].getClassName().equals(className) || st[pos].getClassName().equals(className2) ||
+					!st[pos].getClassName().startsWith(packageName))
+				continue;
+			return st[pos].getClassName();
+		}
+		throw new IllegalStateException();
+	}
+
 	
 	private String getFullMessage(int level, String caller, String message) {
 		String levelText = level == LOG_LEVEL_ERR ? "ERR" : (level == LOG_LEVEL_INFO ? "INFO" : "DEBUG");
 		JsonServerServlet.RpcInfo info = JsonServerServlet.getCurrentRpcInfo();
 		return "[" + serviceName + "] [" + levelText + "] [" + getCurrentMicro() + "] [" + systemLogin + "] " +
-				"[" + caller + "] [" + pid + "] [" + nn(info.getUser()) + "] [" + nn(info.getModule()) + "] " +
-				"[" + nn(info.getMethod()) + "] [" + nn(info.getId()) + "]: " + message;
+				"[" + caller + "] [" + pid + "] [" + systemIP + "] [" + nn(info.getUser()) + "] " +
+				"[" + nn(info.getModule()) + "] [" + nn(info.getMethod()) + "] [" + nn(info.getId()) + "]: " + message;
 	}
 	
 	private void logToFile(int level, String caller, String[] messages) {

@@ -64,6 +64,11 @@ public class Tuple4 <T1, T2, T3, T4> {
         return this;
     }
 
+    @Override
+    public String toString() {
+        return "Tuple4 [e1=" + e1 + ", e2=" + e2 + ", e3=" + e3 + ", e4=" + e4 + "]";
+    }
+
     @JsonAnyGetter
     public Map<String, Object> getAdditionalProperties() {
         return this.additionalProperties;

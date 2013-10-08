@@ -684,9 +684,10 @@ public class JSONRPCLayerTest {
 		InitProgress noprog = new InitProgress().withPtype("none");
 		CLIENT1.createAndStartJob(token2, "ls stat", "ls desc", noprog);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER2)));
-		CLIENT1.createAndStartJob(token1, "ls2 stat", "ls2 desc", noprog);
+		String jobid = CLIENT1.createAndStartJob(token1, "ls2 stat",
+				"ls2 desc", noprog);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER1, USER2)));
-		
+		CLIENT1.forceDeleteJob(token1, jobid);
 	}
 	
 	private void checkListServices(UserAndJobStateClient client,

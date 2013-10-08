@@ -119,4 +119,9 @@ public class Results {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return ((((((((((("Results"+" [shocknodes=")+ shocknodes)+", shockurl=")+ shockurl)+", workspaceids=")+ workspaceids)+", workspaceurl=")+ workspaceurl)+", additionalProperties=")+ additionalProperties)+"]");
+    }
+
 }

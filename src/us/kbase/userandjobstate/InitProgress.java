@@ -75,4 +75,9 @@ public class InitProgress {
         this.additionalProperties.put(name, value);
     }
 
+    @Override
+    public String toString() {
+        return ((((((("InitProgress"+" [ptype=")+ ptype)+", max=")+ max)+", additionalProperties=")+ additionalProperties)+"]");
+    }
+
 }
