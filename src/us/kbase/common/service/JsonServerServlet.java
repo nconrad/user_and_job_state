@@ -286,7 +286,6 @@ public class JsonServerServlet extends HttpServlet {
 				if (ex instanceof InvocationTargetException && ex.getCause() != null) {
 					ex = ex.getCause();
 				}
-				sysLogger.logErr(ex, getClass().getName());
 				writeError(response, -32500, ex, output);
 				return;
 			}
@@ -319,16 +318,18 @@ public class JsonServerServlet extends HttpServlet {
 	}
 	
 	private void writeError(HttpServletResponse response, int code, String message, OutputStream output) {
+		sysLogger.log(LOG_LEVEL_ERR, getClass().getName(), message);
 		writeError(response, code, message, null, output);
 	}
 	
 	private void writeError(HttpServletResponse response, int code, Throwable ex, OutputStream output) {
+		sysLogger.logErr(ex, getClass().getName());
 		StringWriter sw = new StringWriter();
 		ex.printStackTrace(new PrintWriter(sw));
 		String errorMessage = ex.getLocalizedMessage();
 		if (errorMessage == null)
 			errorMessage = ex.getMessage();
-		writeError(response, code, ex.getLocalizedMessage(), sw.toString(), output);
+		writeError(response, code, errorMessage, sw.toString(), output);
 	}
 	
 	private void writeError(HttpServletResponse response, int code, String message, String data, OutputStream output) {
@@ -348,10 +349,9 @@ public class JsonServerServlet extends HttpServlet {
 			ByteArrayOutputStream bais = new ByteArrayOutputStream();
 			mapper.writeValue(bais, ret);
 			bais.close();
-			byte[] bytes = bais.toByteArray();
-			String logMessage = new String(bytes);
-			sysLogger.log(LOG_LEVEL_ERR, getClass().getName(), logMessage);
-			output.write(bytes);
+			//String logMessage = new String(bytes);
+			//sysLogger.log(LOG_LEVEL_ERR, getClass().getName(), logMessage);
+			output.write(bais.toByteArray());
 			output.flush();
 		} catch (Exception e) {
 			e.printStackTrace();

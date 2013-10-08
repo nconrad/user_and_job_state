@@ -5,8 +5,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.management.ManagementFactory;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,6 +39,9 @@ public class JsonServerSyslog {
 	private static String pid = getPID();
 	
 	private static final SyslogOutput defaultSyslogOutput = new SyslogOutput();
+	
+	private static final long startMillis = System.currentTimeMillis();
+	private static final long startNanos = System.nanoTime();
 	
 	public JsonServerSyslog(String serviceName, String configFileParam) {
 		this(serviceName, configFileParam, -1);
@@ -89,9 +90,10 @@ public class JsonServerSyslog {
 			return;
 		if (level > LOG_LEVEL_DEBUG)
 			level = LOG_LEVEL_DEBUG;
+		String micro = getCurrentMicro();
 		for (String message : messages)
-			output.logToSystem(log, level, getFullMessage(level, caller, message));
-		logToFile(level, caller, messages);
+			output.logToSystem(log, level, getFullMessage(level, caller, message, micro));
+		logToFile(level, caller, messages, micro);
 		config.addPrintedLines(messages.length);
 	}
 	
@@ -172,15 +174,15 @@ public class JsonServerSyslog {
 		return ret;
 	}
 
-	private String getFullMessage(int level, String caller, String message) {
+	private String getFullMessage(int level, String caller, String message, String micro) {
 		String levelText = level == LOG_LEVEL_ERR ? "ERR" : (level == LOG_LEVEL_INFO ? "INFO" : "DEBUG");
 		RpcInfo info = getCurrentRpcInfo();
-		return "[" + serviceName + "] [" + levelText + "] [" + getCurrentMicro() + "] [" + systemLogin + "] " +
+		return "[" + serviceName + "] [" + levelText + "] [" + micro + "] [" + systemLogin + "] " +
 				"[" + caller + "] [" + pid + "] [" + nn(info.getIp()) + "] [" + nn(info.getUser()) + "] " +
 				"[" + nn(info.getModule()) + "] [" + nn(info.getMethod()) + "] [" + nn(info.getId()) + "]: " + message;
 	}
 	
-	private void logToFile(int level, String caller, String[] messages) {
+	private void logToFile(int level, String caller, String[] messages, String micro) {
 		File f = config.getExternalLogFile();
 		if (f == null)
 			return;
@@ -193,13 +195,14 @@ public class JsonServerSyslog {
 				currentFile = f;
 			}
 			for (String message : messages) {
-				message = getDateFormat().format(new Date()) + " java " + getFullMessage(level, caller, message);
+				message = getDateFormat().format(new Date()) + " java " + getFullMessage(level, caller, message, micro);
 				currentWriter = output.logToFile(currentFile, currentWriter, level, message);
 			}
 			if (currentWriter != null)
 				currentWriter.flush();
 		} catch (Exception ex) {
-			output.logToSystem(log, LOG_LEVEL_ERR, getFullMessage(LOG_LEVEL_ERR, getClass().getName(), "Can not write into log file: " + f));
+			output.logToSystem(log, LOG_LEVEL_ERR, getFullMessage(LOG_LEVEL_ERR, getClass().getName(), 
+					"Can not write into log file: " + f, micro));
 		}
 	}
 	
@@ -225,8 +228,10 @@ public class JsonServerSyslog {
 	}
 	
 	private static String getCurrentMicro() {
-		String ret = "" + System.currentTimeMillis() + "000000";
-		return ret.substring(0, ret.length() - 9) + "." + ret.substring(ret.length() - 9, ret.length() - 3);
+		long microSeconds = startMillis * 1000 + (System.nanoTime() - startNanos) / 1000;
+		return (microSeconds / 1000000) + "." + (microSeconds % 1000000);
+		//String ret = "" + System.currentTimeMillis() + "000000";
+		//return ret.substring(0, ret.length() - 9) + "." + ret.substring(ret.length() - 9, ret.length() - 3);
 	}
 
 	private class Config {
@@ -287,7 +292,8 @@ public class JsonServerSyslog {
 				if (logLevelText != null)
 					maxLogLevel = Integer.parseInt(logLevelText);
 			} catch (IOException ignore) {
-				output.logToSystem(log, LOG_LEVEL_ERR, getFullMessage(LOG_LEVEL_ERR, getClass().getName(), "Error reading configuration file: " + file));
+				output.logToSystem(log, LOG_LEVEL_ERR, getFullMessage(LOG_LEVEL_ERR, getClass().getName(), 
+						"Error reading configuration file: " + file, getCurrentMicro()));
 			}
 		}
 	}
