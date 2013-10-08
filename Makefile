@@ -1,5 +1,5 @@
 #TODO change port
-SERVICE_PORT = 7058
+SERVICE_PORT = 7083
 SERVICE = userandjobstate
 SERVICE_CAPS = UserAndJobState
 CLIENT_JAR = UserAndJobStateClient.jar
