@@ -10,7 +10,6 @@ import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 
 //BEGIN_HEADER
-import static us.kbase.common.utils.ServiceUtils.formatDate;
 import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
 
 import java.io.IOException;
@@ -26,6 +25,7 @@ import us.kbase.auth.TokenExpiredException;
 import us.kbase.auth.TokenFormatException;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
 import us.kbase.common.mongo.exceptions.MongoAuthException;
+import us.kbase.common.utils.UTCDateFormat;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
@@ -97,6 +97,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	private final UserState us;
 	private final JobState js;
 	
+	private final UTCDateFormat dateFormat = new UTCDateFormat();
+	
 	private UserState getUserState(final String host, final String dbs,
 			final String user, final String pwd) {
 		try {
@@ -162,7 +164,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return t.getUserName();
 	}
 	
-	private static Tuple12<String, String, String, String, String, Integer,
+	private Tuple12<String, String, String, String, String, Integer,
 			Integer, String, Integer, Integer, String, Results> jobToJobInfo(
 			final Job j) {
 		return new Tuple12<String, String, String, String, String, Integer,
@@ -171,7 +173,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withE2(j.getService())
 				.withE3(j.getStage())
 				.withE4(j.getStatus())
-				.withE5(formatDate(j.getLastUpdated()))
+				.withE5(dateFormat.formatDate(j.getLastUpdated()))
 				.withE6(j.getProgress())
 				.withE7(j.getMaxProgress())
 				.withE8(j.getProgType())
@@ -569,7 +571,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Integer return6 = null;
         //BEGIN get_job_status
 		final Job j = js.getJob(authPart.getUserName(), job);
-		return1 = formatDate(j.getLastUpdated());
+		return1 = dateFormat.formatDate(j.getLastUpdated());
 		return2 = j.getStage();
 		return3 = j.getStatus();
 		return4 = j.getProgress();
