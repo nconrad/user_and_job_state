@@ -1,4 +1,3 @@
-#TODO change port
 SERVICE_PORT = 7083
 SERVICE = userandjobstate
 SERVICE_CAPS = UserAndJobState
@@ -6,6 +5,11 @@ CLIENT_JAR = UserAndJobStateClient.jar
 WAR = UserAndJobStateService.war
 
 THREADPOOL_SIZE = 20
+
+#End of user defined variables
+
+GITCOMMIT := $(shell git rev-parse --short HEAD)
+TAGS := $(shell git tag --contains $(GITCOMMIT))
 
 TOP_DIR =  $(shell python -c "import os.path as p; print p.abspath('../..')")
 
@@ -78,6 +82,8 @@ deploy-client-libs:
 	mkdir -p $(TARGET)/lib/
 	cp dist/client/$(CLIENT_JAR) $(TARGET)/lib/
 	cp -rv lib/* $(TARGET)/lib/
+	echo $(GITCOMMIT) > $(TARGET)/lib/$(SERVICE).clientdist
+	echo $(TAGS) >> $(TARGET)/lib/$(SERVICE).clientdist
 
 deploy-docs:
 	mkdir -p $(SERVICE_DIR)/webroot
@@ -91,6 +97,8 @@ deploy-service: deploy-service-libs deploy-service-scripts
 deploy-service-libs:
 	mkdir -p $(SERVICE_DIR)
 	cp dist/$(WAR) $(SERVICE_DIR)
+	echo $(GITCOMMIT) > $(SERVICE_DIR)/$(SERVICE).serverdist
+	echo $(TAGS) >> $(SERVICE_DIR)/$(SERVICE).serverdist
 	
 deploy-service-scripts:
 	cp server_scripts/* $(SERVICE_DIR)
