@@ -1,4 +1,4 @@
-package us.kbase.userandjobstate.kbase.test;
+package us.kbase.userandjobstate.test.kbase;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -80,7 +80,6 @@ public class JSONRPCLayerTest {
 	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		//TODO catch exceptions and print nice errors - next deploy
 		USER1 = System.getProperty("test.user1");
 		USER2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");

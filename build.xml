@@ -151,9 +151,9 @@
       <sysproperty key="test.pwd1" value="${test.pwd1}"/>
       <sysproperty key="test.user2" value="${test.user2}"/>
       <sysproperty key="test.pwd2" value="${test.pwd2}"/>
-      <test name="us.kbase.userandjobstate.jobstate.test.JobStateTests"/>
-      <test name="us.kbase.userandjobstate.userstate.test.UserStateTests"/>
-      <test name="us.kbase.userandjobstate.kbase.test.JSONRPCLayerTest"/>
+      <test name="us.kbase.userandjobstate.test.jobstate.JobStateTests"/>
+      <test name="us.kbase.userandjobstate.test.userstate.UserStateTests"/>
+      <test name="us.kbase.userandjobstate.test.kbase.JSONRPCLayerTest"/>
     </junit>
     <fail message="Test failure detected, check test results." if="test.failed" />
   </target>

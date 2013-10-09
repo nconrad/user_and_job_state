@@ -1,4 +1,4 @@
-package us.kbase.userandjobstate.userstate.test;
+package us.kbase.userandjobstate.test.userstate;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
