@@ -17,6 +17,7 @@ public class Job {
 	private Integer prog;
 	private Integer maxprog;
 	private String status;
+	private Date started;
 	private Date updated;
 	private Boolean complete;
 	private Boolean error;
@@ -83,6 +84,10 @@ public class Job {
 		return status;
 	}
 
+	public Date getStarted() {
+		return started;
+	}
+	
 	public Date getLastUpdated() {
 		return updated;
 	}
@@ -105,6 +110,7 @@ public class Job {
 				", service=" + service + ", desc=" + desc +
 				", progtype=" + progtype + ", prog=" + getProgress() +
 				", maxprog=" + getMaxProgress() + ", status=" + getStatus() +
+				", started=" + started + 
 				", updated=" + updated + ", complete=" + complete +
 				", error=" + error + ", results=" + results + "]";
 	}

@@ -191,7 +191,8 @@ module UserAndJobState {
 	
 	/* Get the description of a job. */
 	funcdef get_job_description(job_id job) returns(service_name service,
-		progress_type ptype, max_progress max, job_description desc);
+		progress_type ptype, max_progress max, job_description desc,
+		timestamp started);
 	
 	/* Get the status of a job. */
 	funcdef get_job_status(job_id job) returns(timestamp last_update, 

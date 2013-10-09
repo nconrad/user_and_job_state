@@ -275,6 +275,8 @@ public class JobStateTests {
 		assertThat("job prog ok", j.getProgress(), is(prog));
 		assertThat("job maxprog ok", j.getMaxProgress(), is(maxproj));
 		assertThat("job status ok", j.getStatus(), is(status));
+		assertTrue("job started is ok", j.getStarted() == null ||
+				j.getStarted() instanceof Date);
 		assertThat("job updated ok", j.getLastUpdated(), is(Date.class));
 		assertThat("job complete ok", j.isComplete(), is(complete));
 		assertThat("job error ok", j.hasError(), is(error));

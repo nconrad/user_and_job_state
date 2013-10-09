@@ -42,6 +42,7 @@ public class JobState {
 	private final static String CREATED = "created";
 	private final static String USER = "user";
 	private final static String SERVICE = "service";
+	private final static String STARTED = "started";
 	private final static String UPDATED = "updated";
 	private final static String COMPLETE = "complete";
 	private final static String ERROR = "error";
@@ -186,7 +187,9 @@ public class JobState {
 		update.put(STATUS, status);
 		update.put(DESCRIPTION, description);
 		update.put(PROG_TYPE, progType);
-		update.put(UPDATED, new Date());
+		final Date now = new Date();
+		update.put(STARTED, now);
+		update.put(UPDATED, now);
 		update.put(COMPLETE, false);
 		update.put(ERROR, false);
 		update.put(RESULT, null);
