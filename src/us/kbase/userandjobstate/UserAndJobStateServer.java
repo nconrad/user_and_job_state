@@ -58,8 +58,7 @@ import us.kbase.userandjobstate.userstate.UserState;
  * All job writes require service authentication. No reads, either for key/value
  * pairs or jobs, require service authentication.
  * The service assumes other services are capable of simple math and does not
- * throw errors if a progress bar overflows, nor if an estimated completion date
- * is in the past.
+ * throw errors if a progress bar overflows.
  * Jobs are automatically deleted after 30 days.
  * Potential job process flows:
  * Asysnc:
