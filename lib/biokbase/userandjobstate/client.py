@@ -414,10 +414,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def start_job(self, job, token, status, desc, progress):
+    def start_job(self, job, token, status, desc, progress, est_complete):
 
         arg_hash = { 'method': 'UserAndJobState.start_job',
-                     'params': [job, token, status, desc, progress],
+                     'params': [job, token, status, desc, progress, est_complete],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -449,10 +449,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def create_and_start_job(self, token, status, desc, progress):
+    def create_and_start_job(self, token, status, desc, progress, est_complete):
 
         arg_hash = { 'method': 'UserAndJobState.create_and_start_job',
-                     'params': [token, status, desc, progress],
+                     'params': [token, status, desc, progress, est_complete],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -484,10 +484,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def update_job_progress(self, job, token, status, prog):
+    def update_job_progress(self, job, token, status, prog, est_complete):
 
         arg_hash = { 'method': 'UserAndJobState.update_job_progress',
-                     'params': [job, token, status, prog],
+                     'params': [job, token, status, prog, est_complete],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }
@@ -519,10 +519,10 @@ class UserAndJobState:
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def update_job(self, job, token, status):
+    def update_job(self, job, token, status, est_complete):
 
         arg_hash = { 'method': 'UserAndJobState.update_job',
-                     'params': [job, token, status],
+                     'params': [job, token, status, est_complete],
                      'version': '1.1',
                      'id': str(random.random())[2:]
                      }

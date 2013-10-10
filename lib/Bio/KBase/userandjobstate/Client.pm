@@ -45,7 +45,8 @@ All job writes require service authentication. No reads, either for key/value
 pairs or jobs, require service authentication.
 
 The service assumes other services are capable of simple math and does not
-throw errors if a progress bar overflows.
+throw errors if a progress bar overflows, nor if an estimated completion date
+is in the past.
 
 Jobs are automatically deleted after 30 days.
 
@@ -797,7 +798,7 @@ sub create_job
 
 =head2 start_job
 
-  $obj->start_job($job, $token, $status, $desc, $progress)
+  $obj->start_job($job, $token, $status, $desc, $progress, $est_complete)
 
 =over 4
 
@@ -811,6 +812,7 @@ $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
@@ -820,6 +822,7 @@ InitProgress is a reference to a hash where the following keys are defined:
 	max has a value which is a UserAndJobState.max_progress
 progress_type is a string
 max_progress is an int
+timestamp is a string
 
 </pre>
 
@@ -832,6 +835,7 @@ $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
@@ -841,6 +845,7 @@ InitProgress is a reference to a hash where the following keys are defined:
 	max has a value which is a UserAndJobState.max_progress
 progress_type is a string
 max_progress is an int
+timestamp is a string
 
 
 =end text
@@ -859,13 +864,13 @@ sub start_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 5)
+    if ((my $n = @args) != 6)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function start_job (received $n, expecting 5)");
+							       "Invalid argument count for function start_job (received $n, expecting 6)");
     }
     {
-	my($job, $token, $status, $desc, $progress) = @args;
+	my($job, $token, $status, $desc, $progress, $est_complete) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
@@ -873,6 +878,7 @@ sub start_job
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
         (!ref($desc)) or push(@_bad_arguments, "Invalid type for argument 4 \"desc\" (value was \"$desc\")");
         (ref($progress) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 5 \"progress\" (value was \"$progress\")");
+        (!ref($est_complete)) or push(@_bad_arguments, "Invalid type for argument 6 \"est_complete\" (value was \"$est_complete\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to start_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -905,7 +911,7 @@ sub start_job
 
 =head2 create_and_start_job
 
-  $job = $obj->create_and_start_job($token, $status, $desc, $progress)
+  $job = $obj->create_and_start_job($token, $status, $desc, $progress, $est_complete)
 
 =over 4
 
@@ -918,6 +924,7 @@ $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
+$est_complete is a UserAndJobState.timestamp
 $job is a UserAndJobState.job_id
 service_token is a string
 job_status is a string
@@ -927,6 +934,7 @@ InitProgress is a reference to a hash where the following keys are defined:
 	max has a value which is a UserAndJobState.max_progress
 progress_type is a string
 max_progress is an int
+timestamp is a string
 job_id is a string
 
 </pre>
@@ -939,6 +947,7 @@ $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $desc is a UserAndJobState.job_description
 $progress is a UserAndJobState.InitProgress
+$est_complete is a UserAndJobState.timestamp
 $job is a UserAndJobState.job_id
 service_token is a string
 job_status is a string
@@ -948,6 +957,7 @@ InitProgress is a reference to a hash where the following keys are defined:
 	max has a value which is a UserAndJobState.max_progress
 progress_type is a string
 max_progress is an int
+timestamp is a string
 job_id is a string
 
 
@@ -967,19 +977,20 @@ sub create_and_start_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 4)
+    if ((my $n = @args) != 5)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function create_and_start_job (received $n, expecting 4)");
+							       "Invalid argument count for function create_and_start_job (received $n, expecting 5)");
     }
     {
-	my($token, $status, $desc, $progress) = @args;
+	my($token, $status, $desc, $progress, $est_complete) = @args;
 
 	my @_bad_arguments;
         (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 1 \"token\" (value was \"$token\")");
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 2 \"status\" (value was \"$status\")");
         (!ref($desc)) or push(@_bad_arguments, "Invalid type for argument 3 \"desc\" (value was \"$desc\")");
         (ref($progress) eq 'HASH') or push(@_bad_arguments, "Invalid type for argument 4 \"progress\" (value was \"$progress\")");
+        (!ref($est_complete)) or push(@_bad_arguments, "Invalid type for argument 5 \"est_complete\" (value was \"$est_complete\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to create_and_start_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1012,7 +1023,7 @@ sub create_and_start_job
 
 =head2 update_job_progress
 
-  $obj->update_job_progress($job, $token, $status, $prog)
+  $obj->update_job_progress($job, $token, $status, $prog, $est_complete)
 
 =over 4
 
@@ -1025,10 +1036,12 @@ $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $prog is a UserAndJobState.progress
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
 progress is an int
+timestamp is a string
 
 </pre>
 
@@ -1040,10 +1053,12 @@ $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
 $prog is a UserAndJobState.progress
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
 progress is an int
+timestamp is a string
 
 
 =end text
@@ -1062,19 +1077,20 @@ sub update_job_progress
 
 # Authentication: required
 
-    if ((my $n = @args) != 4)
+    if ((my $n = @args) != 5)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function update_job_progress (received $n, expecting 4)");
+							       "Invalid argument count for function update_job_progress (received $n, expecting 5)");
     }
     {
-	my($job, $token, $status, $prog) = @args;
+	my($job, $token, $status, $prog, $est_complete) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
         (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
         (!ref($prog)) or push(@_bad_arguments, "Invalid type for argument 4 \"prog\" (value was \"$prog\")");
+        (!ref($est_complete)) or push(@_bad_arguments, "Invalid type for argument 5 \"est_complete\" (value was \"$est_complete\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to update_job_progress:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1107,7 +1123,7 @@ sub update_job_progress
 
 =head2 update_job
 
-  $obj->update_job($job, $token, $status)
+  $obj->update_job($job, $token, $status, $est_complete)
 
 =over 4
 
@@ -1119,9 +1135,11 @@ sub update_job_progress
 $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
+timestamp is a string
 
 </pre>
 
@@ -1132,9 +1150,11 @@ job_status is a string
 $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
+$est_complete is a UserAndJobState.timestamp
 job_id is a string
 service_token is a string
 job_status is a string
+timestamp is a string
 
 
 =end text
@@ -1153,18 +1173,19 @@ sub update_job
 
 # Authentication: required
 
-    if ((my $n = @args) != 3)
+    if ((my $n = @args) != 4)
     {
 	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
-							       "Invalid argument count for function update_job (received $n, expecting 3)");
+							       "Invalid argument count for function update_job (received $n, expecting 4)");
     }
     {
-	my($job, $token, $status) = @args;
+	my($job, $token, $status, $est_complete) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
         (!ref($token)) or push(@_bad_arguments, "Invalid type for argument 2 \"token\" (value was \"$token\")");
         (!ref($status)) or push(@_bad_arguments, "Invalid type for argument 3 \"status\" (value was \"$status\")");
+        (!ref($est_complete)) or push(@_bad_arguments, "Invalid type for argument 4 \"est_complete\" (value was \"$est_complete\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to update_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -1197,7 +1218,7 @@ sub update_job
 
 =head2 get_job_description
 
-  $service, $ptype, $max, $desc = $obj->get_job_description($job)
+  $service, $ptype, $max, $desc, $started = $obj->get_job_description($job)
 
 =over 4
 
@@ -1211,11 +1232,13 @@ $service is a UserAndJobState.service_name
 $ptype is a UserAndJobState.progress_type
 $max is a UserAndJobState.max_progress
 $desc is a UserAndJobState.job_description
+$started is a UserAndJobState.timestamp
 job_id is a string
 service_name is a string
 progress_type is a string
 max_progress is an int
 job_description is a string
+timestamp is a string
 
 </pre>
 
@@ -1228,11 +1251,13 @@ $service is a UserAndJobState.service_name
 $ptype is a UserAndJobState.progress_type
 $max is a UserAndJobState.max_progress
 $desc is a UserAndJobState.job_description
+$started is a UserAndJobState.timestamp
 job_id is a string
 service_name is a string
 progress_type is a string
 max_progress is an int
 job_description is a string
+timestamp is a string
 
 
 =end text
@@ -1293,7 +1318,7 @@ sub get_job_description
 
 =head2 get_job_status
 
-  $last_update, $stage, $status, $progress, $complete, $error = $obj->get_job_status($job)
+  $last_update, $stage, $status, $progress, $est_complete, $complete, $error = $obj->get_job_status($job)
 
 =over 4
 
@@ -1307,6 +1332,7 @@ $last_update is a UserAndJobState.timestamp
 $stage is a UserAndJobState.job_stage
 $status is a UserAndJobState.job_status
 $progress is a UserAndJobState.total_progress
+$est_complete is a UserAndJobState.timestamp
 $complete is a UserAndJobState.boolean
 $error is a UserAndJobState.boolean
 job_id is a string
@@ -1327,6 +1353,7 @@ $last_update is a UserAndJobState.timestamp
 $stage is a UserAndJobState.job_stage
 $status is a UserAndJobState.job_status
 $progress is a UserAndJobState.total_progress
+$est_complete is a UserAndJobState.timestamp
 $complete is a UserAndJobState.boolean
 $error is a UserAndJobState.boolean
 job_id is a string
@@ -1608,23 +1635,25 @@ sub get_results
 $job is a UserAndJobState.job_id
 $info is a UserAndJobState.job_info
 job_id is a string
-job_info is a reference to a list containing 12 items:
+job_info is a reference to a list containing 14 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
 	2: (stage) a UserAndJobState.job_stage
-	3: (status) a UserAndJobState.job_status
-	4: (last_update) a UserAndJobState.timestamp
-	5: (prog) a UserAndJobState.total_progress
-	6: (max) a UserAndJobState.max_progress
-	7: (ptype) a UserAndJobState.progress_type
-	8: (complete) a UserAndJobState.boolean
-	9: (error) a UserAndJobState.boolean
-	10: (desc) a UserAndJobState.job_description
-	11: (res) a UserAndJobState.Results
+	3: (started) a UserAndJobState.timestamp
+	4: (status) a UserAndJobState.job_status
+	5: (last_update) a UserAndJobState.timestamp
+	6: (prog) a UserAndJobState.total_progress
+	7: (max) a UserAndJobState.max_progress
+	8: (ptype) a UserAndJobState.progress_type
+	9: (est_complete) a UserAndJobState.timestamp
+	10: (complete) a UserAndJobState.boolean
+	11: (error) a UserAndJobState.boolean
+	12: (desc) a UserAndJobState.job_description
+	13: (res) a UserAndJobState.Results
 service_name is a string
 job_stage is a string
-job_status is a string
 timestamp is a string
+job_status is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
@@ -1645,23 +1674,25 @@ Results is a reference to a hash where the following keys are defined:
 $job is a UserAndJobState.job_id
 $info is a UserAndJobState.job_info
 job_id is a string
-job_info is a reference to a list containing 12 items:
+job_info is a reference to a list containing 14 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
 	2: (stage) a UserAndJobState.job_stage
-	3: (status) a UserAndJobState.job_status
-	4: (last_update) a UserAndJobState.timestamp
-	5: (prog) a UserAndJobState.total_progress
-	6: (max) a UserAndJobState.max_progress
-	7: (ptype) a UserAndJobState.progress_type
-	8: (complete) a UserAndJobState.boolean
-	9: (error) a UserAndJobState.boolean
-	10: (desc) a UserAndJobState.job_description
-	11: (res) a UserAndJobState.Results
+	3: (started) a UserAndJobState.timestamp
+	4: (status) a UserAndJobState.job_status
+	5: (last_update) a UserAndJobState.timestamp
+	6: (prog) a UserAndJobState.total_progress
+	7: (max) a UserAndJobState.max_progress
+	8: (ptype) a UserAndJobState.progress_type
+	9: (est_complete) a UserAndJobState.timestamp
+	10: (complete) a UserAndJobState.boolean
+	11: (error) a UserAndJobState.boolean
+	12: (desc) a UserAndJobState.job_description
+	13: (res) a UserAndJobState.Results
 service_name is a string
 job_stage is a string
-job_status is a string
 timestamp is a string
+job_status is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
@@ -1746,23 +1777,25 @@ $filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
 job_filter is a string
-job_info is a reference to a list containing 12 items:
+job_info is a reference to a list containing 14 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
 	2: (stage) a UserAndJobState.job_stage
-	3: (status) a UserAndJobState.job_status
-	4: (last_update) a UserAndJobState.timestamp
-	5: (prog) a UserAndJobState.total_progress
-	6: (max) a UserAndJobState.max_progress
-	7: (ptype) a UserAndJobState.progress_type
-	8: (complete) a UserAndJobState.boolean
-	9: (error) a UserAndJobState.boolean
-	10: (desc) a UserAndJobState.job_description
-	11: (res) a UserAndJobState.Results
+	3: (started) a UserAndJobState.timestamp
+	4: (status) a UserAndJobState.job_status
+	5: (last_update) a UserAndJobState.timestamp
+	6: (prog) a UserAndJobState.total_progress
+	7: (max) a UserAndJobState.max_progress
+	8: (ptype) a UserAndJobState.progress_type
+	9: (est_complete) a UserAndJobState.timestamp
+	10: (complete) a UserAndJobState.boolean
+	11: (error) a UserAndJobState.boolean
+	12: (desc) a UserAndJobState.job_description
+	13: (res) a UserAndJobState.Results
 job_id is a string
 job_stage is a string
-job_status is a string
 timestamp is a string
+job_status is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
@@ -1785,23 +1818,25 @@ $filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
 job_filter is a string
-job_info is a reference to a list containing 12 items:
+job_info is a reference to a list containing 14 items:
 	0: (job) a UserAndJobState.job_id
 	1: (service) a UserAndJobState.service_name
 	2: (stage) a UserAndJobState.job_stage
-	3: (status) a UserAndJobState.job_status
-	4: (last_update) a UserAndJobState.timestamp
-	5: (prog) a UserAndJobState.total_progress
-	6: (max) a UserAndJobState.max_progress
-	7: (ptype) a UserAndJobState.progress_type
-	8: (complete) a UserAndJobState.boolean
-	9: (error) a UserAndJobState.boolean
-	10: (desc) a UserAndJobState.job_description
-	11: (res) a UserAndJobState.Results
+	3: (started) a UserAndJobState.timestamp
+	4: (status) a UserAndJobState.job_status
+	5: (last_update) a UserAndJobState.timestamp
+	6: (prog) a UserAndJobState.total_progress
+	7: (max) a UserAndJobState.max_progress
+	8: (ptype) a UserAndJobState.progress_type
+	9: (est_complete) a UserAndJobState.timestamp
+	10: (complete) a UserAndJobState.boolean
+	11: (error) a UserAndJobState.boolean
+	12: (desc) a UserAndJobState.job_description
+	13: (res) a UserAndJobState.Results
 job_id is a string
 job_stage is a string
-job_status is a string
 timestamp is a string
+job_status is a string
 total_progress is an int
 max_progress is an int
 progress_type is a string
@@ -2298,7 +2333,10 @@ a UserAndJobState.boolean
 
 =item Description
 
-A time, e.g. 2012-12-17T23:24:06.
+A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference
+in time to UTC in the format +/-HHMM, eg:
+        2012-12-17T23:24:06-5000 (EST time)
+        2013-04-03T08:56:32+0000 (UTC time)
 
 
 =item Definition
@@ -2683,19 +2721,21 @@ Information about a job.
 =begin html
 
 <pre>
-a reference to a list containing 12 items:
+a reference to a list containing 14 items:
 0: (job) a UserAndJobState.job_id
 1: (service) a UserAndJobState.service_name
 2: (stage) a UserAndJobState.job_stage
-3: (status) a UserAndJobState.job_status
-4: (last_update) a UserAndJobState.timestamp
-5: (prog) a UserAndJobState.total_progress
-6: (max) a UserAndJobState.max_progress
-7: (ptype) a UserAndJobState.progress_type
-8: (complete) a UserAndJobState.boolean
-9: (error) a UserAndJobState.boolean
-10: (desc) a UserAndJobState.job_description
-11: (res) a UserAndJobState.Results
+3: (started) a UserAndJobState.timestamp
+4: (status) a UserAndJobState.job_status
+5: (last_update) a UserAndJobState.timestamp
+6: (prog) a UserAndJobState.total_progress
+7: (max) a UserAndJobState.max_progress
+8: (ptype) a UserAndJobState.progress_type
+9: (est_complete) a UserAndJobState.timestamp
+10: (complete) a UserAndJobState.boolean
+11: (error) a UserAndJobState.boolean
+12: (desc) a UserAndJobState.job_description
+13: (res) a UserAndJobState.Results
 
 </pre>
 
@@ -2703,19 +2743,21 @@ a reference to a list containing 12 items:
 
 =begin text
 
-a reference to a list containing 12 items:
+a reference to a list containing 14 items:
 0: (job) a UserAndJobState.job_id
 1: (service) a UserAndJobState.service_name
 2: (stage) a UserAndJobState.job_stage
-3: (status) a UserAndJobState.job_status
-4: (last_update) a UserAndJobState.timestamp
-5: (prog) a UserAndJobState.total_progress
-6: (max) a UserAndJobState.max_progress
-7: (ptype) a UserAndJobState.progress_type
-8: (complete) a UserAndJobState.boolean
-9: (error) a UserAndJobState.boolean
-10: (desc) a UserAndJobState.job_description
-11: (res) a UserAndJobState.Results
+3: (started) a UserAndJobState.timestamp
+4: (status) a UserAndJobState.job_status
+5: (last_update) a UserAndJobState.timestamp
+6: (prog) a UserAndJobState.total_progress
+7: (max) a UserAndJobState.max_progress
+8: (ptype) a UserAndJobState.progress_type
+9: (est_complete) a UserAndJobState.timestamp
+10: (complete) a UserAndJobState.boolean
+11: (error) a UserAndJobState.boolean
+12: (desc) a UserAndJobState.job_description
+13: (res) a UserAndJobState.Results
 
 
 =end text
