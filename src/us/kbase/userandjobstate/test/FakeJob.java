@@ -9,7 +9,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import us.kbase.common.service.Tuple13;
+import us.kbase.common.service.Tuple14;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
 
@@ -69,25 +69,26 @@ public class FakeJob {
 	private final SimpleDateFormat utc =
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
-	public FakeJob(Tuple13<String, String, String, String, String, String,
-			Integer, Integer, String, Integer, Integer, String, Results> ji)
+	public FakeJob(Tuple14<String, String, String, String, String, String,
+			Integer, Integer, String, String, Integer, Integer, String,
+			Results> ji)
 			throws ParseException {
 		this.user = null;
 		this.id = ji.getE1();
 		this.service = ji.getE2();
 		this.stage = ji.getE3();
-		this.estcompl = ji.getE4() == null ? null : utc.parse(ji.getE4());
 		this.status = ji.getE5();
 		this.prog = ji.getE7();
 		this.maxprog = ji.getE8();
 		this.progtype = ji.getE9();
-		this.complete = ji.getE10() != 0;
-		this.error = ji.getE11() != 0;
-		this.desc = ji.getE12();
-		if (ji.getE13() == null) {
+		this.estcompl = ji.getE10() == null ? null : utc.parse(ji.getE4());
+		this.complete = ji.getE11() != 0;
+		this.error = ji.getE12() != 0;
+		this.desc = ji.getE13();
+		if (ji.getE14() == null) {
 			this.results = null;
 		} else {
-			Results r = ji.getE13();
+			Results r = ji.getE14();
 			Map<String, Object> res = new HashMap<String, Object>();
 			res.put("shocknodes", r.getShocknodes());
 			res.put("shockurl", r.getShockurl());

@@ -176,19 +176,21 @@ module UserAndJobState {
 	
 	/* Start a job and specify the job parameters. */
 	funcdef start_job(job_id job, service_token token, job_status status, 
-		job_description desc, InitProgress progress) returns();
+		job_description desc, InitProgress progress, timestamp est_complete)
+		returns();
 	
 	/* Create and start a job. */
 	funcdef create_and_start_job(service_token token, job_status status, 
-		job_description desc, InitProgress progress) returns(job_id job);
+		job_description desc, InitProgress progress, timestamp est_complete)
+		returns(job_id job);
 	
 	/* Update the status and progress for a job. */
 	funcdef update_job_progress(job_id job, service_token token,
-		job_status status, progress prog) returns();
+		job_status status, progress prog, timestamp est_complete) returns();
 		
 	/* Update the status for a job. */
-	funcdef update_job(job_id job, service_token token, job_status status)
-		returns();
+	funcdef update_job(job_id job, service_token token, job_status status,
+		timestamp est_complete) returns();
 	
 	/* Get the description of a job. */
 	funcdef get_job_description(job_id job) returns(service_name service,
@@ -198,7 +200,7 @@ module UserAndJobState {
 	/* Get the status of a job. */
 	funcdef get_job_status(job_id job) returns(timestamp last_update, 
 		job_stage stage, job_status status, total_progress progress,
-		boolean complete, boolean error);
+		timestamp est_complete, boolean complete, boolean error);
 	
 	/* Complete the job. After the job is completed, total_progress always
 		equals max_progress.
@@ -213,8 +215,8 @@ module UserAndJobState {
 	typedef tuple<job_id job, service_name service, job_stage stage,
 		timestamp started, job_status status, timestamp last_update,
 		total_progress prog, max_progress max, progress_type ptype,
-		boolean complete, boolean error, job_description desc, Results res>
-		job_info;
+		timestamp est_complete, boolean complete, boolean error,
+		job_description desc, Results res> job_info;
 	
 	/* Get information about a job. */
 	funcdef get_job_info(job_id job) returns(job_info info);

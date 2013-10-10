@@ -27,8 +27,6 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 public class JobStateTests {
 	
-	//TODO est completion time tests - should get same date back
-	
 	private static JobState js;
 	
 	@BeforeClass
