@@ -27,6 +27,8 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 public class JobStateTests {
 	
+	//TODO est completion time tests - should get same date back
+	
 	private static JobState js;
 	
 	@BeforeClass
@@ -83,8 +85,8 @@ public class JobStateTests {
 		String jobid = js.createJob("foo");
 		assertThat("get job id", jobid, OBJ_ID_MATCH);
 		Job j = js.getJob("foo", jobid);
-		checkJob(j, jobid, "created", "foo", null, null, null, null, null, null, null,
-				null, null);
+		checkJob(j, jobid, "created", null, "foo", null, null, null, null,
+				null, null, null, null, null);
 		try {
 			js.getJob("foo1", jobid);
 			fail("Got a non-existant job");
@@ -113,10 +115,10 @@ public class JobStateTests {
 	@Test
 	public void startJob() throws Exception {
 		String jobid = js.createJob("foo");
-		js.startJob("foo", jobid, "serv1", "started job", "job desc");
+		js.startJob("foo", jobid, "serv1", "started job", "job desc", null);
 		Job j = js.getJob("foo", jobid);
-		checkJob(j, jobid, "started", "foo", "started job", "serv1", "job desc", "none",
-				null, null, false, false, null);
+		checkJob(j, jobid, "started", null, "foo", "started job", "serv1",
+				"job desc", "none", null, null, false, false, null);
 		testStartJobBadArgs("foo", jobid, "serv2", "started job", "job desc",
 				new NoSuchJobException(String.format(
 						"There is no unstarted job %s for user foo", jobid)));
@@ -149,7 +151,8 @@ public class JobStateTests {
 		testStartJobBadArgs("foo", jobid, "serv2", "started job", long1001,
 				new IllegalArgumentException("description exceeds the maximum length of 1000"));
 		try {
-			js.startJob("foo", jobid, "serv2", "started job", "job desc", 0);
+			js.startJob("foo", jobid, "serv2", "started job", "job desc", 0,
+					null);
 			fail("Started job with 0 for num tasks");
 		} catch (IllegalArgumentException iae) {
 			assertThat("correct exception", iae.getLocalizedMessage(),
@@ -158,44 +161,48 @@ public class JobStateTests {
 		int[] char1 = {11614};
 		String uni = new String(char1, 0, 1);
 		jobid = js.createJob("unicode");
-		js.startJob("unicode", jobid, "serv3", uni, "desc3", 200);
+		js.startJob("unicode", jobid, "serv3", uni, "desc3", 200,
+				new Date(1234567));
 		j = js.getJob("unicode", jobid);
-		checkJob(j, jobid, "started", "unicode", uni, "serv3", "desc3",
-				"task", 0, 200, false, false, null);
+		checkJob(j, jobid, "started", new Date(1234567), "unicode", uni,
+				"serv3", "desc3", "task", 0, 200, false, false, null);
 		
 		jobid = js.createJob("foo3");
-		js.startJob("foo3", jobid, "serv3", "start3", "desc3", 200);
+		js.startJob("foo3", jobid, "serv3", "start3", "desc3", 200, new Date(0));
 		j = js.getJob("foo3", jobid);
-		checkJob(j, jobid, "started", "foo3", "start3", "serv3", "desc3",
-				"task", 0, 200, false, false, null);
+		checkJob(j, jobid, "started", new Date(0), "foo3", "start3", "serv3",
+				"desc3", "task", 0, 200, false, false, null);
 		jobid = js.createJob("foo4");
-		js.startJobWithPercentProg("foo4", jobid, "serv4", "start4", "desc4");
+		js.startJobWithPercentProg("foo4", jobid, "serv4", "start4", "desc4",
+				new Date(44));
 		j = js.getJob("foo4", jobid);
-		checkJob(j, jobid, "started", "foo4", "start4", "serv4", "desc4",
-				"percent", 0, 100, false, false, null);
+		checkJob(j, jobid, "started", new Date(44), "foo4", "start4", "serv4",
+				"desc4", "percent", 0, 100, false, false, null);
 		
-		jobid = js.createAndStartJob("fooc1", "servc1", "startc1", "desc_c1");
+		jobid = js.createAndStartJob("fooc1", "servc1", "startc1", "desc_c1",
+				new Date(999999999));
 		j = js.getJob("fooc1", jobid);
-		checkJob(j, jobid, "started", "fooc1", "startc1", "servc1", "desc_c1", "none",
-				null, null, false, false, null);
+		checkJob(j, jobid, "started", new Date(999999999), "fooc1", "startc1",
+				"servc1", "desc_c1", "none", null, null, false, false, null);
 		
-		jobid = js.createAndStartJob("fooc2", "servc2", "startc2", "desc_c2", 50);
+		jobid = js.createAndStartJob("fooc2", "servc2", "startc2", "desc_c2",
+				50, new Date(3));
 		j = js.getJob("fooc2", jobid);
-		checkJob(j, jobid, "started", "fooc2", "startc2", "servc2", "desc_c2",
-				"task", 0, 50, false, false, null);
+		checkJob(j, jobid, "started", new Date(3), "fooc2", "startc2", "servc2",
+				"desc_c2", "task", 0, 50, false, false, null);
 		
 		jobid = js.createAndStartJobWithPercentProg("fooc3", "servc3",
-				"startc3", "desc_c3");
+				"startc3", "desc_c3", new Date(42));
 		j = js.getJob("fooc3", jobid);
-		checkJob(j, jobid, "started", "fooc3", "startc3", "servc3", "desc_c3",
-				"percent", 0, 100, false, false, null);
+		checkJob(j, jobid, "started", new Date(42), "fooc3", "startc3", "servc3",
+				"desc_c3", "percent", 0, 100, false, false, null);
 		
 	}
 	
 	private void testStartJobBadArgs(String user, String jobid, String service,
 			String status, String desc, Exception exception) throws Exception {
 		try {
-			js.startJob(user, jobid, service, status, desc);
+			js.startJob(user, jobid, service, status, desc, null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -204,7 +211,8 @@ public class JobStateTests {
 					is(exception.getLocalizedMessage()));
 		}
 		try {
-			js.startJobWithPercentProg(user, jobid, service, status, desc);
+			js.startJobWithPercentProg(user, jobid, service, status, desc,
+					null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -213,7 +221,7 @@ public class JobStateTests {
 					is(exception.getLocalizedMessage()));
 		}
 		try {
-			js.startJob(user, jobid, service, status, desc, 6);
+			js.startJob(user, jobid, service, status, desc, 6, null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -225,7 +233,7 @@ public class JobStateTests {
 			return;
 		}
 		try {
-			js.createAndStartJob(user, service, status, desc);
+			js.createAndStartJob(user, service, status, desc, null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -234,7 +242,8 @@ public class JobStateTests {
 					is(exception.getLocalizedMessage()));
 		}
 		try {
-			js.createAndStartJobWithPercentProg(user, service, status, desc);
+			js.createAndStartJobWithPercentProg(user, service, status, desc,
+					null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -243,7 +252,7 @@ public class JobStateTests {
 					is(exception.getLocalizedMessage()));
 		}
 		try {
-			js.createAndStartJob(user, service, status, desc, 6);
+			js.createAndStartJob(user, service, status, desc, 6, null);
 			fail("Started job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -262,10 +271,10 @@ public class JobStateTests {
 		}
 	}
 	
-	private void checkJob(Job j, String id, String stage, String user,
-			String status, String service, String desc, String progtype,
-			Integer prog, Integer maxproj, Boolean complete, Boolean error,
-			Map<String, Object> results) {
+	private void checkJob(Job j, String id, String stage, Date estComplete, 
+			String user, String status, String service, String desc,
+			String progtype, Integer prog, Integer maxproj, Boolean complete,
+			Boolean error, Map<String, Object> results) {
 		assertThat("job id ok", j.getID(), is(id));
 		assertThat("job stage ok", j.getStage(), is(stage));
 		assertThat("job user ok", j.getUser(), is(user));
@@ -277,6 +286,8 @@ public class JobStateTests {
 		assertThat("job status ok", j.getStatus(), is(status));
 		assertTrue("job started is ok", j.getStarted() == null ||
 				j.getStarted() instanceof Date);
+		assertThat("job est complete ok", j.getEstimatedCompletion(),
+				is(estComplete));
 		assertThat("job updated ok", j.getLastUpdated(), is(Date.class));
 		assertThat("job complete ok", j.isComplete(), is(complete));
 		assertThat("job error ok", j.hasError(), is(error));
@@ -286,62 +297,66 @@ public class JobStateTests {
 	@Test
 	public void updateJob() throws Exception {
 		//task based progress
-		String jobid = js.createAndStartJob("bar", "service1", "st", "de", 33);
+		String jobid = js.createAndStartJob("bar", "service1", "st", "de", 33,
+				null);
 		Job j = js.getJob("bar", jobid);
-		checkJob(j, jobid, "started", "bar", "st", "service1", "de",
+		checkJob(j, jobid, "started", null, "bar", "st", "service1", "de",
 				"task", 0, 33, false, false, null);
 		
-		js.updateJob("bar", jobid, "service1", "new st", 4);
+		js.updateJob("bar", jobid, "service1", "new st", 4, null);
 		j = js.getJob("bar", jobid);
-		checkJob(j, jobid, "started", "bar", "new st", "service1", "de",
-				"task", 4, 33, false, false, null);
+		checkJob(j, jobid, "started", null, "bar", "new st",
+				"service1", "de", "task", 4, 33, false, false, null);
 		
-		js.updateJob("bar", jobid, "service1", "new st2", 16);
+		js.updateJob("bar", jobid, "service1", "new st2", 16, new Date(12345));
 		j = js.getJob("bar", jobid);
-		checkJob(j, jobid, "started", "bar", "new st2", "service1", "de",
-				"task", 20, 33, false, false, null);
+		checkJob(j, jobid, "started", new Date(12345), "bar", "new st2",
+				"service1", "de", "task", 20, 33, false, false, null);
 		
-		js.updateJob("bar", jobid, "service1", "this really should be done", 16);
+		js.updateJob("bar", jobid, "service1", "this really should be done",
+				16, null);
 		j = js.getJob("bar", jobid);
-		checkJob(j, jobid, "started", "bar", "this really should be done",
-				"service1", "de", "task", 33, 33, false, false, null);
+		checkJob(j, jobid, "started", new Date(12345), "bar",
+				"this really should be done", "service1", "de", "task", 33, 33,
+				false, false, null);
 		
 		//no progress tracking
-		jobid = js.createAndStartJob("bar2", "service2", "st2", "de2");
+		jobid = js.createAndStartJob("bar2", "service2", "st2", "de2", null);
 		j = js.getJob("bar2", jobid);
-		checkJob(j, jobid, "started", "bar2", "st2", "service2", "de2",
+		checkJob(j, jobid, "started", null, "bar2", "st2", "service2", "de2",
 				"none", null, null, false, false, null);
 		
-		js.updateJob("bar2", jobid, "service2", "st2-2", null);
+		js.updateJob("bar2", jobid, "service2", "st2-2", null, new Date(6));
 		j = js.getJob("bar2", jobid);
-		checkJob(j, jobid, "started", "bar2", "st2-2", "service2", "de2",
-				"none", null, null, false, false, null);
+		checkJob(j, jobid, "started", new Date(6), "bar2", "st2-2", "service2",
+				"de2", "none", null, null, false, false, null);
 		
-		js.updateJob("bar2", jobid, "service2", "st2-3", 6);
+		js.updateJob("bar2", jobid, "service2", "st2-3", 6, null);
 		j = js.getJob("bar2", jobid);
-		checkJob(j, jobid, "started", "bar2", "st2-3", "service2", "de2",
-				"none", null, null, false, false, null);
+		checkJob(j, jobid, "started", new Date(6), "bar2", "st2-3", "service2",
+				"de2", "none", null, null, false, false, null);
 		
 		//percentage based tracking
-		jobid = js.createAndStartJobWithPercentProg("bar3", "service3", "st3", "de3");
+		jobid = js.createAndStartJobWithPercentProg("bar3", "service3", "st3",
+				"de3", null);
 		j = js.getJob("bar3", jobid);
-		checkJob(j, jobid, "started", "bar3", "st3", "service3", "de3",
+		checkJob(j, jobid, "started", null, "bar3", "st3", "service3", "de3",
 				"percent", 0, 100, false, false, null);
 		
-		js.updateJob("bar3", jobid, "service3", "st3-2", 30);
+		js.updateJob("bar3", jobid, "service3", "st3-2", 30, null);
 		j = js.getJob("bar3", jobid);
-		checkJob(j, jobid, "started", "bar3", "st3-2", "service3", "de3",
+		checkJob(j, jobid, "started", null, "bar3", "st3-2", "service3", "de3",
 				"percent", 30, 100, false, false, null);
 		
-		js.updateJob("bar3", jobid, "service3", "st3-3", 2);
+		js.updateJob("bar3", jobid, "service3", "st3-3", 2, new Date(64445));
 		j = js.getJob("bar3", jobid);
-		checkJob(j, jobid, "started", "bar3", "st3-3", "service3", "de3",
-				"percent", 32, 100, false, false, null);
+		checkJob(j, jobid, "started", new Date(64445), "bar3", "st3-3",
+				"service3", "de3", "percent", 32, 100, false, false, null);
 		
-		js.updateJob("bar3", jobid, "service3", "st3-4", 80);
+		js.updateJob("bar3", jobid, "service3", "st3-4", 80, null);
 		j = js.getJob("bar3", jobid);
-		checkJob(j, jobid, "started", "bar3", "st3-4", "service3", "de3",
-				"percent", 100, 100, false, false, null);
+		checkJob(j, jobid, "started", new Date(64445), "bar3", "st3-4",
+				"service3", "de3", "percent", 100, 100, false, false, null);
 		
 		testUpdateJobBadArgs("bar3", jobid, "service2", "stat", null,
 				new NoSuchJobException(String.format(
@@ -384,7 +399,7 @@ public class JobStateTests {
 				new NoSuchJobException(String.format(
 				"There is no uncompleted job %s for user foobar started by service serv2",
 				jobid)));
-		jobid = js.createAndStartJob("foobar", "serv2", "stat", "desc");
+		jobid = js.createAndStartJob("foobar", "serv2", "stat", "desc", null);
 		js.completeJob("foobar", jobid, "serv2", "stat", false, null);
 		testUpdateJobBadArgs("foobar", jobid, "serv2", "stat", 1,
 				new NoSuchJobException(String.format(
@@ -395,7 +410,7 @@ public class JobStateTests {
 	private void testUpdateJobBadArgs(String user, String jobid, String service,
 			String status, Integer progress, Exception exception) throws Exception {
 		try {
-			js.updateJob(user, jobid, service, status, progress);
+			js.updateJob(user, jobid, service, status, progress, null);
 			fail("updated job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
@@ -407,14 +422,15 @@ public class JobStateTests {
 	
 	@Test
 	public void completeJob() throws Exception {
-		String jobid = js.createAndStartJob("comp", "cserv1", "cstat1", "cdesc1", 5);
-		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 2);
-		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 6);
+		String jobid = js.createAndStartJob("comp", "cserv1", "cstat1",
+				"cdesc1", 5, null);
+		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 2, null);
+		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 6, null);
 		Map<String, Object> res = new HashMap<String, Object>();
 		res.put("shocknodes", Arrays.asList("node1", "node2"));
 		js.completeJob("comp", jobid, "cserv1", "cstat1-3", true, res);
 		Job j = js.getJob("comp", jobid);
-		checkJob(j, jobid, "error", "comp", "cstat1-3", "cserv1", "cdesc1",
+		checkJob(j, jobid, "error", null, "comp", "cstat1-3", "cserv1", "cdesc1",
 				"task", 5, 5, true, true, res);
 		try {
 			js.completeJob("comp", jobid, "cserv1", "cstat1-4", false, res);
@@ -426,12 +442,13 @@ public class JobStateTests {
 					jobid)));
 		}
 		
-		jobid = js.createAndStartJobWithPercentProg("comp", "cserv2", "cstat2", "cdesc2");
-		js.updateJob("comp", jobid, "cserv2", "cstat2-2", 25);
-		js.updateJob("comp", jobid, "cserv2", "cstat2-3", 50);
+		jobid = js.createAndStartJobWithPercentProg("comp", "cserv2", "cstat2",
+				"cdesc2", null);
+		js.updateJob("comp", jobid, "cserv2", "cstat2-2", 25, null);
+		js.updateJob("comp", jobid, "cserv2", "cstat2-3", 50, null);
 		js.completeJob("comp", jobid, "cserv2", "cstat2-3", false, res);
 		j = js.getJob("comp", jobid);
-		checkJob(j, jobid, "complete", "comp", "cstat2-3", "cserv2", "cdesc2",
+		checkJob(j, jobid, "complete", null, "comp", "cstat2-3", "cserv2", "cdesc2",
 				"percent", 100, 100, true, false, res);
 		
 		jobid = js.createJob("comp");
@@ -445,7 +462,7 @@ public class JobStateTests {
 					jobid)));
 		}
 		
-		jobid = js.createAndStartJob("comp", "service2", "stat", "desc");
+		jobid = js.createAndStartJob("comp", "service2", "stat", "desc", null);
 		
 		testCompleteJobBadArgs("comp1", jobid, "service2", "stat",
 				new NoSuchJobException(String.format(
@@ -499,13 +516,13 @@ public class JobStateTests {
 		String jobid = js.createJob("date");
 		Job j = js.getJob("date", jobid);
 		Date create = j.getLastUpdated();
-		js.startJob("date", jobid, "serv1", "stat", "desc");
+		js.startJob("date", jobid, "serv1", "stat", "desc", null);
 		j = js.getJob("date", jobid);
 		Date start = j.getLastUpdated();
-		js.updateJob("date", jobid, "serv1", "stat", null);
+		js.updateJob("date", jobid, "serv1", "stat", null, null);
 		j = js.getJob("date", jobid);
 		Date update = j.getLastUpdated();
-		js.updateJob("date", jobid, "serv1", "stat", null);
+		js.updateJob("date", jobid, "serv1", "stat", null, null);
 		j = js.getJob("date", jobid);
 		Date update2 = j.getLastUpdated();
 		js.completeJob("date", jobid, "serv1", "stat", false, null);
@@ -520,19 +537,20 @@ public class JobStateTests {
 	
 	@Test
 	public void deleteJob() throws Exception {
-		String jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		String jobid = js.createAndStartJob("delete", "serv1", "st", "dsc",
+				null);
 		js.completeJob("delete", jobid, "serv1", "st", false, null);
 		Job j = js.getJob("delete", jobid); //should work
-		checkJob(j, jobid, "complete", "delete", "st", "serv1", "dsc", "none",
-				null, null, true, false, null);
+		checkJob(j, jobid, "complete", null, "delete", "st", "serv1", "dsc",
+				"none", null, null, true, false, null);
 		succeedAtDeletingJob("delete", jobid);
 		failToDeleteJob("delete", jobid, null);
 		
 		jobid = js.createJob("delete");
 		failToDeleteJob("delete", jobid, null);
-		js.startJob("delete", jobid, "s", "s", "d");
+		js.startJob("delete", jobid, "s", "s", "d", null);
 		failToDeleteJob("delete", jobid, null);
-		js.updateJob("delete", jobid, "s", "s", 1);
+		js.updateJob("delete", jobid, "s", "s", 1, null);
 		failToDeleteJob("delete", jobid, null);
 		failToDeleteJob("delete1", jobid, null);
 		failToDeleteJob("delete", "a" + jobid.substring(1), null);
@@ -543,14 +561,14 @@ public class JobStateTests {
 		jobid = js.createJob("delete");
 //		succeedAtDeletingJob("delete", jobid, "serv1");
 		failToDeleteJob("delete", jobid, "serv1");
-		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc", null);
 		succeedAtDeletingJob("delete", jobid, "serv1");
 		failToDeleteJob("delete", jobid, "serv1");
-		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
-		js.updateJob("delete", jobid, "serv1", "st", null);
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc", null);
+		js.updateJob("delete", jobid, "serv1", "st", null, null);
 		succeedAtDeletingJob("delete", jobid, "serv1");
 		failToDeleteJob("delete", jobid, "serv1");
-		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc");
+		jobid = js.createAndStartJob("delete", "serv1", "st", "dsc", null);
 		js.completeJob("delete", jobid, "serv1", "st", false, null);
 		succeedAtDeletingJob("delete", jobid, "serv1");
 		failToDeleteJob("delete", jobid, "serv1");
@@ -614,12 +632,12 @@ public class JobStateTests {
 		checkListServ("listserv", new ArrayList<String>());
 		String jobid = js.createJob("listserv");
 		checkListServ("listserv", new ArrayList<String>());
-		js.startJob("listserv", jobid, "serv1", null, null);
+		js.startJob("listserv", jobid, "serv1", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1"));
 		checkListServ("listserv2", new ArrayList<String>());
-		js.createAndStartJob("listserv", "serv2", null, null);
+		js.createAndStartJob("listserv", "serv2", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
-		js.createAndStartJob("listserv2", "serv3", null, null);
+		js.createAndStartJob("listserv2", "serv3", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
 		checkListServ("listserv2", Arrays.asList("serv3"));
 		
@@ -639,22 +657,26 @@ public class JobStateTests {
 		String jobid = js.createJob(lj);
 		checkListJobs(empty, js.listJobs(lj, "serv1", true, true, true));
 		
-		jobid = js.createAndStartJob(lj, "serv1", "lst", "ldsc", 42);
-		FakeJob started = new FakeJob(jobid, lj, "serv1", "started", "ldsc", "task",
-				0, 42, "lst", false, false, null);
+		jobid = js.createAndStartJob(lj, "serv1", "lst", "ldsc", 42, new Date(6));
+		FakeJob started = new FakeJob(jobid, lj, "serv1", "started",
+				new Date(6),"ldsc", "task", 0, 42, "lst", false, false, null);
 		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", true, true, true));
 		checkListJobs(empty, js.listJobs(lj, "serv2", true, true, true));
 		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", false, false, false));
 		
-		jobid = js.createAndStartJob(lj, "serv1", "comp-st", "comp-dsc");
+		jobid = js.createAndStartJob(lj, "serv1", "comp-st", "comp-dsc",
+				new Date(1234567));
 		js.completeJob(lj, jobid, "serv1", "comp-st1", false, null);
 		FakeJob complete = new FakeJob(jobid, lj, "serv1", "complete",
-				"comp-dsc", "none", null, null, "comp-st1", true, false, null);
+				new Date(1234567), "comp-dsc", "none", null, null, "comp-st1",
+				true, false, null);
 		
-		jobid = js.createAndStartJobWithPercentProg(lj, "serv1", "err-st", "err-dsc");
+		jobid = js.createAndStartJobWithPercentProg(lj, "serv1", "err-st",
+				"err-dsc", new Date(42));
 		js.completeJob(lj, jobid, "serv1", "err-st1", true, null);
 		FakeJob error = new FakeJob(jobid, lj, "serv1", "error",
-				"err-dsc", "percent", 100, 100, "err-st1", true, true, null);
+				new Date(42), "err-dsc", "percent", 100, 100, "err-st1", true,
+				true, null);
 		
 		//all 3
 		List<FakeJob> all = Arrays.asList(started, complete, error);

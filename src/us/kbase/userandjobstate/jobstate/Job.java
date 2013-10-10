@@ -19,6 +19,7 @@ public class Job {
 	private String status;
 	private Date started;
 	private Date updated;
+	private Date estcompl;
 	private Boolean complete;
 	private Boolean error;
 	private Map<String, Object> results;
@@ -88,6 +89,10 @@ public class Job {
 		return started;
 	}
 	
+	public Date getEstimatedCompletion() {
+		return estcompl;
+	}
+	
 	public Date getLastUpdated() {
 		return updated;
 	}
@@ -110,7 +115,7 @@ public class Job {
 				", service=" + service + ", desc=" + desc +
 				", progtype=" + progtype + ", prog=" + getProgress() +
 				", maxprog=" + getMaxProgress() + ", status=" + getStatus() +
-				", started=" + started + 
+				", started=" + started + ", estcompl=" + estcompl +
 				", updated=" + updated + ", complete=" + complete +
 				", error=" + error + ", results=" + results + "]";
 	}

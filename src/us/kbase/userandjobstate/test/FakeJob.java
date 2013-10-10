@@ -3,6 +3,8 @@ package us.kbase.userandjobstate.test;
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,6 +19,7 @@ public class FakeJob {
 	private final String user;
 	private final String service;
 	private final String stage;
+	private final Date estcompl;
 	private final String desc;
 	private final String progtype;
 	private final Integer prog;
@@ -30,6 +33,7 @@ public class FakeJob {
 		id = j.getID();
 		user = j.getUser();
 		service = j.getService();
+		estcompl = j.getEstimatedCompletion();
 		stage = j.getStage();
 		desc = j.getDescription();
 		progtype = j.getProgType();
@@ -43,14 +47,15 @@ public class FakeJob {
 	}
 
 	public FakeJob(final String id, final String user, final String service,
-			final String stage, final String desc, final String progtype,
-			final Integer prog, final Integer maxprog, final String status,
-			final Boolean complete, final Boolean error,
+			final String stage, final Date estComplete, final String desc,
+			final String progtype, final Integer prog, final Integer maxprog,
+			final String status, final Boolean complete, final Boolean error,
 			final Map<String, Object> results) {
 		this.id = id;
 		this.user = user;
 		this.service = service;
 		this.stage = stage;
+		this.estcompl = estComplete;
 		this.desc = desc;
 		this.progtype = progtype;
 		this.prog = prog;
@@ -60,13 +65,18 @@ public class FakeJob {
 		this.error = error;
 		this.results = results;
 	}
+	
+	private final SimpleDateFormat utc =
+			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 	public FakeJob(Tuple13<String, String, String, String, String, String,
-			Integer, Integer, String, Integer, Integer, String, Results> ji) {
+			Integer, Integer, String, Integer, Integer, String, Results> ji)
+			throws ParseException {
 		this.user = null;
 		this.id = ji.getE1();
 		this.service = ji.getE2();
 		this.stage = ji.getE3();
+		this.estcompl = ji.getE4() == null ? null : utc.parse(ji.getE4());
 		this.status = ji.getE5();
 		this.prog = ji.getE7();
 		this.maxprog = ji.getE8();
@@ -94,10 +104,10 @@ public class FakeJob {
 	@Override
 	public String toString() {
 		return "FakeJob [id=" + id + ", user=" + user + ", service=" + service
-				+ ", stage=" + stage + ", desc=" + desc + ", progtype="
-				+ progtype + ", prog=" + prog + ", maxprog=" + maxprog
-				+ ", status=" + status + ", complete=" + complete + ", error="
-				+ error + ", results=" + results + "]";
+				+ ", stage=" + stage + ", estcompl=" + estcompl + ", desc="
+				+ desc + ", progtype=" + progtype + ", prog=" + prog
+				+ ", maxprog=" + maxprog + ", status=" + status + ", complete="
+				+ complete + ", error=" + error + ", results=" + results + "]";
 	}
 
 	@Override
@@ -108,6 +118,8 @@ public class FakeJob {
 				+ ((complete == null) ? 0 : complete.hashCode());
 		result = prime * result + ((desc == null) ? 0 : desc.hashCode());
 		result = prime * result + ((error == null) ? 0 : error.hashCode());
+		result = prime * result
+				+ ((estcompl == null) ? 0 : estcompl.hashCode());
 		result = prime * result + ((id == null) ? 0 : id.hashCode());
 		result = prime * result + ((maxprog == null) ? 0 : maxprog.hashCode());
 		result = prime * result + ((prog == null) ? 0 : prog.hashCode());
@@ -152,6 +164,13 @@ public class FakeJob {
 				return false;
 			}
 		} else if (!error.equals(other.error)) {
+			return false;
+		}
+		if (estcompl == null) {
+			if (other.estcompl != null) {
+				return false;
+			}
+		} else if (!estcompl.equals(other.estcompl)) {
 			return false;
 		}
 		if (id == null) {

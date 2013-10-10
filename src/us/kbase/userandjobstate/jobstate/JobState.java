@@ -44,7 +44,8 @@ public class JobState {
 	private final static String SERVICE = "service";
 	private final static String STARTED = "started";
 	private final static String UPDATED = "updated";
-	private final static String COMPLETE = "complete";
+	private final static String EST_COMP = "estcompl";
+	private final static String COMPLETE = "complete"; //TODO change to date
 	private final static String ERROR = "error";
 	private final static String DESCRIPTION = "desc";
 	private final static String PROG_TYPE = "progtype";
@@ -99,6 +100,7 @@ public class JobState {
 		final Date date = new Date();
 		job.put(CREATED, date);
 		job.put(UPDATED, date);
+		job.put(EST_COMP, null);
 		job.put(SERVICE, null);
 		try {
 			jobcol.insert(job);
@@ -145,29 +147,33 @@ public class JobState {
 	
 	public void startJob(final String user, final String jobID,
 			final String service, final String status,
-			final String description) throws CommunicationException,
-			NoSuchJobException {
-		startJob(user, jobID, service, status, description, PROG_NONE, null);
+			final String description, final Date estComplete)
+			throws CommunicationException, NoSuchJobException {
+		startJob(user, jobID, service, status, description, PROG_NONE, null,
+				estComplete);
 	}
 	
 	public void startJob(final String user, final String jobID,
 			final String service, final String status,
-			final String description, final int maxProg) throws
-		CommunicationException, NoSuchJobException {
-		startJob(user, jobID, service, status, description, PROG_TASK, maxProg);
+			final String description, final int maxProg,
+			final Date estComplete)
+			throws CommunicationException, NoSuchJobException {
+		startJob(user, jobID, service, status, description, PROG_TASK, maxProg,
+				estComplete);
 	}
 	
 	public void startJobWithPercentProg(final String user, final String jobID,
 			final String service, final String status,
-			final String description)
+			final String description, final Date estComplete)
 			throws CommunicationException, NoSuchJobException {
-		startJob(user, jobID, service, status, description, PROG_PERC, null);
+		startJob(user, jobID, service, status, description, PROG_PERC, null,
+				estComplete);
 	}
 	
 	private void startJob(final String user, final String jobID,
 			final String service, final String status,
 			final String description, final String progType,
-			final Integer maxProg)
+			final Integer maxProg, final Date estComplete)
 			throws CommunicationException, NoSuchJobException {
 		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId oi = checkJobID(jobID);
@@ -190,6 +196,7 @@ public class JobState {
 		final Date now = new Date();
 		update.put(STARTED, now);
 		update.put(UPDATED, now);
+		update.put(EST_COMP, estComplete);
 		update.put(COMPLETE, false);
 		update.put(ERROR, false);
 		update.put(RESULT, null);
@@ -226,35 +233,38 @@ public class JobState {
 	}
 	
 	public String createAndStartJob(final String user, final String service,
-			final String status, final String description)
+			final String status, final String description,
+			final Date estComplete)
 			throws CommunicationException {
 		return createAndStartJob(user, service, status, description, PROG_NONE,
-				null);
+				null, estComplete);
 	}
 	
 	public String createAndStartJob(final String user, final String service,
-			final String status, final String description, final int maxProg)
+			final String status, final String description, final int maxProg,
+			final Date estComplete)
 			throws CommunicationException {
 		return createAndStartJob(user, service, status, description, PROG_TASK,
-				maxProg);
+				maxProg, estComplete);
 	}
 	
 	public String createAndStartJobWithPercentProg(final String user,
 			final String service, final String status,
-			final String description)
+			final String description, final Date estComplete)
 			throws CommunicationException {
 		return createAndStartJob(user, service, status, description, PROG_PERC,
-				null);
+				null, estComplete);
 	}
 	
 	private String createAndStartJob(final String user, final String service,
 			final String status, final String description,
-			final String progType, final Integer maxProg)
+			final String progType, final Integer maxProg,
+			final Date estComplete)
 			throws CommunicationException {
 		final String jobid = createJob(user);
 		try {
 			startJob(user, jobid, service, status, description, progType,
-					maxProg);
+					maxProg, estComplete);
 		} catch (NoSuchJobException nsje) {
 			throw new RuntimeException(
 					"Just created a job and it's already deleted", nsje);
@@ -263,12 +273,16 @@ public class JobState {
 	}
 	
 	public void updateJob(final String user, final String jobID,
-			final String service, final String status, final Integer progress)
+			final String service, final String status, final Integer progress,
+			final Date estComplete)
 			throws CommunicationException, NoSuchJobException {
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
 		final DBObject query = buildStartedJobQuery(user, jobID, service);
 		final DBObject set = new BasicDBObject(STATUS, status);
 		set.put(UPDATED, new Date());
+		if (estComplete != null) {
+			set.put(EST_COMP, estComplete);
+		}
 		final DBObject update = new BasicDBObject("$set", set);
 		if (progress != null) {
 			if (progress < 0) {
