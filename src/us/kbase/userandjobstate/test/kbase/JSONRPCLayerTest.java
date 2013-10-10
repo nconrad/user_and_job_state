@@ -10,11 +10,13 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -46,8 +48,6 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
  * {@link us.kbase.userandjobstate.jobstate.test.JobStateTests} handles that.
  */
 public class JSONRPCLayerTest {
-	
-	//TODO start time and est completion tests
 	
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
@@ -250,8 +250,23 @@ public class JSONRPCLayerTest {
 		}*/
 	}
 	
+	private String[] getNearbyTimes() {
+		SimpleDateFormat dateformutc =
+				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		dateformutc.setTimeZone(TimeZone.getTimeZone("UTC"));
+		Date nf = new Date(new Date().getTime() + 10000);
+		Date np =  new Date(new Date().getTime() - 10);
+		String[] nearfuture = new String[3];
+		nearfuture[0] = dateform.format(nf);
+		nearfuture[1] = dateformutc.format(nf);
+		nearfuture[2] = dateform.format(np);
+		return nearfuture;
+	}
+	
 	@Test
 	public void createAndStartJob() throws Exception {
+		String[] nearfuture = getNearbyTimes();
+		
 		String jobid = CLIENT1.createJob();
 		checkJob(jobid, "created",null, null, null, null,
 				null, null, null, null, null, null);
@@ -262,9 +277,9 @@ public class JSONRPCLayerTest {
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, TOKEN2, "new stat2", "ne desc2",
-				new InitProgress().withPtype("percent"), null);
+				new InitProgress().withPtype("percent"), nearfuture[0]);
 		checkJob(jobid, "started", "new stat2", USER2,
-				"ne desc2", "percent", 0, 100, null, 0, 0, null);
+				"ne desc2", "percent", 0, 100, nearfuture[1], 0, 0, null);
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, TOKEN2, "new stat3", "ne desc3",
@@ -272,42 +287,49 @@ public class JSONRPCLayerTest {
 		checkJob(jobid, "started", "new stat3", USER2,
 				"ne desc3", "task", 0, 5, null, 0, 0, null);
 		
-		testStartJob(null, TOKEN2, "s", "d", new InitProgress().withPtype("none"),
-				"id cannot be null or the empty string", true);
-		testStartJob("", TOKEN2, "s", "d", new InitProgress().withPtype("none"),
-				"id cannot be null or the empty string", true);
-		testStartJob("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", "d",
+		startJobBadArgs(null, TOKEN2, "s", "d", new InitProgress().withPtype("none"),
+				null, "id cannot be null or the empty string", true);
+		startJobBadArgs("", TOKEN2, "s", "d", new InitProgress().withPtype("none"),
+				null, "id cannot be null or the empty string", true);
+		startJobBadArgs("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", "d",
 				new InitProgress().withPtype("none"),
-				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID", true);
+				null, "Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID", true);
 		
 		jobid = CLIENT1.createJob();
-		testStartJob(jobid, null, "s", "d", new InitProgress().withPtype("none"),
-				"Service token cannot be null or the empty string");
-		testStartJob(jobid, "foo", "s", "d", new InitProgress().withPtype("none"),
-				"Auth token is in the incorrect format, near 'foo'");
+		startJobBadArgs(jobid, null, "s", "d", new InitProgress().withPtype("none"),
+				null, "Service token cannot be null or the empty string");
+		startJobBadArgs(jobid, "foo", "s", "d", new InitProgress().withPtype("none"),
+				null, "Auth token is in the incorrect format, near 'foo'");
 		//TODO restore when auth service is fixed
 //		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
 //				"id cannot be null or the empty string");
 		
-		testStartJob(jobid, TOKEN2, "s", "d", null,
-				"InitProgress cannot be null");
+		startJobBadArgs(jobid, TOKEN2, "s", "d",
+				new InitProgress().withPtype("none"),
+				nearfuture[2], "The estimated completion date must be in the future", true);
+		startJobBadArgs(jobid, TOKEN2, "s", "d",
+				new InitProgress().withPtype("none"),
+				"2200-12-30T123:30:54-8000", "Unparseable date: \"2200-12-30T123:30:54-8000\"", true);
+		
+		startJobBadArgs(jobid, TOKEN2, "s", "d", null,
+				null, "InitProgress cannot be null");
 		InitProgress ip = new InitProgress().withPtype("none");
 		ip.setAdditionalProperties("foo", "bar");
-		testStartJob(jobid, TOKEN2, "s", "d", ip,
-				"Unexpected arguments in InitProgress: foo");
-		testStartJob(jobid, TOKEN2, "s", "d", new InitProgress().withPtype(null),
-				"Progress type cannot be null");
-		testStartJob(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("foo"),
-				"No such progress type: foo");
-		testStartJob(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("task")
+		startJobBadArgs(jobid, TOKEN2, "s", "d", ip,
+				null, "Unexpected arguments in InitProgress: foo");
+		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype(null),
+				null, "Progress type cannot be null");
+		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("foo"),
+				null, "No such progress type: foo");
+		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("task")
 				.withMax(null),
-				"Max progress cannot be null for task based progress");
+				null, "Max progress cannot be null for task based progress");
 		
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat", "cs desc",
-				new InitProgress().withPtype("none"), null);
+				new InitProgress().withPtype("none"), nearfuture[0]);
 		checkJob(jobid, "started", "cs stat", USER2,
-				"cs desc", "none", null, null, null, 0, 0, null);
+				"cs desc", "none", null, null, nearfuture[1], 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat2", "cs desc2",
 				new InitProgress().withPtype("percent"), null);
@@ -320,15 +342,16 @@ public class JSONRPCLayerTest {
 				"cs desc3", "task", 0, 5, null, 0, 0, null);
 	}
 	
-	private void testStartJob(String jobid, String token, String stat, String desc,
-			InitProgress prog, String exception) throws Exception {
-		testStartJob(jobid, token, stat, desc, prog, exception, false);
+	private void startJobBadArgs(String jobid, String token, String stat, String desc,
+			InitProgress prog, String estCompl, String exception) throws Exception {
+		startJobBadArgs(jobid, token, stat, desc, prog, estCompl, exception, false);
 	}
 	
-	private void testStartJob(String jobid, String token, String stat, String desc,
-			InitProgress prog, String exception, boolean badid) throws Exception {
+	private void startJobBadArgs(String jobid, String token, String stat, String desc,
+			InitProgress prog, String estCompl, String exception, boolean badid)
+			throws Exception {
 		try {
-			CLIENT1.startJob(jobid, token, stat, desc, prog, null);
+			CLIENT1.startJob(jobid, token, stat, desc, prog, estCompl);
 			fail("started job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
@@ -338,7 +361,7 @@ public class JSONRPCLayerTest {
 			return;
 		}
 		try {
-			CLIENT1.createAndStartJob(token, stat, desc, prog, null);
+			CLIENT1.createAndStartJob(token, stat, desc, prog, estCompl);
 			fail("started job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
@@ -346,7 +369,7 @@ public class JSONRPCLayerTest {
 		}
 	}
 	
-	private final SimpleDateFormat utc =
+	private final SimpleDateFormat dateform =
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	
 	private void checkJob(String id, String stage, String status,
@@ -360,7 +383,7 @@ public class JSONRPCLayerTest {
 		assertThat("job id ok", ret.getE1(), is(id));
 		assertThat("job stage ok", ret.getE3(), is(stage));
 		if (ret.getE4() != null) {
-			utc.parse(ret.getE4()); //should throw error if bad format
+			dateform.parse(ret.getE4()); //should throw error if bad format
 		}
 		assertThat("job est compl ok", ret.getE10(), is(estCompl));
 		assertThat("job service ok", ret.getE2(), is(service));
@@ -369,7 +392,7 @@ public class JSONRPCLayerTest {
 		assertThat("job prog ok", ret.getE7(), is(prog));
 		assertThat("job maxprog ok", ret.getE8(), is(maxprog));
 		assertThat("job status ok", ret.getE5(), is(status));
-		utc.parse(ret.getE6()); //should throw error if bad format
+		dateform.parse(ret.getE6()); //should throw error if bad format
 		assertThat("job complete ok", ret.getE11(), is(complete));
 		assertThat("job error ok", ret.getE12(), is(error));
 		checkResults(ret.getE14(), results);
@@ -381,12 +404,12 @@ public class JSONRPCLayerTest {
 		assertThat("job maxprog ok", jobdesc.getE3(), is(maxprog));
 		assertThat("job desc ok", jobdesc.getE4(), is(desc));
 		if (jobdesc.getE5() != null) {
-			utc.parse(jobdesc.getE5()); //should throw error if bad format
+			dateform.parse(jobdesc.getE5()); //should throw error if bad format
 		}
 		
 		Tuple7<String, String, String, Integer, String, Integer, Integer> 
 				jobstat = CLIENT1.getJobStatus(id);
-		utc.parse(jobstat.getE1()); //should throw error if bad format
+		dateform.parse(jobstat.getE1()); //should throw error if bad format
 		assertThat("job stage ok", jobstat.getE2(), is(stage));
 		assertThat("job status ok", jobstat.getE3(), is(status));
 		assertThat("job progress ok", jobstat.getE4(), is(prog));
@@ -461,6 +484,7 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void updateJob() throws Exception {
+		String[] nearfuture = getNearbyTimes();
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "up stat", "up desc",
 				new InitProgress().withPtype("none"), null);
 		CLIENT1.updateJob(jobid, TOKEN2, "up stat2", null);
@@ -469,50 +493,55 @@ public class JSONRPCLayerTest {
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up stat3", 40, null);
 		checkJob(jobid, "started", "up stat3", USER2,
 				"up desc", "none", null, null, null, 0, 0, null);
-		CLIENT1.updateJobProgress(jobid, TOKEN2, "up stat3", null, null);
+		CLIENT1.updateJobProgress(jobid, TOKEN2, "up stat3", null, nearfuture[0]);
 		checkJob(jobid, "started", "up stat3", USER2,
-				"up desc", "none", null, null, null, 0, 0, null);
+				"up desc", "none", null, null, nearfuture[1], 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up2 stat", "up2 desc",
 				new InitProgress().withPtype("percent"), null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up2 stat2", 40, null);
 		checkJob(jobid, "started", "up2 stat2", USER2,
 				"up2 desc", "percent", 40, 100, null, 0, 0, null);
-		CLIENT1.updateJob(jobid, TOKEN2, "up2 stat3", null);
+		CLIENT1.updateJob(jobid, TOKEN2, "up2 stat3", nearfuture[0]);
 		checkJob(jobid, "started", "up2 stat3", USER2,
-				"up2 desc", "percent", 40, 100, null, 0, 0, null);
+				"up2 desc", "percent", 40, 100, nearfuture[1], 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up2 stat4", 70, null);
 		checkJob(jobid, "started", "up2 stat4", USER2,
-				"up2 desc", "percent", 100, 100, null, 0, 0, null);
+				"up2 desc", "percent", 100, 100, nearfuture[1], 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up3 stat", "up3 desc",
 				new InitProgress().withPtype("task").withMax(42), null);
-		CLIENT1.updateJobProgress(jobid, TOKEN2, "up3 stat2", 30, null);
+		CLIENT1.updateJobProgress(jobid, TOKEN2, "up3 stat2", 30, nearfuture[0]);
 		checkJob(jobid, "started", "up3 stat2", USER2,
-				"up3 desc", "task", 30, 42, null, 0, 0, null);
+				"up3 desc", "task", 30, 42, nearfuture[1], 0, 0, null);
 		CLIENT1.updateJob(jobid, TOKEN2, "up3 stat3", null);
 		checkJob( jobid, "started", "up3 stat3", USER2,
-				"up3 desc", "task", 30, 42, null, 0, 0, null);
+				"up3 desc", "task", 30, 42, nearfuture[1], 0, 0, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up3 stat4", 15, null);
 		checkJob(jobid, "started", "up3 stat4", USER2,
-				"up3 desc", "task", 42, 42, null, 0, 0, null);
+				"up3 desc", "task", 42, 42, nearfuture[1], 0, 0, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up4 stat", "up4 desc",
 				new InitProgress().withPtype("none"), null);
-		testUpdateJob(jobid, TOKEN2, "up4 stat2", -1, "progress cannot be negative");
+		updateJobBadArgs(jobid, TOKEN2, "up4 stat2", -1, null, "progress cannot be negative");
 		
-		testUpdateJob(null, TOKEN2, "s",
+		updateJobBadArgs(null, TOKEN2, "s", null,
 				"id cannot be null or the empty string");
-		testUpdateJob("", TOKEN2, "s",
+		updateJobBadArgs("", TOKEN2, "s", null,
 				"id cannot be null or the empty string");
-		testUpdateJob("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s",
+		updateJobBadArgs("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", null,
 				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
 		
-		testUpdateJob(jobid, null, "s",
+		updateJobBadArgs(jobid, TOKEN2, "s",nearfuture[2],
+				"The estimated completion date must be in the future");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T123:30:54-8000",
+				"Unparseable date: \"2200-12-30T123:30:54-8000\"");
+		
+		updateJobBadArgs(jobid, null, "s", null,
 				"Service token cannot be null or the empty string");
-		testUpdateJob(jobid, "foo", "s",
+		updateJobBadArgs(jobid, "foo", "s", null,
 				"Auth token is in the incorrect format, near 'foo'");
-		testUpdateJob(jobid, TOKEN1, "s", String.format(
+		updateJobBadArgs(jobid, TOKEN1, "s", null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
 		
@@ -522,26 +551,26 @@ public class JSONRPCLayerTest {
 //				"id cannot be null or the empty string");
 	}
 	
-	private void testUpdateJob(String jobid, String token, String status,
-			Integer prog, String exception) throws Exception {
+	private void updateJobBadArgs(String jobid, String token, String status,
+			Integer prog, String estCompl, String exception) throws Exception {
 		try {
-			CLIENT1.updateJobProgress(jobid, token, status, prog, null);
+			CLIENT1.updateJobProgress(jobid, token, status, prog, estCompl);
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 	}
 	
-	private void testUpdateJob(String jobid, String token, String status,
-			String exception) throws Exception {
+	private void updateJobBadArgs(String jobid, String token, String status,
+			String estCompl, String exception) throws Exception {
 		try {
-			CLIENT1.updateJob(jobid, token, status, null);
+			CLIENT1.updateJob(jobid, token, status, estCompl);
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
-			CLIENT1.updateJobProgress(jobid, token, status, 1, null);
+			CLIENT1.updateJobProgress(jobid, token, status, 1, estCompl);
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
@@ -550,6 +579,7 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void completeJob() throws Exception {
+		String[] nearfuture = getNearbyTimes();
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "c stat", "c desc",
 				new InitProgress().withPtype("none"), null);
 		CLIENT1.completeJob(jobid, TOKEN2, "c stat2", 0, null);
@@ -565,7 +595,7 @@ public class JSONRPCLayerTest {
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "c3 stat", "c3 desc",
 				new InitProgress().withPtype("task").withMax(37), null);
-		CLIENT1.updateJobProgress(jobid, TOKEN2, "c3 stat2", 15, null);
+		CLIENT1.updateJobProgress(jobid, TOKEN2, "c3 stat2", 15, nearfuture[0]);
 		Results res = new Results()
 						.withShocknodes(Arrays.asList("node1", "node3"))
 						.withShockurl("surl")
@@ -573,7 +603,7 @@ public class JSONRPCLayerTest {
 						.withWorkspaceurl("wurl");
 		CLIENT1.completeJob(jobid, TOKEN2, "c3 stat3", 0, res);
 		checkJob(jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
-				37, 37, null, 1, 0, res);
+				37, 37, nearfuture[1], 1, 0, res);
 		
 		testCompleteJob(null, TOKEN2, "s", 0, null,
 				"id cannot be null or the empty string");
