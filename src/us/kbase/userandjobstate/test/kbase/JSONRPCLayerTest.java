@@ -25,12 +25,11 @@ import org.junit.Test;
 import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
-import us.kbase.common.service.Tuple12;
+import us.kbase.common.service.Tuple13;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 import us.kbase.common.test.TestException;
-import us.kbase.common.utils.UTCDateFormat;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
@@ -353,21 +352,24 @@ public class JSONRPCLayerTest {
 			Integer maxprog, Integer complete, Integer error,
 			Results results)
 			throws Exception {
-		Tuple12<String, String, String, String, String,
+		Tuple13<String, String, String, String, String, String,
 				Integer, Integer, String, Integer, Integer, String, Results> ret 
 				= CLIENT1.getJobInfo(id);
 		assertThat("job id ok", ret.getE1(), is(id));
 		assertThat("job stage ok", ret.getE3(), is(stage));
+		if (ret.getE4() != null) {
+			utc.parse(ret.getE4()); //should throw error if bad format
+		}
 		assertThat("job service ok", ret.getE2(), is(service));
-		assertThat("job desc ok", ret.getE11(), is(desc));
-		assertThat("job progtype ok", ret.getE8(), is(progtype));
-		assertThat("job prog ok", ret.getE6(), is(prog));
-		assertThat("job maxprog ok", ret.getE7(), is(maxprog));
-		assertThat("job status ok", ret.getE4(), is(status));
-		utc.parse(ret.getE5()); //should throw error if bad format
-		assertThat("job complete ok", ret.getE9(), is(complete));
-		assertThat("job error ok", ret.getE10(), is(error));
-		checkResults(ret.getE12(), results);
+		assertThat("job desc ok", ret.getE12(), is(desc));
+		assertThat("job progtype ok", ret.getE9(), is(progtype));
+		assertThat("job prog ok", ret.getE7(), is(prog));
+		assertThat("job maxprog ok", ret.getE8(), is(maxprog));
+		assertThat("job status ok", ret.getE5(), is(status));
+		utc.parse(ret.getE6()); //should throw error if bad format
+		assertThat("job complete ok", ret.getE10(), is(complete));
+		assertThat("job error ok", ret.getE11(), is(error));
+		checkResults(ret.getE13(), results);
 		
 		Tuple5<String, String, Integer, String, String> jobdesc =
 				CLIENT1.getJobDescription(id);
@@ -895,8 +897,8 @@ public class JSONRPCLayerTest {
 	private void checkListJobs(String service, String filter,
 			Set<FakeJob> expected) throws Exception {
 		Set<FakeJob> got = new HashSet<FakeJob>();
-		for (Tuple12<String, String, String, String, String, Integer, Integer,
-				String, Integer, Integer, String, Results> ji: 
+		for (Tuple13<String, String, String, String, String, String, Integer,
+				Integer, String, Integer, Integer, String, Results> ji: 
 					CLIENT2.listJobs(service, filter)) {
 			got.add(new FakeJob(ji));
 		}

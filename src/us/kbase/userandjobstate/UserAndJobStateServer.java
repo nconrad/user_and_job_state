@@ -4,7 +4,7 @@ import java.util.List;
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
 import us.kbase.common.service.JsonServerServlet;
-import us.kbase.common.service.Tuple12;
+import us.kbase.common.service.Tuple13;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
@@ -164,23 +164,24 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return t.getUserName();
 	}
 	
-	private Tuple12<String, String, String, String, String, Integer,
+	private Tuple13<String, String, String, String, String, String, Integer,
 			Integer, String, Integer, Integer, String, Results> jobToJobInfo(
 			final Job j) {
-		return new Tuple12<String, String, String, String, String, Integer,
-				Integer, String, Integer, Integer, String, Results>()
+		return new Tuple13<String, String, String, String, String, String,
+				Integer, Integer, String, Integer, Integer, String, Results>()
 				.withE1(j.getID())
 				.withE2(j.getService())
 				.withE3(j.getStage())
-				.withE4(j.getStatus())
-				.withE5(dateFormat.formatDate(j.getLastUpdated()))
-				.withE6(j.getProgress())
-				.withE7(j.getMaxProgress())
-				.withE8(j.getProgType())
-				.withE9(boolToInt(j.isComplete()))
-				.withE10(boolToInt(j.hasError()))
-				.withE11(j.getDescription())
-				.withE12(makeResults(j.getResults()));
+				.withE4(dateFormat.formatDate(j.getStarted()))
+				.withE5(j.getStatus())
+				.withE6(dateFormat.formatDate(j.getLastUpdated()))
+				.withE7(j.getProgress())
+				.withE8(j.getMaxProgress())
+				.withE9(j.getProgType())
+				.withE10(boolToInt(j.isComplete()))
+				.withE11(boolToInt(j.hasError()))
+				.withE12(j.getDescription())
+				.withE13(makeResults(j.getResults()));
 	}
 	
 	private static Integer boolToInt(final Boolean b) {
@@ -636,11 +637,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Get information about a job.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @return   parameter "info" of original type "job_info" (Information about a job.) &rarr; tuple of size 12: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
+     * @return   parameter "info" of original type "job_info" (Information about a job.) &rarr; tuple of size 13: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_info")
-    public Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
-        Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> returnVal = null;
+    public Tuple13<String, String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
+        Tuple13<String, String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results> returnVal = null;
         //BEGIN get_job_info
 		returnVal = jobToJobInfo(js.getJob(authPart.getUserName(), job));
         //END get_job_info
@@ -654,11 +655,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * </pre>
      * @param   service   instance of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all jobs that have been started are returned.)
-     * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 12: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
+     * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 13: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
-    public List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
-        List<Tuple12<String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
+    public List<Tuple13<String, String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
+        List<Tuple13<String, String, String, String, String, String, Integer, Integer, String, Integer, Integer, String, Results>> returnVal = null;
         //BEGIN list_jobs
 		boolean running = false;
 		boolean complete = false;
@@ -674,9 +675,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				error = true;
 			}
 		}
-		returnVal = new LinkedList<Tuple12<String, String, String, String,
-				String, Integer, Integer, String, Integer, Integer, String,
-				Results>>();
+		returnVal = new LinkedList<Tuple13<String, String, String, String,
+				String, String, Integer, Integer, String, Integer, Integer,
+				String, Results>>();
 		for (final Job j: js.listJobs(authPart.getUserName(), service,
 				running, complete, error)) {
 			returnVal.add(jobToJobInfo(j));

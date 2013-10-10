@@ -7,7 +7,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import us.kbase.common.service.Tuple12;
+import us.kbase.common.service.Tuple13;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
 
@@ -61,23 +61,23 @@ public class FakeJob {
 		this.results = results;
 	}
 
-	public FakeJob(Tuple12<String, String, String, String, String, Integer,
-			Integer, String, Integer, Integer, String, Results> ji) {
+	public FakeJob(Tuple13<String, String, String, String, String, String,
+			Integer, Integer, String, Integer, Integer, String, Results> ji) {
 		this.user = null;
 		this.id = ji.getE1();
 		this.service = ji.getE2();
 		this.stage = ji.getE3();
-		this.status = ji.getE4();
-		this.prog = ji.getE6();
-		this.maxprog = ji.getE7();
-		this.progtype = ji.getE8();
-		this.complete = ji.getE9() != 0;
-		this.error = ji.getE10() != 0;
-		this.desc = ji.getE11();
-		if (ji.getE12() == null) {
+		this.status = ji.getE5();
+		this.prog = ji.getE7();
+		this.maxprog = ji.getE8();
+		this.progtype = ji.getE9();
+		this.complete = ji.getE10() != 0;
+		this.error = ji.getE11() != 0;
+		this.desc = ji.getE12();
+		if (ji.getE13() == null) {
 			this.results = null;
 		} else {
-			Results r = ji.getE12();
+			Results r = ji.getE13();
 			Map<String, Object> res = new HashMap<String, Object>();
 			res.put("shocknodes", r.getShocknodes());
 			res.put("shockurl", r.getShockurl());
