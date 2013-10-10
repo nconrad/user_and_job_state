@@ -220,7 +220,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return ret;
 	}
 		
-	private Date parseDate(final String date) throws ParseException { //TODO test if pe is ok, or need to catch
+	private Date parseDate(final String date) throws ParseException {
 		return date == null ? null : dateFormat.parseDate(date);
 	}
     //END_CLASS_HEADER

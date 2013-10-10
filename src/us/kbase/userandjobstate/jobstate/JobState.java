@@ -45,7 +45,7 @@ public class JobState {
 	private final static String STARTED = "started";
 	private final static String UPDATED = "updated";
 	private final static String EST_COMP = "estcompl";
-	private final static String COMPLETE = "complete"; //TODO change to date
+	private final static String COMPLETE = "complete";
 	private final static String ERROR = "error";
 	private final static String DESCRIPTION = "desc";
 	private final static String PROG_TYPE = "progtype";
@@ -182,6 +182,7 @@ public class JobState {
 		checkString(service, "service", MAX_LEN_SERVICE);
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
 		checkMaxLen(description, "description", MAX_LEN_DESC);
+		checkEstComplete(estComplete);
 		if (maxProg != null && maxProg < 1) {
 			throw new IllegalArgumentException(
 					"The maximum progress for the job must be > 0"); 
@@ -229,6 +230,16 @@ public class JobState {
 		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
 					"There is no unstarted job %s for user %s", jobID, user));
+		}
+	}
+	
+	private void checkEstComplete(final Date estComplete) {
+		if (estComplete == null) {
+			return;
+		}
+		if (estComplete.compareTo(new Date()) < 1) {
+			throw new IllegalArgumentException(
+					"The estimated completion date must be in the future");
 		}
 	}
 	
@@ -281,6 +292,7 @@ public class JobState {
 		final DBObject set = new BasicDBObject(STATUS, status);
 		set.put(UPDATED, new Date());
 		if (estComplete != null) {
+			checkEstComplete(estComplete);
 			set.put(EST_COMP, estComplete);
 		}
 		final DBObject update = new BasicDBObject("$set", set);
