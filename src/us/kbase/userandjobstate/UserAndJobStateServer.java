@@ -5,7 +5,7 @@ import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
 import us.kbase.common.service.JsonServerServlet;
 import us.kbase.common.service.Tuple12;
-import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 
@@ -530,26 +530,29 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Get the description of a job.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @return   multiple set: (1) parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), (2) parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), (3) parameter "max" of original type "max_progress" (The maximum possible progress of a job.), (4) parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
+     * @return   multiple set: (1) parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), (2) parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), (3) parameter "max" of original type "max_progress" (The maximum possible progress of a job.), (4) parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), (5) parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time))
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_description", tuple = true)
-    public Tuple4<String, String, Integer, String> getJobDescription(String job, AuthToken authPart) throws Exception {
+    public Tuple5<String, String, Integer, String, String> getJobDescription(String job, AuthToken authPart) throws Exception {
         String return1 = null;
         String return2 = null;
         Integer return3 = null;
         String return4 = null;
+        String return5 = null;
         //BEGIN get_job_description
 		final Job j = js.getJob(authPart.getUserName(), job);
 		return1 = j.getService();
 		return2 = j.getProgType();
 		return3 = j.getMaxProgress();
 		return4 = j.getDescription();
+		return5 = dateFormat.formatDate(j.getStarted());
         //END get_job_description
-        Tuple4<String, String, Integer, String> returnVal = new Tuple4<String, String, Integer, String>();
+        Tuple5<String, String, Integer, String, String> returnVal = new Tuple5<String, String, Integer, String, String>();
         returnVal.setE1(return1);
         returnVal.setE2(return2);
         returnVal.setE3(return3);
         returnVal.setE4(return4);
+        returnVal.setE5(return5);
         return returnVal;
     }
 

@@ -209,10 +209,11 @@ module UserAndJobState {
 	funcdef get_results(job_id job) returns(Results res);
 	
 	/* Information about a job. */
-	typedef tuple<job_id job, service_name service, job_stage stage, 
-		job_status status, timestamp last_update, total_progress prog,
-		max_progress max, progress_type ptype, boolean complete, boolean error,
-		job_description desc, Results res> job_info;
+	typedef tuple<job_id job, service_name service, job_stage stage,
+		timestamp started, job_status status, timestamp last_update,
+		total_progress prog, max_progress max, progress_type ptype,
+		boolean complete, boolean error, job_description desc, Results res>
+		job_info;
 	
 	/* Get information about a job. */
 	funcdef get_job_info(job_id job) returns(job_info info);

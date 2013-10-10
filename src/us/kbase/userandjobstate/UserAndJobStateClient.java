@@ -10,7 +10,7 @@ import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonClientCaller;
 import us.kbase.common.service.JsonClientException;
 import us.kbase.common.service.Tuple12;
-import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 import us.kbase.common.service.UnauthorizedException;
@@ -353,15 +353,15 @@ public class UserAndJobStateClient {
      * Get the description of a job.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @return   multiple set: (1) parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), (2) parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), (3) parameter "max" of original type "max_progress" (The maximum possible progress of a job.), (4) parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.)
+     * @return   multiple set: (1) parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), (2) parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), (3) parameter "max" of original type "max_progress" (The maximum possible progress of a job.), (4) parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), (5) parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time))
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public Tuple4<String, String, Integer, String> getJobDescription(String job) throws IOException, JsonClientException {
+    public Tuple5<String, String, Integer, String, String> getJobDescription(String job) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
-        TypeReference<Tuple4<String, String, Integer, String>> retType = new TypeReference<Tuple4<String, String, Integer, String>>() {};
-        Tuple4<String, String, Integer, String> res = caller.jsonrpcCall("UserAndJobState.get_job_description", args, retType, true, true);
+        TypeReference<Tuple5<String, String, Integer, String, String>> retType = new TypeReference<Tuple5<String, String, Integer, String, String>>() {};
+        Tuple5<String, String, Integer, String, String> res = caller.jsonrpcCall("UserAndJobState.get_job_description", args, retType, true, true);
         return res;
     }
 

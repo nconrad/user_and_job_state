@@ -60,16 +60,22 @@ public class JsonClientCaller {
 		HttpURLConnection conn = (HttpURLConnection) serviceUrl.openConnection();
 		conn.setDoOutput(true);
 		conn.setRequestMethod("POST");
-		if (authRequired) {
+		if (authRequired || accessToken != null) {
 			if (!(conn instanceof HttpsURLConnection || isAuthAllowedForHttp)) {
 				throw new UnauthorizedException("RPC method required authentication shouldn't " +
 						"be called through unsecured http, use https instead or call " +
 						"setAuthAllowedForHttp(true) for your client");
 			}
 			if (accessToken == null || accessToken.isExpired()) {
-				if (user == null)
-					throw new UnauthorizedException("RPC method requires authentication because of " +
-							"token expiration but user wasn't defined");
+				if (user == null) {
+					if (accessToken == null) {
+						throw new UnauthorizedException("RPC method requires authentication but neither " +
+								"user nor token was set");
+					} else {
+						throw new UnauthorizedException("Token is expired and can not be reloaded " +
+								"because user wasn't set");
+					}
+				}
 				accessToken = requestTokenFromKBase(user, password);
 			}
 			conn.setRequestProperty("Authorization", accessToken.toString());

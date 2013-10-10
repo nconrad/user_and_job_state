@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,7 +26,7 @@ import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple12;
-import us.kbase.common.service.Tuple4;
+import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple6;
 import us.kbase.common.service.UObject;
 import us.kbase.common.test.TestException;
@@ -344,7 +345,8 @@ public class JSONRPCLayerTest {
 		}
 	}
 	
-	private UTCDateFormat utc = new UTCDateFormat();
+	private final SimpleDateFormat utc =
+			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 	
 	private void checkJob(String id, String stage, String status,
 			String service, String desc, String progtype, Integer prog,
@@ -362,21 +364,24 @@ public class JSONRPCLayerTest {
 		assertThat("job prog ok", ret.getE6(), is(prog));
 		assertThat("job maxprog ok", ret.getE7(), is(maxprog));
 		assertThat("job status ok", ret.getE4(), is(status));
-		utc.parseDate(ret.getE5()); //should throw error if bad format
+		utc.parse(ret.getE5()); //should throw error if bad format
 		assertThat("job complete ok", ret.getE9(), is(complete));
 		assertThat("job error ok", ret.getE10(), is(error));
 		checkResults(ret.getE12(), results);
 		
-		Tuple4<String, String, Integer, String> jobdesc =
+		Tuple5<String, String, Integer, String, String> jobdesc =
 				CLIENT1.getJobDescription(id);
 		assertThat("job service ok", jobdesc.getE1(), is(service));
 		assertThat("job progtype ok", jobdesc.getE2(), is(progtype));
 		assertThat("job maxprog ok", jobdesc.getE3(), is(maxprog));
 		assertThat("job desc ok", jobdesc.getE4(), is(desc));
+		if (jobdesc.getE5() != null) {
+			utc.parse(jobdesc.getE5()); //should throw error if bad format
+		}
 		
 		Tuple6<String, String, String, Integer, Integer, Integer> jobstat =
 				CLIENT1.getJobStatus(id);
-		utc.parseDate(jobstat.getE1()); //should throw error if bad format
+		utc.parse(jobstat.getE1()); //should throw error if bad format
 		assertThat("job stage ok", jobstat.getE2(), is(stage));
 		assertThat("job status ok", jobstat.getE3(), is(status));
 		assertThat("job progress ok", jobstat.getE4(), is(prog));
