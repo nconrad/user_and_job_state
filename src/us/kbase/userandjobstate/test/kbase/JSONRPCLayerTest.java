@@ -251,6 +251,7 @@ public class JSONRPCLayerTest {
 	}
 	
 	private String[] getNearbyTimes() {
+		SimpleDateFormat dateform = getDateFormat();
 		SimpleDateFormat dateformutc =
 				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 		dateformutc.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -309,7 +310,10 @@ public class JSONRPCLayerTest {
 				nearfuture[2], "The estimated completion date must be in the future", true);
 		startJobBadArgs(jobid, TOKEN2, "s", "d",
 				new InitProgress().withPtype("none"),
-				"2200-12-30T123:30:54-8000", "Unparseable date: \"2200-12-30T123:30:54-8000\"", true);
+				"2200-12-30T23:30:54-8000", "Unparseable date: \"2200-12-30T23:30:54-8000\"", true);
+		startJobBadArgs(jobid, TOKEN2, "s", "d",
+				new InitProgress().withPtype("none"),
+				"2200-12-30T123:30:54-0800", "Unparseable date: \"2200-12-30T123:30:54-0800\"", true);
 		
 		startJobBadArgs(jobid, TOKEN2, "s", "d", null,
 				null, "InitProgress cannot be null");
@@ -369,14 +373,19 @@ public class JSONRPCLayerTest {
 		}
 	}
 	
-	private final SimpleDateFormat dateform =
-			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+	private SimpleDateFormat getDateFormat() {
+		SimpleDateFormat dateform =
+				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
+		dateform.setLenient(false);
+		return dateform;
+	}
 	
 	private void checkJob(String id, String stage, String status,
 			String service, String desc, String progtype, Integer prog,
 			Integer maxprog, String estCompl, Integer complete, Integer error,
 			Results results)
 			throws Exception {
+		SimpleDateFormat dateform = getDateFormat();
 		Tuple14<String, String, String, String, String, String,
 				Integer, Integer, String, String, Integer, Integer, String,
 				Results> ret = CLIENT1.getJobInfo(id);
@@ -532,10 +541,12 @@ public class JSONRPCLayerTest {
 		updateJobBadArgs("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", null,
 				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
 		
-		updateJobBadArgs(jobid, TOKEN2, "s",nearfuture[2],
+		updateJobBadArgs(jobid, TOKEN2, "s", nearfuture[2],
 				"The estimated completion date must be in the future");
-		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T123:30:54-8000",
-				"Unparseable date: \"2200-12-30T123:30:54-8000\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T23:30:54-8000",
+				"Unparseable date: \"2200-12-30T23:30:54-8000\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T123:30:54-0800",
+				"Unparseable date: \"2200-12-30T123:30:54-0800\"");
 		
 		updateJobBadArgs(jobid, null, "s", null,
 				"Service token cannot be null or the empty string");
