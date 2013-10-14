@@ -20,3 +20,24 @@ SETUP
 If the server doesn't start up correctly, check /var/log/syslog and
 /kb/runtime/glassfish3/glassfish/domains/domain1/logs/server.log 
 for debugging information.
+
+KNOWN BUGS: 
+In some cases, the server can start up, apparently normally, without
+establishing contact with MongoDB. In this case all calls will fail, and the
+server should be restarted. This *appears* to only occur once per magellean
+instance, which makes it difficult to debug.
+
+To check whether this has occurred:
+
+# cd /kb/deployment/lib/
+# python
+Python 2.7.3 (default, Sep 26 2013, 20:03:06) 
+[GCC 4.6.3] on linux2
+Type "help", "copyright", "credits" or "license" for more information.
+>>> from biokbase.userandjobstate.client import UserAndJobState
+>>> ujs = UserAndJobState('http://localhost:7083', user_id='[username]',
+	password='[pwd]')
+>>> ujs.create_job()
+u'525c7bb0e4b0ade4bb6a6593'
+
+The above call will fail if the server has started incorrectly.
