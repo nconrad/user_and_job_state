@@ -1,7 +1,6 @@
 
 package us.kbase.userandjobstate;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -40,14 +39,14 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 public class Results {
 
     @JsonProperty("shocknodes")
-    private List<String> shocknodes = new ArrayList<String>();
+    private List<String> shocknodes;
     @JsonProperty("shockurl")
-    private String shockurl;
+    private java.lang.String shockurl;
     @JsonProperty("workspaceids")
-    private List<String> workspaceids = new ArrayList<String>();
+    private List<String> workspaceids;
     @JsonProperty("workspaceurl")
-    private String workspaceurl;
-    private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+    private java.lang.String workspaceurl;
+    private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
 
     @JsonProperty("shocknodes")
     public List<String> getShocknodes() {
@@ -65,16 +64,16 @@ public class Results {
     }
 
     @JsonProperty("shockurl")
-    public String getShockurl() {
+    public java.lang.String getShockurl() {
         return shockurl;
     }
 
     @JsonProperty("shockurl")
-    public void setShockurl(String shockurl) {
+    public void setShockurl(java.lang.String shockurl) {
         this.shockurl = shockurl;
     }
 
-    public Results withShockurl(String shockurl) {
+    public Results withShockurl(java.lang.String shockurl) {
         this.shockurl = shockurl;
         return this;
     }
@@ -95,32 +94,32 @@ public class Results {
     }
 
     @JsonProperty("workspaceurl")
-    public String getWorkspaceurl() {
+    public java.lang.String getWorkspaceurl() {
         return workspaceurl;
     }
 
     @JsonProperty("workspaceurl")
-    public void setWorkspaceurl(String workspaceurl) {
+    public void setWorkspaceurl(java.lang.String workspaceurl) {
         this.workspaceurl = workspaceurl;
     }
 
-    public Results withWorkspaceurl(String workspaceurl) {
+    public Results withWorkspaceurl(java.lang.String workspaceurl) {
         this.workspaceurl = workspaceurl;
         return this;
     }
 
     @JsonAnyGetter
-    public Map<String, Object> getAdditionalProperties() {
+    public Map<java.lang.String, Object> getAdditionalProperties() {
         return this.additionalProperties;
     }
 
     @JsonAnySetter
-    public void setAdditionalProperties(String name, Object value) {
+    public void setAdditionalProperties(java.lang.String name, Object value) {
         this.additionalProperties.put(name, value);
     }
 
     @Override
-    public String toString() {
+    public java.lang.String toString() {
         return ((((((((((("Results"+" [shocknodes=")+ shocknodes)+", shockurl=")+ shockurl)+", workspaceids=")+ workspaceids)+", workspaceurl=")+ workspaceurl)+", additionalProperties=")+ additionalProperties)+"]");
     }
 

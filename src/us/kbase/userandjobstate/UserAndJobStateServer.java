@@ -166,11 +166,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return t.getUserName();
 	}
 	
-	private Tuple14<String, String, String, String, String, String, Integer,
-			Integer, String, String, Integer, Integer, String, Results>
+	private Tuple14<String, String, String, String, String, String, Long,
+			Long, String, String, Long, Long, String, Results>
 			jobToJobInfo(final Job j) {
 		return new Tuple14<String, String, String, String, String, String,
-				Integer, Integer, String, String, Integer, Integer, String,
+				Long, Long, String, String, Long, Long, String,
 				Results>()
 				.withE1(j.getID())
 				.withE2(j.getService())
@@ -178,21 +178,23 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withE4(dateFormat.formatDate(j.getStarted()))
 				.withE5(j.getStatus())
 				.withE6(dateFormat.formatDate(j.getLastUpdated()))
-				.withE7(j.getProgress())
-				.withE8(j.getMaxProgress())
+				.withE7(j.getProgress() == null ? null :
+					new Long(j.getProgress()))
+				.withE8(j.getMaxProgress() == null ? null :
+					new Long(j.getMaxProgress()))
 				.withE9(j.getProgType())
 				.withE10(dateFormat.formatDate(j.getEstimatedCompletion()))
-				.withE11(boolToInt(j.isComplete()))
-				.withE12(boolToInt(j.hasError()))
+				.withE11(boolToLong(j.isComplete()))
+				.withE12(boolToLong(j.hasError()))
 				.withE13(j.getDescription())
 				.withE14(makeResults(j.getResults()));
 	}
 	
-	private static Integer boolToInt(final Boolean b) {
+	private static Long boolToLong(final Boolean b) {
 		if (b == null) {
 			return null;
 		}
-		return b ? 1 : 0;
+		return b ? 1L : 0L;
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -320,7 +322,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   parameter "value" of unspecified object
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_state")
-    public UObject getState(String service, String key, Integer auth, AuthToken authPart) throws Exception {
+    public UObject getState(String service, String key, Long auth, AuthToken authPart) throws Exception {
         UObject returnVal = null;
         //BEGIN get_state
 		returnVal = new UObject(us.getState(authPart.getUserName(), service,
@@ -370,7 +372,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   parameter "keys" of list of String
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_state")
-    public List<String> listState(String service, Integer auth, AuthToken authPart) throws Exception {
+    public List<String> listState(String service, Long auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state
 		returnVal = new LinkedList<String>(us.listState(authPart.getUserName(),
@@ -388,7 +390,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   parameter "services" of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_state_services")
-    public List<String> listStateServices(Integer auth, AuthToken authPart) throws Exception {
+    public List<String> listStateServices(Long auth, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN list_state_services
 		returnVal = new LinkedList<String>(us.listServices(
@@ -446,8 +448,14 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				throw new IllegalArgumentException(
 						"Max progress cannot be null for task based progress");
 			}
+			if (progress.getMax().longValue() > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(
+						"Max progress can be no greater than "
+						+ Integer.MAX_VALUE); //TODO test
+			}
 			js.startJob(authPart.getUserName(), job, getServiceName(token),
-					status, desc, progress.getMax(), parseDate(estComplete));
+					status, desc, (int) progress.getMax().longValue(),
+					parseDate(estComplete));
 		} else {
 			throw new IllegalArgumentException("No such progress type: " +
 					progress.getPtype());
@@ -491,8 +499,14 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				throw new IllegalArgumentException(
 						"Max progress cannot be null for task based progress");
 			}
+			if (progress.getMax().longValue() > Integer.MAX_VALUE) {
+				throw new IllegalArgumentException(
+						"Max progress can be no greater than "
+						+ Integer.MAX_VALUE); //TODO test
+			}
 			returnVal = js.createAndStartJob(authPart.getUserName(),
-					getServiceName(token), status, desc, progress.getMax(),
+					getServiceName(token), status, desc,
+					(int) progress.getMax().longValue(),
 					parseDate(estComplete));
 		} else {
 			throw new IllegalArgumentException("No such progress type: " +
@@ -514,10 +528,19 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @param   estComplete   instance of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time))
      */
     @JsonServerMethod(rpc = "UserAndJobState.update_job_progress")
-    public void updateJobProgress(String job, String token, String status, Integer prog, String estComplete, AuthToken authPart) throws Exception {
+    public void updateJobProgress(String job, String token, String status, Long prog, String estComplete, AuthToken authPart) throws Exception {
         //BEGIN update_job_progress
+		Integer progval = null;
+		if (prog != null) {
+			if (prog.longValue() > Integer.MAX_VALUE) {
+			throw new IllegalArgumentException(
+					"Max progress can be no greater than "
+					+ Integer.MAX_VALUE); //TODO test
+			}
+			progval = (int) prog.longValue();
+		}
 		js.updateJob(authPart.getUserName(), job, getServiceName(token),
-				status, prog, parseDate(estComplete));
+				status, progval, parseDate(estComplete));
         //END update_job_progress
     }
 
@@ -548,21 +571,22 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   multiple set: (1) parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), (2) parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), (3) parameter "max" of original type "max_progress" (The maximum possible progress of a job.), (4) parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), (5) parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time))
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_description", tuple = true)
-    public Tuple5<String, String, Integer, String, String> getJobDescription(String job, AuthToken authPart) throws Exception {
+    public Tuple5<String, String, Long, String, String> getJobDescription(String job, AuthToken authPart) throws Exception {
         String return1 = null;
         String return2 = null;
-        Integer return3 = null;
+        Long return3 = null;
         String return4 = null;
         String return5 = null;
         //BEGIN get_job_description
 		final Job j = js.getJob(authPart.getUserName(), job);
 		return1 = j.getService();
 		return2 = j.getProgType();
-		return3 = j.getMaxProgress();
+		return3 = j.getMaxProgress() == null ? null :
+			new Long(j.getMaxProgress());
 		return4 = j.getDescription();
 		return5 = dateFormat.formatDate(j.getStarted());
         //END get_job_description
-        Tuple5<String, String, Integer, String, String> returnVal = new Tuple5<String, String, Integer, String, String>();
+        Tuple5<String, String, Long, String, String> returnVal = new Tuple5<String, String, Long, String, String>();
         returnVal.setE1(return1);
         returnVal.setE2(return2);
         returnVal.setE3(return3);
@@ -580,25 +604,25 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   multiple set: (1) parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), (2) parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), (3) parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), (4) parameter "progress" of original type "total_progress" (The total progress of a job.), (5) parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), (6) parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), (7) parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_status", tuple = true)
-    public Tuple7<String, String, String, Integer, String, Integer, Integer> getJobStatus(String job, AuthToken authPart) throws Exception {
+    public Tuple7<String, String, String, Long, String, Long, Long> getJobStatus(String job, AuthToken authPart) throws Exception {
         String return1 = null;
         String return2 = null;
         String return3 = null;
-        Integer return4 = null;
+        Long return4 = null;
         String return5 = null;
-        Integer return6 = null;
-        Integer return7 = null;
+        Long return6 = null;
+        Long return7 = null;
         //BEGIN get_job_status
 		final Job j = js.getJob(authPart.getUserName(), job);
 		return1 = dateFormat.formatDate(j.getLastUpdated());
 		return2 = j.getStage();
 		return3 = j.getStatus();
-		return4 = j.getProgress();
+		return4 = j.getProgress() == null ? null :new Long(j.getProgress());
 		return5 = dateFormat.formatDate(j.getEstimatedCompletion());
-		return6 = boolToInt(j.isComplete());
-		return7 = boolToInt(j.hasError());
+		return6 = boolToLong(j.isComplete());
+		return7 = boolToLong(j.hasError());
         //END get_job_status
-        Tuple7<String, String, String, Integer, String, Integer, Integer> returnVal = new Tuple7<String, String, String, Integer, String, Integer, Integer>();
+        Tuple7<String, String, String, Long, String, Long, Long> returnVal = new Tuple7<String, String, String, Long, String, Long, Long>();
         returnVal.setE1(return1);
         returnVal.setE2(return2);
         returnVal.setE3(return3);
@@ -622,7 +646,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @param   res   instance of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.complete_job")
-    public void completeJob(String job, String token, String status, Integer error, Results res, AuthToken authPart) throws Exception {
+    public void completeJob(String job, String token, String status, Long error, Results res, AuthToken authPart) throws Exception {
         //BEGIN complete_job
 		js.completeJob(authPart.getUserName(), job, getServiceName(token),
 				status, error == null ? false : error != 0,
@@ -657,8 +681,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   parameter "info" of original type "job_info" (Information about a job.) &rarr; tuple of size 14: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_info")
-    public Tuple14<String, String, String, String, String, String, Integer, Integer, String, String, Integer, Integer, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
-        Tuple14<String, String, String, String, String, String, Integer, Integer, String, String, Integer, Integer, String, Results> returnVal = null;
+    public Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results> getJobInfo(String job, AuthToken authPart) throws Exception {
+        Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results> returnVal = null;
         //BEGIN get_job_info
 		returnVal = jobToJobInfo(js.getJob(authPart.getUserName(), job));
         //END get_job_info
@@ -675,8 +699,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 14: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-5000 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
-    public List<Tuple14<String, String, String, String, String, String, Integer, Integer, String, String, Integer, Integer, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
-        List<Tuple14<String, String, String, String, String, String, Integer, Integer, String, String, Integer, Integer, String, Results>> returnVal = null;
+    public List<Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results>> listJobs(String service, String filter, AuthToken authPart) throws Exception {
+        List<Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results>> returnVal = null;
         //BEGIN list_jobs
 		boolean running = false;
 		boolean complete = false;
@@ -693,8 +717,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			}
 		}
 		returnVal = new LinkedList<Tuple14<String, String, String, String,
-				String, String, Integer, Integer, String, String, Integer,
-				Integer, String, Results>>();
+				String, String, Long, Long, String, String, Long,
+				Long, String, Results>>();
 		for (final Job j: js.listJobs(authPart.getUserName(), service,
 				running, complete, error)) {
 			returnVal.add(jobToJobInfo(j));

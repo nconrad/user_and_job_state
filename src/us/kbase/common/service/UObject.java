@@ -118,7 +118,16 @@ public class UObject {
 			return asJsonNode().isInt();
 		return userObj instanceof Integer;
 	}
-	
+
+	/**
+	 * @return true in case this object is long
+	 */
+	public boolean isLong() {
+		if (isJsonNode())
+			return asJsonNode().isLong();
+		return userObj instanceof Long;
+	}
+
 	/**
 	 * @return true in case this object is text
 	 */
@@ -222,7 +231,8 @@ public class UObject {
 	 * Helper method for transformation POJO into POJO of another type.
 	 */
 	public static <T> T transformObjectToObject(Object obj, Class<T> retType) {
-		return transformStringToObject(transformObjectToString(obj), retType);
+		//return transformStringToObject(transformObjectToString(obj), retType);
+		return transformJacksonToObject(transformObjectToJackson(obj), retType);
 	}
 
 	/**
@@ -240,7 +250,8 @@ public class UObject {
 	 * Helper method for transformation POJO into POJO of another type.
 	 */
 	public static <T> T transformObjectToObject(Object obj, TypeReference<T> retType) {
-		return transformStringToObject(transformObjectToString(obj), retType);
+		//return transformStringToObject(transformObjectToString(obj), retType);
+		return transformJacksonToObject(transformObjectToJackson(obj), retType);
 	}
 
 	/**
@@ -311,8 +322,8 @@ public class UObject {
 	 * Helper method for transformation POJO into Jackson tree.
 	 */
 	public static JsonNode transformObjectToJackson(Object obj) {
-		//return mapper.valueToTree(obj);
-		return transformStringToJackson(transformObjectToString(obj));
+		return mapper.valueToTree(obj);
+		//return transformStringToJackson(transformObjectToString(obj));
 	}
 
 	/**

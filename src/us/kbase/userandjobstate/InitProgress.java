@@ -32,7 +32,7 @@ public class InitProgress {
     @JsonProperty("ptype")
     private String ptype;
     @JsonProperty("max")
-    private Integer max;
+    private Long max;
     private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
     @JsonProperty("ptype")
@@ -51,16 +51,16 @@ public class InitProgress {
     }
 
     @JsonProperty("max")
-    public Integer getMax() {
+    public Long getMax() {
         return max;
     }
 
     @JsonProperty("max")
-    public void setMax(Integer max) {
+    public void setMax(Long max) {
         this.max = max;
     }
 
-    public InitProgress withMax(Integer max) {
+    public InitProgress withMax(Long max) {
         this.max = max;
         return this;
     }

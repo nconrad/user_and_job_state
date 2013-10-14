@@ -70,7 +70,7 @@ public class FakeJob {
 			new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 
 	public FakeJob(Tuple14<String, String, String, String, String, String,
-			Integer, Integer, String, String, Integer, Integer, String,
+			Long, Long, String, String, Long, Long, String,
 			Results> ji)
 			throws ParseException {
 		this.user = null;
@@ -78,8 +78,8 @@ public class FakeJob {
 		this.service = ji.getE2();
 		this.stage = ji.getE3();
 		this.status = ji.getE5();
-		this.prog = ji.getE7();
-		this.maxprog = ji.getE8();
+		this.prog = longToInt(ji.getE7());
+		this.maxprog = longToInt(ji.getE8());
 		this.progtype = ji.getE9();
 		this.estcompl = ji.getE10() == null ? null : utc.parse(ji.getE4());
 		this.complete = ji.getE11() != 0;
@@ -96,6 +96,14 @@ public class FakeJob {
 			res.put("workspaceurl", r.getWorkspaceurl());
 			this.results = res;
 		}
+	}
+	
+	//no checking, assumes the cast is ok
+	private Integer longToInt(Long l) {
+		if (l == null) {
+			return null;
+		}
+		return new Integer((int) l.longValue());
 	}
 	
 	public String getID() {
