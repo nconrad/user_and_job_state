@@ -327,6 +327,12 @@ public class JSONRPCLayerTest {
 		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("task")
 				.withMax(null),
 				null, "Max progress cannot be null for task based progress");
+		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("task")
+				.withMax(-1L),
+				null, "The maximum progress for the job must be > 0");
+		startJobBadArgs(jobid, TOKEN2, "s", "d", new InitProgress().withPtype("task")
+				.withMax(((long) Integer.MAX_VALUE) + 1),
+				null, "Max progress can be no greater than " + Integer.MAX_VALUE);
 		
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat", "cs desc",
@@ -532,6 +538,9 @@ public class JSONRPCLayerTest {
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up4 stat", "up4 desc",
 				new InitProgress().withPtype("none"), null);
 		updateJobBadArgs(jobid, TOKEN2, "up4 stat2", -1L, null, "progress cannot be negative");
+		updateJobBadArgs(jobid, TOKEN2, "up4 stat2",
+				(long) Integer.MAX_VALUE + 1, null,
+				"Max progress can be no greater than " + Integer.MAX_VALUE);
 		
 		updateJobBadArgs(null, TOKEN2, "s", null,
 				"id cannot be null or the empty string");
@@ -554,7 +563,6 @@ public class JSONRPCLayerTest {
 		updateJobBadArgs(jobid, TOKEN1, "s", null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
-		
 		
 		//TODO restore when auth service is fixed
 //		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),

@@ -451,7 +451,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			if (progress.getMax().longValue() > Integer.MAX_VALUE) {
 				throw new IllegalArgumentException(
 						"Max progress can be no greater than "
-						+ Integer.MAX_VALUE); //TODO test
+						+ Integer.MAX_VALUE);
 			}
 			js.startJob(authPart.getUserName(), job, getServiceName(token),
 					status, desc, (int) progress.getMax().longValue(),
@@ -502,7 +502,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			if (progress.getMax().longValue() > Integer.MAX_VALUE) {
 				throw new IllegalArgumentException(
 						"Max progress can be no greater than "
-						+ Integer.MAX_VALUE); //TODO test
+						+ Integer.MAX_VALUE);
 			}
 			returnVal = js.createAndStartJob(authPart.getUserName(),
 					getServiceName(token), status, desc,
@@ -535,7 +535,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			if (prog.longValue() > Integer.MAX_VALUE) {
 			throw new IllegalArgumentException(
 					"Max progress can be no greater than "
-					+ Integer.MAX_VALUE); //TODO test
+					+ Integer.MAX_VALUE);
 			}
 			progval = (int) prog.longValue();
 		}
