@@ -270,7 +270,7 @@ public class UObject {
 	 */
 	public static <T> T transformJacksonToObject(JsonNode node, Class<T> retType) {
 		try {
-			T ret = mapper.readValue(mapper.treeAsTokens(node), retType);
+			T ret = mapper.readValue(new JsonTreeTraversingParser(node, mapper), retType);
 			return ret;
 		} catch (IOException ex) {
 			throw new IllegalStateException(ex);
@@ -282,7 +282,7 @@ public class UObject {
 	 */
 	public static <T> T transformJacksonToObject(JsonNode node, TypeReference<T> retType) {
 		try {
-			T ret = mapper.readValue(mapper.treeAsTokens(node), retType);
+			T ret = mapper.readValue(new JsonTreeTraversingParser(node, mapper), retType);
 			return ret;
 		} catch (IOException ex) {
 			throw new IllegalStateException(ex);

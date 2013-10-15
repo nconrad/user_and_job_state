@@ -122,7 +122,7 @@ public class JacksonTupleModule extends SimpleModule {
 					if (p.getCurrentToken() == JsonToken.VALUE_EMBEDDED_OBJECT) {
 						Object tempObj = p.getEmbeddedObject();
 						JsonNode tempNode = valueToTree(p.getCodec(), tempObj);
-						val = p.getCodec().readValue(new TreeTraversingParser(tempNode, p.getCodec()), types.get(i));
+						val = p.getCodec().readValue(new JsonTreeTraversingParser(tempNode, p.getCodec()), types.get(i));
 						p.nextToken();
 					} else {
 						val = p.getCodec().readValue(p, types.get(i));
@@ -145,7 +145,6 @@ public class JacksonTupleModule extends SimpleModule {
 			jp.close();
 			return result;
 		} 
-
 	}
 
 	public static class UObjectSerializer extends JsonSerializer<UObject> {		
