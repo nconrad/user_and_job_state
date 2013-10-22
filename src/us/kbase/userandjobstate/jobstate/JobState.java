@@ -32,7 +32,7 @@ import com.mongodb.WriteResult;
 
 public class JobState {
 
-	private final static int JOB_EXP = 30 * 24 * 60 * 60; // 30 days
+	private final static int JOB_EXPIRES = 30 * 24 * 60 * 60; // 30 days
 	
 	private final static int MAX_LEN_USER = 100;
 	private final static int MAX_LEN_SERVICE = 100;
@@ -89,7 +89,8 @@ public class JobState {
 		idx.put(COMPLETE, 1);
 		jobcol.ensureIndex(idx);
 		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
-		final DBObject opts = new BasicDBObject("expireAfterSeconds", JOB_EXP);
+		final DBObject opts = new BasicDBObject("expireAfterSeconds",
+				JOB_EXPIRES);
 		jobcol.ensureIndex(ttlidx, opts);
 		
 	}
@@ -392,11 +393,9 @@ public class JobState {
 	}
 	
 	final static DBObject SERV_GROUP;
-	final static DBObject SERV_PROJ;
 	static {
 		final DBObject pfields = new BasicDBObject(SERVICE, 1);
 		pfields.put(MONGO_ID, 0);
-		SERV_PROJ = new BasicDBObject("$project", pfields);
 		SERV_GROUP = new BasicDBObject("$group",
 				new BasicDBObject(MONGO_ID, "$" + SERVICE));
 	}
@@ -406,21 +405,18 @@ public class JobState {
 		checkString(user, "user");
 		final DBObject query = new BasicDBObject(USER, user);
 		query.put(SERVICE, new BasicDBObject("$ne", null));
-		final DBObject match = new BasicDBObject("$match",
-				new BasicDBObject(USER, user));
+		final DBObject match = new BasicDBObject("$match", query);
 		
 		final AggregationOutput mret;
 		try {
-			mret = jobcol.aggregate(match, SERV_PROJ, SERV_GROUP);
+			mret = jobcol.aggregate(match, SERV_GROUP);
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
 		final Set<String> services = new HashSet<String>();
 		for (DBObject o: mret.results()) {
-			if (o.get(MONGO_ID) != null) { //shouldn't be necessary, but...
-				services.add((String) o.get(MONGO_ID));
-			}
+			services.add((String) o.get(MONGO_ID));
 		}
 		return services;
 	}
