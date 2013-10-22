@@ -127,6 +127,11 @@ module UserAndJobState {
 		be summed to the total progress so far. */
 	typedef int progress;
 	
+	/* Detailed information about a job error, such as a stacktrace, that will
+		not fit in the job_status. No more than 100K characters.
+	*/
+	typedef string detailed_err;
+	
 	/* The total progress of a job. */
 	typedef int total_progress;
 	
@@ -202,13 +207,17 @@ module UserAndJobState {
 		timestamp est_complete, boolean complete, boolean error);
 	
 	/* Complete the job. After the job is completed, total_progress always
-		equals max_progress.
+		equals max_progress. If detailed_err is anything other than null,
+		the job is considered to have errored out.
 	*/
 	funcdef complete_job(job_id job, service_token token, job_status status,
-		boolean error, Results res) returns();
+		detailed_err error, Results res) returns();
 		
 	/* Get the job results. */
 	funcdef get_results(job_id job) returns(Results res);
+	
+	/* Get the detailed error message, if any */
+	funcdef get_detailed_error(job_id job) returns(detailed_err error);
 	
 	/* Information about a job. */
 	typedef tuple<job_id job, service_name service, job_stage stage,

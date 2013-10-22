@@ -395,17 +395,18 @@ public class UserAndJobStateClient {
      * <p>Original spec-file function name: complete_job</p>
      * <pre>
      * Complete the job. After the job is completed, total_progress always
-     * equals max_progress.
+     * equals max_progress. If detailed_err is anything other than null,
+     * the job is considered to have errored out.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
      * @param   token   instance of original type "service_token" (A globus ID token that validates that the service really is said service.)
      * @param   status   instance of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.)
-     * @param   error   instance of original type "boolean" (A boolean. 0 = false, other = true.)
+     * @param   error   instance of original type "detailed_err" (Detailed information about a job error, such as a stacktrace, that will not fit in the job_status. No more than 100K characters.)
      * @param   res   instance of type {@link us.kbase.userandjobstate.Results Results}
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
      */
-    public void completeJob(String job, String token, String status, Long error, Results res) throws IOException, JsonClientException {
+    public void completeJob(String job, String token, String status, String error, Results res) throws IOException, JsonClientException {
         List<Object> args = new ArrayList<Object>();
         args.add(job);
         args.add(token);
@@ -431,6 +432,24 @@ public class UserAndJobStateClient {
         args.add(job);
         TypeReference<List<Results>> retType = new TypeReference<List<Results>>() {};
         List<Results> res = caller.jsonrpcCall("UserAndJobState.get_results", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_detailed_error</p>
+     * <pre>
+     * Get the detailed error message, if any
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   parameter "error" of original type "detailed_err" (Detailed information about a job error, such as a stacktrace, that will not fit in the job_status. No more than 100K characters.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public String getDetailedError(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<List<String>> retType = new TypeReference<List<String>>() {};
+        List<String> res = caller.jsonrpcCall("UserAndJobState.get_detailed_error", args, retType, true, true);
         return res.get(0);
     }
 

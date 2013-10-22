@@ -1433,12 +1433,12 @@ sub get_job_status
 $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
-$error is a UserAndJobState.boolean
+$error is a UserAndJobState.detailed_err
 $res is a UserAndJobState.Results
 job_id is a string
 service_token is a string
 job_status is a string
-boolean is an int
+detailed_err is a string
 Results is a reference to a hash where the following keys are defined:
 	shocknodes has a value which is a reference to a list where each element is a string
 	shockurl has a value which is a string
@@ -1454,12 +1454,12 @@ Results is a reference to a hash where the following keys are defined:
 $job is a UserAndJobState.job_id
 $token is a UserAndJobState.service_token
 $status is a UserAndJobState.job_status
-$error is a UserAndJobState.boolean
+$error is a UserAndJobState.detailed_err
 $res is a UserAndJobState.Results
 job_id is a string
 service_token is a string
 job_status is a string
-boolean is an int
+detailed_err is a string
 Results is a reference to a hash where the following keys are defined:
 	shocknodes has a value which is a reference to a list where each element is a string
 	shockurl has a value which is a string
@@ -1472,7 +1472,8 @@ Results is a reference to a hash where the following keys are defined:
 =item Description
 
 Complete the job. After the job is completed, total_progress always
-equals max_progress.
+equals max_progress. If detailed_err is anything other than null,
+the job is considered to have errored out.
 
 =back
 
@@ -1614,6 +1615,90 @@ sub get_results
         Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_results",
 					    status_line => $self->{client}->status_line,
 					    method_name => 'get_results',
+				       );
+    }
+}
+
+
+
+=head2 get_detailed_error
+
+  $error = $obj->get_detailed_error($job)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+$error is a UserAndJobState.detailed_err
+job_id is a string
+detailed_err is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+$error is a UserAndJobState.detailed_err
+job_id is a string
+detailed_err is a string
+
+
+=end text
+
+=item Description
+
+Get the detailed error message, if any
+
+=back
+
+=cut
+
+sub get_detailed_error
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_detailed_error (received $n, expecting 1)");
+    }
+    {
+	my($job) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_detailed_error:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_detailed_error');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.get_detailed_error",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{code},
+					       method_name => 'get_detailed_error',
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_detailed_error",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_detailed_error',
 				       );
     }
 }
@@ -2510,6 +2595,38 @@ an int
 =begin text
 
 an int
+
+=end text
+
+=back
+
+
+
+=head2 detailed_err
+
+=over 4
+
+
+
+=item Description
+
+Detailed information about a job error, such as a stacktrace, that will
+not fit in the job_status. No more than 100K characters.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a string
+</pre>
+
+=end html
+
+=begin text
+
+a string
 
 =end text
 
