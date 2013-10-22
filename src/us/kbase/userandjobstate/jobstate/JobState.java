@@ -327,7 +327,7 @@ public class JobState {
 			final Map<String, Object> results)
 			throws CommunicationException, NoSuchJobException {
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
-		checkMaxLen(status, "error", MAX_LEN_ERR);
+		checkMaxLen(error, "error", MAX_LEN_ERR);
 		final DBObject query = buildStartedJobQuery(user, jobID, service);
 		final DBObject set = new BasicDBObject(UPDATED, new Date());
 		set.put(COMPLETE, true);

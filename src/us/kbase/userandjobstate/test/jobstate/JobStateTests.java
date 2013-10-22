@@ -52,17 +52,26 @@ public class JobStateTests {
 	private static String long101;
 	private static String long201;
 	private static String long1001;
+	private static String long100001;
 	static {
-		for (int i = 0; i < 10; i++) {
+		long101 = "";
+		long201 = "";
+		long1001 = "";
+		long100001 = "";
+		for (int i = 0; i < 5; i++) {
 			long101 += "aaaaaaaaaabbbbbbbbbb";
-			long201 += long101 + long101;
-			for (int j = 0; j < 10; j++) {
-				long1001 += long201 + long201;
-			}
+		}
+		long201 = long101 + long101;
+		for (int i = 0; i < 5; i++) {
+			long1001 += long201;
+		}
+		for (int i = 0; i < 100; i++) {
+			long100001 += long1001;
 		}
 		long101 += "f";
 		long201 += "f";
 		long1001 += "f";
+		long100001 += "f";
 	}
 	
 	@Test
@@ -477,44 +486,46 @@ public class JobStateTests {
 		
 		jobid = js.createAndStartJob("comp", "service2", "stat", "desc", null);
 		
-		testCompleteJobBadArgs("comp1", jobid, "service2", "stat",
+		testCompleteJobBadArgs("comp1", jobid, "service2", "stat", null,
 				new NoSuchJobException(String.format(
 						"There is no uncompleted job %s for user comp1 started by service service2",
 						jobid)));
-		testCompleteJobBadArgs("comp", jobid, "service3", "stat",
+		testCompleteJobBadArgs("comp", jobid, "service3", "stat", null,
 				new NoSuchJobException(String.format(
 						"There is no uncompleted job %s for user comp started by service service3",
 						jobid)));
-		testCompleteJobBadArgs("comp", "a" + jobid.substring(1), "service2", "stat",
+		testCompleteJobBadArgs("comp", "a" + jobid.substring(1), "service2", "stat", null,
 				new NoSuchJobException(String.format(
 						"There is no uncompleted job %s for user comp started by service service2",
 						"a" + jobid.substring(1))));
-		testCompleteJobBadArgs(null, jobid, "service2", "started job",
+		testCompleteJobBadArgs(null, jobid, "service2", "started job", null,
 				new IllegalArgumentException("user cannot be null or the empty string"));
-		testCompleteJobBadArgs("", jobid, "service2", "started job",
+		testCompleteJobBadArgs("", jobid, "service2", "started job", null,
 				new IllegalArgumentException("user cannot be null or the empty string"));
-		testCompleteJobBadArgs(long101, jobid, "service2", "started job",
+		testCompleteJobBadArgs(long101, jobid, "service2", "started job", null,
 				new IllegalArgumentException("user exceeds the maximum length of 100"));
-		testCompleteJobBadArgs("comp",  null, "service2", "started job",
+		testCompleteJobBadArgs("comp",  null, "service2", "started job", null,
 				new IllegalArgumentException("id cannot be null or the empty string"));
-		testCompleteJobBadArgs("comp", "", "service2", "started job",
+		testCompleteJobBadArgs("comp", "", "service2", "started job", null,
 				new IllegalArgumentException("id cannot be null or the empty string"));
-		testCompleteJobBadArgs("comp", "afeaefafaefaefafeaf", "service2", "started job",
+		testCompleteJobBadArgs("comp", "afeaefafaefaefafeaf", "service2", "started job", null,
 				new IllegalArgumentException("Job ID afeaefafaefaefafeaf is not a legal ID"));
-		testCompleteJobBadArgs("comp", jobid, null, "started job",
+		testCompleteJobBadArgs("comp", jobid, null, "started job", null,
 				new IllegalArgumentException("service cannot be null or the empty string"));
-		testCompleteJobBadArgs("comp", jobid, "", "started job",
+		testCompleteJobBadArgs("comp", jobid, "", "started job", null,
 				new IllegalArgumentException("service cannot be null or the empty string"));
-		testCompleteJobBadArgs("comp", jobid, long101, "started job",
+		testCompleteJobBadArgs("comp", jobid, long101, "started job", null,
 				new IllegalArgumentException("service exceeds the maximum length of 100"));
-		testCompleteJobBadArgs("comp", jobid, "service2", long201,
+		testCompleteJobBadArgs("comp", jobid, "service2", long201, null,
 				new IllegalArgumentException("status exceeds the maximum length of 200"));
+		testCompleteJobBadArgs("comp", jobid, "service2", "started job", long100001,
+				new IllegalArgumentException("error exceeds the maximum length of 100000"));
 	}
 	
 	private void testCompleteJobBadArgs(String user, String jobid, String service,
-			String status, Exception exception) throws Exception {
+			String status, String errormsg, Exception exception) throws Exception {
 		try {
-			js.completeJob(user, jobid, service, status, null, null);
+			js.completeJob(user, jobid, service, status, errormsg, null);
 			fail("completed job with bad args");
 		} catch (Exception e) {
 			assertThat("correct exception type", e,
