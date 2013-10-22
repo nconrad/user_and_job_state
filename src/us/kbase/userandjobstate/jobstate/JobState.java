@@ -38,6 +38,7 @@ public class JobState {
 	private final static int MAX_LEN_SERVICE = 100;
 	private final static int MAX_LEN_STATUS = 200;
 	private final static int MAX_LEN_DESC = 1000;
+	private final static int MAX_LEN_ERR = 100000;
 	
 	private final static String CREATED = "created";
 	private final static String USER = "user";
@@ -47,6 +48,7 @@ public class JobState {
 	private final static String EST_COMP = "estcompl";
 	private final static String COMPLETE = "complete";
 	private final static String ERROR = "error";
+	private final static String ERROR_MSG = "errormsg";
 	private final static String DESCRIPTION = "desc";
 	private final static String PROG_TYPE = "progtype";
 	private final static String PROG = "prog";
@@ -92,7 +94,6 @@ public class JobState {
 		final DBObject opts = new BasicDBObject("expireAfterSeconds",
 				JOB_EXPIRES);
 		jobcol.ensureIndex(ttlidx, opts);
-		
 	}
 	
 	public String createJob(final String user) throws CommunicationException {
@@ -201,6 +202,7 @@ public class JobState {
 		update.put(EST_COMP, estComplete);
 		update.put(COMPLETE, false);
 		update.put(ERROR, false);
+		update.put(ERROR_MSG, null);
 		update.put(RESULT, null);
 		
 		final Integer prog;
@@ -321,14 +323,16 @@ public class JobState {
 	
 	
 	public void completeJob(final String user, final String jobID,
-			final String service, final String status, final boolean error,
+			final String service, final String status, final String error,
 			final Map<String, Object> results)
 			throws CommunicationException, NoSuchJobException {
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
+		checkMaxLen(status, "error", MAX_LEN_ERR);
 		final DBObject query = buildStartedJobQuery(user, jobID, service);
 		final DBObject set = new BasicDBObject(UPDATED, new Date());
 		set.put(COMPLETE, true);
-		set.put(ERROR, error);
+		set.put(ERROR, error != null);
+		set.put(ERROR_MSG, error);
 		set.put(STATUS, status);
 		//if anyone is stupid enough to store 16mb of results will need to
 		//check size first, or at least catch error and report.

@@ -27,6 +27,7 @@ public class FakeJob {
 	private final String status;
 	private final Boolean complete;
 	private final Boolean error;
+	private final String errormsg;
 	private final Map<String, Object> results;
 	
 	public FakeJob(final Job j) {
@@ -43,6 +44,7 @@ public class FakeJob {
 		assertThat("updated is date", j.getLastUpdated(), is(Date.class));
 		complete = j.isComplete();
 		error = j.hasError();
+		errormsg = j.getErrorMsg();
 		results = j.getResults();
 	}
 
@@ -50,7 +52,7 @@ public class FakeJob {
 			final String stage, final Date estComplete, final String desc,
 			final String progtype, final Integer prog, final Integer maxprog,
 			final String status, final Boolean complete, final Boolean error,
-			final Map<String, Object> results) {
+			final String errormsg, final Map<String, Object> results) {
 		this.id = id;
 		this.user = user;
 		this.service = service;
@@ -63,6 +65,7 @@ public class FakeJob {
 		this.status = status;
 		this.complete = complete;
 		this.error = error;
+		this.errormsg = errormsg;
 		this.results = results;
 	}
 	
@@ -85,6 +88,7 @@ public class FakeJob {
 		this.complete = ji.getE11() != 0;
 		this.error = ji.getE12() != 0;
 		this.desc = ji.getE13();
+		this.errormsg = null;
 		if (ji.getE14() == null) {
 			this.results = null;
 		} else {
@@ -116,7 +120,8 @@ public class FakeJob {
 				+ ", stage=" + stage + ", estcompl=" + estcompl + ", desc="
 				+ desc + ", progtype=" + progtype + ", prog=" + prog
 				+ ", maxprog=" + maxprog + ", status=" + status + ", complete="
-				+ complete + ", error=" + error + ", results=" + results + "]";
+				+ complete + ", error=" + error + ", errormsg=" + errormsg
+				+ ", results=" + results + "]";
 	}
 
 	@Override
@@ -126,6 +131,7 @@ public class FakeJob {
 		result = prime * result
 				+ ((complete == null) ? 0 : complete.hashCode());
 		result = prime * result + ((desc == null) ? 0 : desc.hashCode());
+		result = prime * result + ((errormsg == null) ? 0 : errormsg.hashCode());
 		result = prime * result + ((error == null) ? 0 : error.hashCode());
 		result = prime * result
 				+ ((estcompl == null) ? 0 : estcompl.hashCode());
@@ -166,6 +172,13 @@ public class FakeJob {
 				return false;
 			}
 		} else if (!desc.equals(other.desc)) {
+			return false;
+		}
+		if (errormsg == null) {
+			if (other.errormsg != null) {
+				return false;
+			}
+		} else if (!errormsg.equals(other.errormsg)) {
 			return false;
 		}
 		if (error == null) {

@@ -22,6 +22,7 @@ public class Job {
 	private Date estcompl;
 	private Boolean complete;
 	private Boolean error;
+	private String errormsg;
 	private Map<String, Object> results;
 	
 	private static final String CREATED = "created";
@@ -104,6 +105,10 @@ public class Job {
 	public Boolean hasError() {
 		return error;
 	}
+	
+	public String getErrorMsg() {
+		return errormsg;
+	}
 
 	public Map<String, Object> getResults() {
 		return results;
@@ -117,7 +122,8 @@ public class Job {
 				", maxprog=" + getMaxProgress() + ", status=" + getStatus() +
 				", started=" + started + ", estcompl=" + estcompl +
 				", updated=" + updated + ", complete=" + complete +
-				", error=" + error + ", results=" + results + "]";
+				", error=" + error + ", errormsg=" + errormsg +
+				", results=" + results + "]";
 	}
 
 }

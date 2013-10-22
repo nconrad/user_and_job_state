@@ -650,8 +650,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void completeJob(String job, String token, String status, String error, Results res, AuthToken authPart) throws Exception {
         //BEGIN complete_job
 		js.completeJob(authPart.getUserName(), job, getServiceName(token),
-				status, error == null ? false : error != 0,
-				unmakeResults(res));
+				status, error, unmakeResults(res));
         //END complete_job
     }
 
@@ -685,6 +684,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public String getDetailedError(String job, AuthToken authPart) throws Exception {
         String returnVal = null;
         //BEGIN get_detailed_error
+		returnVal =  js.getJob(authPart.getUserName(), job).getErrorMsg();
         //END get_detailed_error
         return returnVal;
     }
