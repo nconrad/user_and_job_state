@@ -722,6 +722,21 @@ public class JobStateTests {
 				js.listJobs(lj, Arrays.asList("serv1"), false, true, true));
 		checkListJobs(Arrays.asList(started, error),
 				js.listJobs(lj, Arrays.asList("serv1"), true, false, true));
+		
+		//check on jobs from multiple services
+		jobid = js.createAndStartJob(lj, "serv2", "mst", "mdsc", 42, MAX_DATE);
+		FakeJob multi = new FakeJob(jobid, lj, "serv2", "started",
+				MAX_DATE, "mdsc", "task", 0, 42, "mst", false, false, null, null);
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, new ArrayList<String>(), true, true, true));
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, null, true, true, true));
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, Arrays.asList("serv1", "serv2"), true, true, true));
+		checkListJobs(Arrays.asList(started, complete),
+				js.listJobs(lj, Arrays.asList("serv1"), true, true, false));
+		checkListJobs(Arrays.asList(multi),
+				js.listJobs(lj, Arrays.asList("serv2"), true, true, true));
 	}
 	
 	private void checkListJobs(List<FakeJob> expected, List<Job> result)

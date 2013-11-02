@@ -431,13 +431,15 @@ public class JobState {
 			final boolean error)
 			throws CommunicationException {
 		checkString(user, "user");
-		for (final String s: services) {
-			checkString(s, "service", MAX_LEN_SERVICE);
-		}
 		String query = String.format("{%s: '%s'", USER, user);
 		if (services != null && !services.isEmpty()) {
+			for (final String s: services) {
+				checkString(s, "service", MAX_LEN_SERVICE);
+			}
 			query += String.format(", %s: {$in: ['%s']}", SERVICE,
 					StringUtils.join(services, "', '"));
+		} else {
+			query += String.format(", %s: {$ne: null}", SERVICE);
 		}
 		//this seems dumb.
 		if (running && !complete && !error) {
