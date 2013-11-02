@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.bson.types.ObjectId;
 import org.jongo.Jongo;
 import org.jongo.MongoCollection;
@@ -425,14 +426,19 @@ public class JobState {
 		return services;
 	}
 	
-	public List<Job> listJobs(final String user, final String service,
+	public List<Job> listJobs(final String user, final List<String> services,
 			final boolean running, final boolean complete,
 			final boolean error)
 			throws CommunicationException {
 		checkString(user, "user");
-		checkString(service, "service", MAX_LEN_SERVICE);
-		String query = String.format("{%s: '%s', %s: '%s'", USER, user,
-				SERVICE, service); 
+		for (final String s: services) {
+			checkString(s, "service", MAX_LEN_SERVICE);
+		}
+		String query = String.format("{%s: '%s'", USER, user);
+		if (services != null && !services.isEmpty()) {
+			query += String.format(", %s: {$in: ['%s']}", SERVICE,
+					StringUtils.join(services, "', '"));
+		}
 		//this seems dumb.
 		if (running && !complete && !error) {
 			query += ", " + COMPLETE + ": false}";

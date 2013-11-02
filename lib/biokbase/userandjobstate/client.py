@@ -782,10 +782,10 @@ class UserAndJobState(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def list_jobs(self, service, filter):
+    def list_jobs(self, services, filter):
 
         arg_hash = {'method': 'UserAndJobState.list_jobs',
-                    'params': [service, filter],
+                    'params': [services, filter],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }

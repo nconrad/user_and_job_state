@@ -966,7 +966,7 @@ public class JSONRPCLayerTest {
 		Set<FakeJob> got = new HashSet<FakeJob>();
 		for (Tuple14<String, String, String, String, String, String, Long,
 				Long, String, String, Long, Long, String, Results> ji: 
-					CLIENT2.listJobs(service, filter)) {
+					CLIENT2.listJobs(Arrays.asList(service), filter)) {
 			got.add(new FakeJob(ji));
 		}
 		assertThat("got the correct jobs", got, is(expected));
@@ -975,7 +975,7 @@ public class JSONRPCLayerTest {
 	public void testListJobsWithBadArgs(String service, String exception)
 			throws Exception{
 		try {
-			CLIENT2.listJobs(service, "RCE");
+			CLIENT2.listJobs(Arrays.asList(service), "RCE");
 			fail("list jobs worked w/ bad service");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),

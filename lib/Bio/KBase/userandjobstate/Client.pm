@@ -1847,7 +1847,7 @@ sub get_job_info
 
 =head2 list_jobs
 
-  $jobs = $obj->list_jobs($service, $filter)
+  $jobs = $obj->list_jobs($services, $filter)
 
 =over 4
 
@@ -1856,7 +1856,7 @@ sub get_job_info
 =begin html
 
 <pre>
-$service is a UserAndJobState.service_name
+$services is a reference to a list where each element is a UserAndJobState.service_name
 $filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
@@ -1897,7 +1897,7 @@ Results is a reference to a hash where the following keys are defined:
 
 =begin text
 
-$service is a UserAndJobState.service_name
+$services is a reference to a list where each element is a UserAndJobState.service_name
 $filter is a UserAndJobState.job_filter
 $jobs is a reference to a list where each element is a UserAndJobState.job_info
 service_name is a string
@@ -1937,7 +1937,8 @@ Results is a reference to a hash where the following keys are defined:
 
 =item Description
 
-List jobs.
+List jobs. Leave 'services' blank or null to list jobs from all
+services.
 
 =back
 
@@ -1955,10 +1956,10 @@ sub list_jobs
 							       "Invalid argument count for function list_jobs (received $n, expecting 2)");
     }
     {
-	my($service, $filter) = @args;
+	my($services, $filter) = @args;
 
 	my @_bad_arguments;
-        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        (ref($services) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 1 \"services\" (value was \"$services\")");
         (!ref($filter)) or push(@_bad_arguments, "Invalid type for argument 2 \"filter\" (value was \"$filter\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to list_jobs:\n" . join("", map { "\t$_\n" } @_bad_arguments);

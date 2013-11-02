@@ -241,8 +241,10 @@ module UserAndJobState {
 	*/
 	typedef string job_filter;
 	
-	/* List jobs. */
-	funcdef list_jobs(service_name service, job_filter filter)
+	/* List jobs. Leave 'services' empty or null to list jobs from all
+		services.
+	*/
+	funcdef list_jobs(list<service_name> services, job_filter filter)
 		returns(list<job_info> jobs);
 	
 	/* List all job services. */
