@@ -4,7 +4,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         options: {
             auth: null,
             loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
-            userJobStateURL: "http://140.221.85.151:7083",
+            userJobStateURL: "http://140.221.84.180:7083",
         },
 
         init: function(options) {
