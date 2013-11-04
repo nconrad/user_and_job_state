@@ -677,16 +677,16 @@ public class JobStateTests {
 	public void listJobs() throws Exception {
 		String lj = "listjobs";
 		List<FakeJob> empty = new ArrayList<FakeJob>();
-		checkListJobs(empty, js.listJobs(lj, "serv1", true, true, true));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
 		String jobid = js.createJob(lj);
-		checkListJobs(empty, js.listJobs(lj, "serv1", true, true, true));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
 		
 		jobid = js.createAndStartJob(lj, "serv1", "lst", "ldsc", 42, MAX_DATE);
 		FakeJob started = new FakeJob(jobid, lj, "serv1", "started",
 				MAX_DATE,"ldsc", "task", 0, 42, "lst", false, false, null, null);
-		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", true, true, true));
-		checkListJobs(empty, js.listJobs(lj, "serv2", true, true, true));
-		checkListJobs(Arrays.asList(started), js.listJobs(lj, "serv1", false, false, false));
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv2"), true, true, true));
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), false, false, false));
 		
 		jobid = js.createAndStartJob(lj, "serv1", "comp-st", "comp-dsc",
 				MAX_DATE);
@@ -704,24 +704,39 @@ public class JobStateTests {
 		
 		//all 3
 		List<FakeJob> all = Arrays.asList(started, complete, error);
-		checkListJobs(all, js.listJobs(lj, "serv1", true, true, true));
-		checkListJobs(all, js.listJobs(lj, "serv1", false, false, false));
+		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
+		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), false, false, false));
 		
 		//1 of 3
 		checkListJobs(Arrays.asList(started),
-				js.listJobs(lj, "serv1", true, false, false));
+				js.listJobs(lj, Arrays.asList("serv1"), true, false, false));
 		checkListJobs(Arrays.asList(complete),
-				js.listJobs(lj, "serv1", false, true, false));
+				js.listJobs(lj, Arrays.asList("serv1"), false, true, false));
 		checkListJobs(Arrays.asList(error),
-				js.listJobs(lj, "serv1", false, false, true));
+				js.listJobs(lj, Arrays.asList("serv1"), false, false, true));
 		
 		//2 of 3
 		checkListJobs(Arrays.asList(started, complete),
-				js.listJobs(lj, "serv1", true, true, false));
+				js.listJobs(lj, Arrays.asList("serv1"), true, true, false));
 		checkListJobs(Arrays.asList(complete, error),
-				js.listJobs(lj, "serv1", false, true, true));
+				js.listJobs(lj, Arrays.asList("serv1"), false, true, true));
 		checkListJobs(Arrays.asList(started, error),
-				js.listJobs(lj, "serv1", true, false, true));
+				js.listJobs(lj, Arrays.asList("serv1"), true, false, true));
+		
+		//check on jobs from multiple services
+		jobid = js.createAndStartJob(lj, "serv2", "mst", "mdsc", 42, MAX_DATE);
+		FakeJob multi = new FakeJob(jobid, lj, "serv2", "started",
+				MAX_DATE, "mdsc", "task", 0, 42, "mst", false, false, null, null);
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, new ArrayList<String>(), true, true, true));
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, null, true, true, true));
+		checkListJobs(Arrays.asList(started, complete, error, multi),
+				js.listJobs(lj, Arrays.asList("serv1", "serv2"), true, true, true));
+		checkListJobs(Arrays.asList(started, complete),
+				js.listJobs(lj, Arrays.asList("serv1"), true, true, false));
+		checkListJobs(Arrays.asList(multi),
+				js.listJobs(lj, Arrays.asList("serv2"), true, true, true));
 	}
 	
 	private void checkListJobs(List<FakeJob> expected, List<Job> result)

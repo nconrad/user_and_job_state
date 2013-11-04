@@ -106,7 +106,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                     var allJobsList = [];
 
                     $.each(services, function(index, name) {
-                        getServiceJobs.push(self.userJobStateClient.list_jobs(name, '', 
+                        getServiceJobs.push(self.userJobStateClient.list_jobs([name], '', 
                             function(jobs) {
                                 allJobsList = allJobsList.concat(jobs);
                             },
