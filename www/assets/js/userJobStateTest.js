@@ -3,7 +3,7 @@ require(['jquery', 'kbaseUserJobState', 'kbaseLogin', 'jquery.cookie'], function
 
         $(document).on('loggedOut.kbase', function(event, token) {
             console.debug("logged out")
-            $('#job-state-container').kbaseUserJobState('refresh');
+//            $('#job-state-container').kbaseUserJobState('refresh');
         });
 
         // Function that sets a cookie compatible with the current narrative
