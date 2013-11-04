@@ -14,6 +14,7 @@ requirejs.config({
 		'jquery.dataTables': '../external/dataTables/1.9.4/js/jquery.dataTables',
 	},
 	shim: {
+		'bootstrap': ['jquery'],
 		'kbwidget': ['jquery'],
 		'header': ['jquery'],
 		'kbasePrompt': ['jquery', 'kbwidget', 'bootstrap'],
