@@ -192,6 +192,16 @@ public class JsonServerServlet extends HttpServlet {
 		return userLogger.getLogLevel() >= LOG_LEVEL_DEBUG;
 	}
 	
+	@Override
+	protected void doOptions(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		setupResponseHeaders(request, response);
+		response.setContentLength(0);
+		response.getOutputStream().print("");
+		response.getOutputStream().flush();
+	}
+	
+	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		JsonServerSyslog.RpcInfo info = JsonServerSyslog.getCurrentRpcInfo().reset();
 		info.setIp(request.getRemoteAddr());
@@ -205,10 +215,18 @@ public class JsonServerServlet extends HttpServlet {
 		writeError(response, -32300, "HTTP GET not allowed.", output);
 	}
 
+	private void setupResponseHeaders(HttpServletRequest request, HttpServletResponse response) {
+		response.setHeader("Access-Control-Allow-Origin", "*");
+		String allowedHeaders = request.getHeader("HTTP_ACCESS_CONTROL_REQUEST_HEADERS");
+		response.setHeader("Access-Control-Allow-Headers", allowedHeaders == null ? "authorization" : allowedHeaders);
+		response.setContentType(APP_JSON);
+	}
+	
+	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		JsonServerSyslog.RpcInfo info = JsonServerSyslog.getCurrentRpcInfo().reset();
 		info.setIp(request.getRemoteAddr());
-		response.setContentType(APP_JSON);
+		setupResponseHeaders(request, response);
 		OutputStream output	= response.getOutputStream();
 		String rpcName = null;
 		AuthToken userProfile = null;
@@ -227,6 +245,7 @@ public class JsonServerServlet extends HttpServlet {
 			} catch (Exception ex) {}
 			JsonNode methodNode = node.get("method");
 			ArrayNode paramsNode = (ArrayNode)node.get("params");
+			node = null;
 			rpcName = (methodNode!=null && !methodNode.isNull()) ? methodNode.asText() : null;
 			if (rpcName.contains(".")) {
 				int pos = rpcName.indexOf('.');
@@ -264,8 +283,8 @@ public class JsonServerServlet extends HttpServlet {
 				writeError(response, -32602, "Wrong parameter count for method " + rpcName, output);
 				return;
 			}
-			for (int typePos = 0; typePos < paramsNode.size(); typePos++) {
-				JsonNode jsonData = paramsNode.get(typePos);
+			for (int typePos = 0; paramsNode.size() > 0; typePos++) {
+				JsonNode jsonData = paramsNode.remove(0);
 				Type paramType = rpcMethod.getGenericParameterTypes()[typePos];
 				PlainTypeRef paramJavaType = new PlainTypeRef(paramType);
 				try {
@@ -275,6 +294,7 @@ public class JsonServerServlet extends HttpServlet {
 					return;
 				}
 			}
+			paramsNode = null;
 			if (userProfile != null && methodValues[methodValues.length - 1] == null)
 				methodValues[methodValues.length - 1] = userProfile;
 			Object result;

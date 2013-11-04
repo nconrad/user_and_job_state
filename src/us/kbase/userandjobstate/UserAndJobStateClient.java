@@ -97,6 +97,10 @@ public class UserAndJobStateClient {
         caller = new JsonClientCaller(DEFAULT_URL, user, password);
     }
 
+	public void setConnectionReadTimeOut(Integer milliseconds) {
+		this.caller.setConnectionReadTimeOut(milliseconds);
+	}
+
     public boolean isAuthAllowedForHttp() {
         return caller.isAuthAllowedForHttp();
     }
@@ -474,7 +478,7 @@ public class UserAndJobStateClient {
     /**
      * <p>Original spec-file function name: list_jobs</p>
      * <pre>
-     * List jobs. Leave 'services' blank or null to list jobs from all
+     * List jobs. Leave 'services' empty or null to list jobs from all
      * services.
      * </pre>
      * @param   services   instance of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)

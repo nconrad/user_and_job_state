@@ -1937,7 +1937,7 @@ Results is a reference to a hash where the following keys are defined:
 
 =item Description
 
-List jobs. Leave 'services' blank or null to list jobs from all
+List jobs. Leave 'services' empty or null to list jobs from all
 services.
 
 =back

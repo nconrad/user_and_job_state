@@ -709,7 +709,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: list_jobs</p>
      * <pre>
-     * List jobs. Leave 'services' blank or null to list jobs from all
+     * List jobs. Leave 'services' empty or null to list jobs from all
      * services.
      * </pre>
      * @param   services   instance of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
