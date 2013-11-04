@@ -4,7 +4,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         options: {
             auth: null,
             loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
-            userJobStateURL: "http://140.221.85.151:7083",
+            userJobStateURL: "http://140.221.84.180:7083",
         },
 
         init: function(options) {
@@ -106,7 +106,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                     var allJobsList = [];
 
                     $.each(services, function(index, name) {
-                        getServiceJobs.push(self.userJobStateClient.list_jobs(name, '', 
+                        getServiceJobs.push(self.userJobStateClient.list_jobs([name], '', 
                             function(jobs) {
                                 allJobsList = allJobsList.concat(jobs);
                             },
