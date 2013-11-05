@@ -119,8 +119,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * as retrieved by the login widget, not just the token string.
          */
         setAuth: function(token) {
-            console.log("setting token");
-            console.log(token);
             if (token)
                 this.options.auth = token;
             else {
@@ -148,7 +146,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             }
 
             else {
-                this.$loadingImage.css({ "display": "" });
+                this.$loadingImage.css({ "display" : "" });
                 this.userJobStateClient = new UserAndJobState(this.options.userJobStateURL, this.options.auth);
                 var self = this;
 
@@ -170,18 +168,18 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
                         $.when.apply($, getServiceJobs).done(function() {
                             var jobTableRows = [];
+
                             for (var i=0; i<allJobsList.length; i++) {
                                 var job = allJobsList[i];
                                 jobTableRows.push([
                                     "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
                                     job[1],                         // service name
-                                    job[2],                         // stage
-                                    job[4],                         // status
                                     job[12],                        // description
-                                    self.parseTimeStamp(job[3]),    // started
-                                    (job[11] === 1) ? "error" : ((job[10] === 1) ? "complete" : self.calcTimeRemaining(self.parseTimeStamp(job[9]))),     // est complete
+                                    self.makePrettyTimestamp(job[3]),        // started
+                                    self.makeStatusElement(job),
                                 ]);
                             }
+
                             if (jobTableRows.length > 0) {
                                 self.$jobTable = $("<table id='kbujs-jobs-table'>")
                                                  .addClass("table table-striped table-bordered");
@@ -191,16 +189,14 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                     "iDisplayLength": 20,
                                     "aaData" : jobTableRows,
                                     "aoColumns" : [
-                                        { "sTitle" : "&nbsp;" },
+                                        { "sTitle" : "&nbsp;", "bSortable" : false },
                                         { "sTitle" : "Service" },
-                                        { "sTitle" : "Stage" },
-                                        { "sTitle" : "Status" },
                                         { "sTitle" : "Description" },
                                         { "sTitle" : "Started" },
-                                        { "sTitle" : "Time Remaining" },
+                                        { "sTitle" : "Status" },
                                     ],
                                     "sPaginationType" : "full_numbers",
-                                    "aaSorting" : [[0, "asc"]],
+                                    "aaSorting" : [[1, "asc"]],
                                     "aoColumnDefs" : [
                                     ]
                                 });
@@ -212,6 +208,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 );
 
                                 self.$tableContainer.append(self.$jobTable);
+                                $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
                             }
                             else {
                                 self.$noJobsDiv.css({ "display" : "" });
@@ -224,6 +221,97 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 );
             }
         },
+
+        /**
+         * @method makePrettyTimestamp
+         * Makes a div containing the 'started time' in units of time ago, with a Bootstrap 3 tooltip
+         * that gives the exact time.
+         *
+         * Note that this tooltip needs to be activated with the $().tooltip() method before it'll function.
+         *
+         * @param timestamp the timestamp to calculate this div around. Should be in a Date.parse() parseable format.
+         * @param suffix an optional suffix for the time element. e.g. "ago" or "from now".
+         * @return a div element with the timestamp calculated to be in terms of how long ago, with a tooltip containing the exact time.
+         * @private
+         */
+        makePrettyTimestamp: function(timestamp, suffix) {
+            var parsedTime = this.parseTimeStamp(timestamp);
+            var timediff = this.calcTimeDifference(timestamp);
+            if (suffix)
+                timediff += " " + suffix;
+
+            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "'>" + timediff + "</div>";
+            return timeHtml;
+        },
+
+        /**
+         * @method makeStatusElement
+         * Builds the HTML for a Status element based on the given job object.
+         * Cases:
+         * 1. Job complete - return 'complete + status message'
+         * 2. Error - return 'error' as a clickable link - opens a modal with the error message.
+         * 3. not complete OR error = in progress.
+         *    Show 3 rows. First = status + progress text ('x / y' or 'z%'). Second = progress bar. Bottom = time remaining div.
+         *
+         * This is all returned wrapped in a div element.
+         * @param job - the job to build a status element around.
+         * @return a div element containing the job's status.
+         */
+        makeStatusElement: function(job) {
+            var status = "<div>";
+            if (job[11] === 1)
+                status += "Error";
+            else if (job[10] === 1)
+                status += "Complete: " + job[4];
+            else {
+                status += "<div>" + job[4];
+                var progressType = job[8].toLowerCase();
+                var progress = job[6];
+                var max = job[7];
+
+                if (progressType === "percent") {
+                    status += " (" + progress + "%)</div>";
+                }
+                if (progressType === "task") {
+                    status += " (" + progress + " / " + max + ")</div>";
+                }
+                if (progressType !== "none") {
+                    status += "</div>" + this.makeProgressBarElement(job);
+                }
+
+                if (job[9] != null) {
+                    status += this.makePrettyTimestamp(job[9], " remaining");
+                }
+            }
+            return status + "</div>";
+        },
+
+        makeProgressBarElement: function(job) {
+            var type = job[8].toLowerCase();
+            var max = job[7];
+            var progress = job[6];
+
+            if (type === "percent") {
+                return "<div class='progress' style='margin-bottom: 0;'>" + 
+                           "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
+                               progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
+                               progress + "%;'>" +
+                               "<span class='sr-only'>" + progress + "% Complete" + "</span>" +
+                           "</div>" +
+                       "</div>";
+            }
+            else {
+                return "<div class='progress' style='margin-bottom: 0;'>" + 
+                           "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
+                           progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
+                           (progress / max * 100) + "%;'>" +
+                               "<span class='sr-only'>" + progress + " / " + max + "</span>" +
+                           "</div>" +
+                       "</div>";
+            }
+            return "<div></div>";
+        },
+
 
         /**
          * Shows the details of the job with the given ID in the modal dialog.
@@ -246,32 +334,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 function(job) {
 
                     // Makes and returns a Bootstrap progress bar based on job information.
-                    var makeProgress = function(job) {
-                        var type = job[8].toLowerCase();
-                        var max = job[7];
-                        var progress = job[6];
-                        if (type === "percent") {
-                            return progress + "%" +
-                                   "<div class='progress' style='margin-bottom: 0;'>" + 
-                                       "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
-                                       progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
-                                       progress + "%;'>" +
-                                           "<span class='sr-only'>" + progress + "% Complete" + "</span>" +
-                                       "</div>" +
-                                   "</div>";
-                        }
-                        else {
-                            return progress + " / " + max +
-                                   "<div class='progress' style='margin-bottom: 0;'>" + 
-                                       "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
-                                       progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
-                                       (progress / max * 100) + "%;'>" +
-                                           "<span class='sr-only'>" + progress + " / " + max + "</span>" +
-                                       "</div>" +
-                                   "</div>";
-                        }
-                        return null;
-                    };
 
                     // Parses the results section of the job into something linkable.
                     var parseResults = function(results) {
@@ -289,14 +351,15 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                      .append(tableRow(["Description", job[12]]))
                                      .append(tableRow(["Stage", job[2]]))
                                      .append(tableRow(["Status", job[4]]))
-                                     .append(tableRow(["Started", self.parseTimeStamp(job[3])]));
+                                     .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + " ago)"]));
 
-                    var progress = makeProgress(job);
+                    var progress = self.makeProgressBarElement(job);
                     if (progress)
                         $infoTable.append(tableRow(["Progress", progress]));
 
-                    $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5])]))
-                              .append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (~" + self.calcTimeRemaining(job[9]) + ")"]));
+                    $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + " ago)" ]));
+                    if (job[11] !== 1 && job[10] !== 1)
+                        $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
                                      // .append(tableRow(["Progress", job[6]]))
                                      // .append(tableRow(["Max Progress", job[7]]))
                                      // .append(tableRow(["Progress Type", job[8]]))
@@ -362,23 +425,24 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 return value;
             };
 
-            return d.getUTCFullYear() + "-" + 
-                   addLeadingZeroes(d.getUTCMonth()) + "-" + 
-                   addLeadingZeroes(d.getUTCDate()) + " " + 
-                   addLeadingZeroes(d.getUTCHours()) + ":" + 
-                   addLeadingZeroes(d.getUTCMinutes()) + ":" + 
-                   addLeadingZeroes(d.getUTCSeconds());
+            return d.getFullYear() + "-" + 
+                   addLeadingZeroes((d.getMonth() + 1)) + "-" + 
+                   addLeadingZeroes(d.getDate()) + " " + 
+                   addLeadingZeroes(d.getHours()) + ":" + 
+                   addLeadingZeroes(d.getMinutes()) + ":" + 
+                   addLeadingZeroes(d.getSeconds());
         },
 
         /**
-         * @method calcTimeRemaining
+         * @method calcTimeDifference
          * From two timestamps (i.e. Date.parse() parseable), calculate the
          * time difference and return it as a human readable string.
          *
          * @param {string} finish - the (estimated) finish timestamp
          * @return a string representing the time difference between the two parameter strings
          */
-        calcTimeRemaining: function(finish) {
+        calcTimeDifference: function(finish) {
+
             // start with seconds
             var timeRem = (Math.abs(new Date(finish) - new Date()) / 1000 );
             var unit = " sec";
@@ -403,17 +467,23 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
             // now we're in days. if > 364.25, go to years)
             if (timeRem >= 364.25) {
-                timeRem /= 264.25;
+                timeRem /= 364.25;
                 unit = " yrs";
+
+                // now we're in years. just for fun, if we're over a century, do that too.
+                if (timeRem >= 100) {
+                    timeRem /= 100;
+                    unit = " centuries";
+                }
+    
+                // ok, fine, i'll do millennia, too.
+                if (timeRem >= 10) {
+                    timeRem /= 10;
+                    unit = " millennia";
+                }
             }
 
-            // now we're in years. just for fun, if we're over a century, do that too.
-            if (timeRem >= 100) {
-                timeRem /= 100;
-                unit = " centuries";
-            }
-
-            return "~" + timeRem.toFixed(2) + unit;
+            return "~" + timeRem.toFixed(1) + unit;
         },
 
         /**
