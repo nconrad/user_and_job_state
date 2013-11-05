@@ -267,8 +267,11 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             var status;
             if (job[11] === 1)
                 status = "<div class='kbujs-error-cell'>" + 
-                            "<span class='glyphicon glyphicon-exclamation-sign kbujs-error' error-job-id='" + job[0] + "'></span>" +
-                            " Error" +
+                            "<span class='kbujs-error' error-job-id='" + job[0] + "'>" +
+                                "<span class='glyphicon glyphicon-exclamation-sign'></span>" +
+                                "&nbsp;Error: " +
+                                job[4] +
+                            "</span>" +
                          "</div>";
             else if (job[10] === 1)
                 status = "<div>Complete: " + job[4] + "</div>";
@@ -357,7 +360,10 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             var parseStage = function(stage) {
                 if (stage.toLowerCase() === "error") {
                     var $btn = $("<span/>")
-                               .addClass("glyphicon glyphicon-exclamation-sign kbujs-error")
+                               .addClass("kbujs-error")
+                               .append($("<span/>")
+                                       .addClass("glyphicon glyphicon-exclamation-sign"))
+                               .append(" Error")
                                .click(function(event) { 
                                     self.$modal.off('hidden.bs.modal');
                                     self.$modal.on('hidden.bs.modal', function(event) {
@@ -368,8 +374,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
                     return $("<div>")
                            .addClass("kbujs-error-cell")
-                           .append($btn)
-                           .append(" Error");
+                           .append($btn);
                 }
                 return stage;
             };
