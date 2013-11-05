@@ -493,20 +493,34 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             self.$modal.find(".modal-dialog .modal-content .modal-body")
                        .html("<div class='kbujs-loading-modal'><img src='" + self.options.errorLoadingImage + "'/><br/>Loading...</div>");
             self.$modal.modal("show");
-            self.userJobStateClient.get_detailed_error(jobId,
-                function(error) {
-                    var $detailedError = $("<div>");
-                    if (error && error.length > 0)
-                        $detailedError.append($("<pre>").append(error));
-                    else
-                        $detailedError.append("No error information found.");
 
-                    self.$modal.find(".modal-dialog .modal-content .modal-body").empty();
-                    self.$modal.find(".modal-dialog .modal-content .modal-body").append($detailedError);
-                },
+            self.userJobStateClient.get_job_info(jobId,
+                function(job) {
+                    var $table = $("<table>")
+                                 .addClass("table table-striped table-bordered")
+                                 .append("<tr><td>Job ID</td><td>" + job[0] + "</td></tr>")
+                                 .append("<tr><td>Service</td><td>" + job[1] + "</td></tr>")
+                                 .append("<tr><td>Description</td><td>" + job[12] + "</td></tr>")
+                                 .append("<tr><td>Status</td><td>" + job[4] + "</td></tr>");
 
-                self.clientError
-            );
+                    self.userJobStateClient.get_detailed_error(jobId,
+                        function(error) {
+                            var $detailedError = $("<div>").append("<h3>Error Details</h3>");
+                            if (error && error.length > 0)
+                                $detailedError.append($("<pre>").append(error));
+                            else
+                                $detailedError.append("No error information found.");
+
+                            self.$modal.find(".modal-dialog .modal-content .modal-body").empty();
+                            self.$modal.find(".modal-dialog .modal-content .modal-body")
+                                       .append($table)
+                                       .append($detailedError);
+                        },
+
+                        self.clientError
+                    );
+
+                })
         },
 
 
