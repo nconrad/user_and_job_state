@@ -13,6 +13,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
      * shockURL - base URL for shock (not including nodes)
      * workspaceURL - baseURL for the workspace browser
      * refreshTime - how often to refresh the statuses (in milliseconds)
+     * detailRefreshTime - how often to refresh the job details popup (in milliseconds)
      * 
      * @exports kbaseUserJobState
      * @version 0.1
@@ -27,7 +28,8 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             userJobStateURL: "http://140.221.84.180:7083",
             shockURL: "http://kbase.us/services/shock/",
             workspaceURL: "http://kbase.us/services/workspace/",
-            refreshTime: 60000
+            refreshTime: 60000,
+            detailRefreshTime: 3000,
         },
 
         /**
@@ -93,6 +95,14 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                           .append($("<div>")
                                                   .addClass("modal-footer")
                                                   .append("<button type='button' class='btn btn-default btn-primary' data-dismiss='modal'>Close</button>"))));
+            
+            var self = this;
+            this.$modal.on('hide.bs.modal', function() {
+                if (self.modalRefreshInterval)
+                    clearInterval(self.modalRefreshInterval);
+                }
+            );
+
 
             // Build the container that will contain the main table and modal.
             // Uses both Bootstrap 3 and kbase_stylesheet.css classes
@@ -184,22 +194,26 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                             self.$jobTable = $("<table id='kbujs-jobs-table'>")
                                              .addClass("table table-striped table-bordered");
 
-                            self.$jobTable =self.$jobTable.dataTable({
+                            self.$tableContainer.append(self.$jobTable);
+
+                            self.$jobTable = self.$jobTable.dataTable({
                                 "bLengthChange" : false,
                                 "iDisplayLength": 20,
                                 "aaData" : jobTableRows,
                                 "aoColumns" : [
-                                    { "sTitle" : "&nbsp;", "bSortable" : false },
-                                    { "sTitle" : "Service" },
-                                    { "sTitle" : "Description" },
-                                    { "sTitle" : "Started" },
-                                    { "sTitle" : "Status" },
+                                    { "sTitle" : "&nbsp;", "bSortable" : false, "bSearchable" : false },
+                                    { "sTitle" : "Service", "bSearchable" : true },
+                                    { "sTitle" : "Description", "bSearchable" : true },
+                                    { "sTitle" : "Started", "bSearchable" : true },
+                                    { "sTitle" : "Status", "bSearchable" : true },
                                 ],
                                 "sPaginationType" : "full_numbers",
                                 "aaSorting" : [[1, "asc"]],
                                 "aoColumnDefs" : [
                                 ]
                             });
+
+                            self.$jobTable; 
 
                             self.$jobTable.on("click", "button[job-id]",
                                 function(event) { 
@@ -213,7 +227,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 }
                             );
 
-                            self.$tableContainer.append(self.$jobTable);
                             $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
                         }
                         else {
@@ -242,8 +255,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         makePrettyTimestamp: function(timestamp, suffix) {
             var parsedTime = this.parseTimeStamp(timestamp);
             var timediff = this.calcTimeDifference(timestamp);
-            if (suffix)
-                timediff += " " + suffix;
 
             var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' class='kbujs-timestamp'>" + timediff + "</div>";
             return timeHtml;
@@ -364,7 +375,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                .append($("<span/>")
                                        .addClass("glyphicon glyphicon-exclamation-sign"))
                                .append(" Error")
-                               .click(function(event) { 
+                               .click(function(event) {
                                     self.$modal.off('hidden.bs.modal');
                                     self.$modal.on('hidden.bs.modal', function(event) {
                                         self.showErrorDetails(jobId);
@@ -379,94 +390,98 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 return stage;
             };
 
+            var refresh = function() {
+                self.userJobStateClient.get_job_info(jobId, 
+                    function(job) {
 
-            self.userJobStateClient.get_job_info(jobId, 
-                function(job) {
-                    self.$modal.modal("hide");
+                        var $infoTable = $("<table>")
+                                         .addClass("table table-striped table-bordered")
+                                         .append(tableRow(["Job ID", job[0]]))
+                                         .append(tableRow(["Service", job[1]]))
+                                         .append(tableRow(["Description", job[12]]))
+                                         .append(tableRow(["Stage", parseStage(job[2])]))
+                                         .append(tableRow(["Status", job[4]]))
+                                         .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + ")"]));
 
-                    var $infoTable = $("<table>")
-                                     .addClass("table table-striped table-bordered")
-                                     .append(tableRow(["Job ID", job[0]]))
-                                     .append(tableRow(["Service", job[1]]))
-                                     .append(tableRow(["Description", job[12]]))
-                                     .append(tableRow(["Stage", parseStage(job[2])]))
-                                     .append(tableRow(["Status", job[4]]))
-                                     .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + " ago)"]));
+                        var progress = self.makeProgressBarElement(job, true);
+                        if (progress)
+                            $infoTable.append(tableRow(["Progress", progress]));
 
-                    var progress = self.makeProgressBarElement(job, true);
-                    if (progress)
-                        $infoTable.append(tableRow(["Progress", progress]));
-
-                    $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + " ago)" ]));
-                    if (job[11] !== 1 && job[10] !== 1)
-                        $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
-                                     // .append(tableRow(["Progress", job[6]]))
-                                     // .append(tableRow(["Max Progress", job[7]]))
-                                     // .append(tableRow(["Progress Type", job[8]]))
-                                     // .append(tableRow(["Complete?", job[10]]))
-                                     // .append(tableRow(["Error?", job[11]]))
-                                     // .append(tableRow(["Results", job[13]]));
+                        $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
+                        if (job[11] !== 1 && job[10] !== 1)
+                            $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
+                                         // .append(tableRow(["Progress", job[6]]))
+                                         // .append(tableRow(["Max Progress", job[7]]))
+                                         // .append(tableRow(["Progress Type", job[8]]))
+                                         // .append(tableRow(["Complete?", job[10]]))
+                                         // .append(tableRow(["Error?", job[11]]))
+                                         // .append(tableRow(["Results", job[13]]));
 
 
-                    var $modalBody = $("<div>")
-                                     .append($infoTable);
+                        var $modalBody = $("<div>")
+                                         .append($infoTable);
 
-                    if (job[13]) {
-                        var resultsData = false;
+                        if (job[13]) {
+                            var resultsData = false;
 
-                        var $resultsDiv = $("<div>")
-                                          .append("<h2>Job Complete</h2>");
+                            var $resultsDiv = $("<div>")
+                                              .append("<h2>Job Complete</h2>");
 
-                        var $resultsTable = $("<table>")
-                                           .addClass("table table-striped table-bordered");
+                            var $resultsTable = $("<table>")
+                                               .addClass("table table-striped table-bordered");
 
-                        if (job[13].shocknodes && job[13].shocknodes.length > 0) {
-                            var shockURL = self.options.shockURL;
-                            if (job[13].shockurl)
-                                shockURL = job[13].shockurl;
+                            if (job[13].shocknodes && job[13].shocknodes.length > 0) {
+                                var shockURL = self.options.shockURL;
+                                if (job[13].shockurl)
+                                    shockURL = job[13].shockurl;
 
-                            var shockNodeUrls = [];
-                            for (var i=0; i<job[13].shocknodes.length; i++) {
-                                shockNodeUrls.push("<a href='" + shockURL + job[13].shocknodes[i] + "' target='_blank'>" + job[13].shocknodes[i] + "</a>");
+                                var shockNodeUrls = [];
+                                for (var i=0; i<job[13].shocknodes.length; i++) {
+                                    shockNodeUrls.push("<a href='" + shockURL + job[13].shocknodes[i] + "' target='_blank'>" + job[13].shocknodes[i] + "</a>");
+                                }
+                                $resultsTable.append(tableRow(["Shock", shockNodeUrls.join("<br/>")]));
+
+                                resultsData = true;
                             }
-                            $resultsTable.append(tableRow(["Shock", shockNodeUrls.join("<br/>")]));
 
-                            resultsData = true;
+                            if (job[13].workspaceids && job[13].workspaceids.length > 0) {
+                                var workspaceURL = self.options.workspaceURL;
+                                if (job[13].workspaceurl)
+                                    workspaceURL = job[13].workspaceurl;
+
+                                var workspaceUrls = [];
+                                for (var i=0; i<job[13].workspaceids.length; i++) {
+                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
+                                }
+                                $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
+                                resultsData = true;
+                            }
+
+                            console.log($resultsTable);
+
+                            if (resultsData === true)
+                                $resultsDiv.append($resultsTable);
+                            $modalBody.append($resultsDiv);
                         }
 
-                        if (job[13].workspaceids && job[13].workspaceids.length > 0) {
-                            var workspaceURL = self.options.workspaceURL;
-                            if (job[13].workspaceurl)
-                                workspaceURL = job[13].workspaceurl;
+                        // if there's an error let the user view what might be a stacktrace.
+                        if (job[11] === 1) {
 
-                            var workspaceUrls = [];
-                            for (var i=0; i<job[13].workspaceids.length; i++) {
-                                workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
-                            }
-                            $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
-                            resultsData = true;
                         }
 
-                        console.log($resultsTable);
+                        self.$modal.find(".modal-dialog .modal-content .modal-body").html($modalBody);
+                        self.$modal.find(".modal-dialog .modal-content .modal-header .modal-title").html("Job Details");
 
-                        if (resultsData === true)
-                            $resultsDiv.append($resultsTable);
-                        $modalBody.append($resultsDiv);
-                    }
+                    },
 
-                    // if there's an error let the user view what might be a stacktrace.
-                    if (job[11] === 1) {
+                    self.clientError
+                );
+            };
 
-                    }
-
-                    self.$modal.find(".modal-dialog .modal-content .modal-body").html($modalBody);
-                    self.$modal.find(".modal-dialog .modal-content .modal-header .modal-title").html("Job Details");
-
-                    self.$modal.modal("show");
-                },
-
-                self.clientError
-            );
+            self.$modal.modal("hide");
+            self.$modal.modal("show");
+            refresh();
+            self.modalRefreshInterval = setInterval( function() { refresh(); }, this.options.detailRefreshTime );
         },
 
         showErrorDetails: function(jobId) {
@@ -507,6 +522,21 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         },
 
         /**
+         * @method isValidTimestamp
+         * Checks if the given timestamp string is a valid format or not.
+         * It does this by making a Date() object from the timestamp and testing if 
+         * d.getFullYear() is a number or not.
+         * 
+         * @param {String} timestamp - the timestamp to check
+         * @returns {Boolean} true if the timestamp is valid, false otherwise. 
+         * @private
+         */
+        isValidTimestamp: function(timestamp) {
+            var d = new Date(timestamp);
+            return !isNaN(d.getFullYear());
+        },
+
+        /**
          * @method parseTimeStamp
          * Parses the user_and_job_state timestamp and returns it as a user-
          * readable string in the UTC time.
@@ -521,14 +551,15 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * If the string is not in that format, this method returns the unchanged
          * timestamp.
          *        
-         * @param timestamp - the timestamp string returned by the service
+         * @param {String} timestamp - the timestamp string returned by the service
+         * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
          * @private
          */
         parseTimeStamp: function(timestamp) {
-            var d = new Date(timestamp);
-
-            if (!d)
+            if (!this.isValidTimestamp(timestamp))
                 return timestamp;
+
+            var d = new Date(timestamp);
 
             var addLeadingZeroes = function(value) {
                 value = String(value);
@@ -550,13 +581,15 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * From two timestamps (i.e. Date.parse() parseable), calculate the
          * time difference and return it as a human readable string.
          *
-         * @param {string} finish - the (estimated) finish timestamp
-         * @return a string representing the time difference between the two parameter strings
+         * @param {String} time - the timestamp to calculate a difference from
+         * @returns {String} - a string representing the time difference between the two parameter strings
          */
-        calcTimeDifference: function(finish) {
+        calcTimeDifference: function(time) {
+            var now = new Date();
+            time = new Date(time);
 
             // start with seconds
-            var timeRem = (Math.abs(new Date(finish) - new Date()) / 1000 );
+            var timeRem = Math.abs((new Date(time) - now) / 1000 );
             var unit = " sec";
 
             // if > 60 seconds, go to minutes.
@@ -595,7 +628,13 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 }
             }
 
-            return "~" + timeRem.toFixed(1) + unit;
+            var timediff = "~" + timeRem.toFixed(1) + unit;
+            if (time > now)
+                timediff += " from now";
+            else
+                timediff += " ago";
+
+            return timediff;
         },
 
         /**
