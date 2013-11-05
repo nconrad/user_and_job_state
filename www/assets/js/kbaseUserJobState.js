@@ -12,6 +12,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
      * userJobStateURL - location of the user_and_job_state service.
      * shockURL - base URL for shock (not including nodes)
      * workspaceURL - baseURL for the workspace browser
+     * refreshTime - how often to refresh the statuses (in milliseconds)
      * 
      * @exports kbaseUserJobState
      * @version 0.1
@@ -26,6 +27,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             userJobStateURL: "http://140.221.84.180:7083",
             shockURL: "http://kbase.us/services/shock/",
             workspaceURL: "http://kbase.us/services/workspace/",
+            refreshTime: 60000
         },
 
         /**
@@ -119,7 +121,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             this.$elem.append(this.$modal);
 
             var self = this;
-            setInterval( function() { self.refresh(); }, 60000 );
+            setInterval( function() { self.refresh(); }, self.options.refreshTime );
             return this;
         },
 
