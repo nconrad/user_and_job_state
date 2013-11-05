@@ -5,8 +5,14 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
      * A reasonably simple widget to demonstrate the user_and_job_state service.
      * 
      * This widget follows the general format of the KBase Functional Site's user page (or 'My Stuff' page), implementing
-     * a "Job Status" table view.
+     * a "Job Status" table view. It refreshes this table every minute (parameterized) as well.
      *
+     * List of available options:
+     * auth - the auth token.
+     * userJobStateURL - location of the user_and_job_state service.
+     * shockURL - base URL for shock (not including nodes)
+     * workspaceURL - baseURL for the workspace browser
+     * 
      * @exports kbaseUserJobState
      * @version 0.1
      * @author Bill Riehl <wjriehl@lbl.gov>
@@ -16,6 +22,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         options: {
             auth: null,
             loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
+            errorLoadingImage: "assets/external/kbase/images/ajax-loader.gif",
             userJobStateURL: "http://140.221.84.180:7083",
             shockURL: "http://kbase.us/services/shock/",
             workspaceURL: "http://kbase.us/services/workspace/",
@@ -45,6 +52,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * This method renders the widget. It is called automatically during the initialization process.
          * The 'render' step here relates to the HTML rendering of the skeleton of what the widget should display.
          * The process of fetching job information and populating the widget is performed by the refresh() method.
+         * @private
          */
         render: function() {
             var self = this;
@@ -109,6 +117,9 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
             this.$elem.append($container);
             this.$elem.append(this.$modal);
+
+            var self = this;
+            setInterval( function() { self.refresh(); }, 60000 );
             return this;
         },
 
@@ -248,6 +259,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * This is all returned wrapped in a div element.
          * @param job - the job to build a status element around.
          * @return a div element containing the job's status.
+         * @private
          */
         makeStatusElement: function(job) {
             var status;
@@ -271,7 +283,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                     status += " (" + progress + " / " + max + ")</div>";
                 }
                 if (progressType !== "none") {
-                    status += "</div>" + this.makeProgressBarElement(job);
+                    status += "</div>" + this.makeProgressBarElement(job, false);
                 }
 
                 if (job[9] != null) {
@@ -281,13 +293,26 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             return status;
         },
 
-        makeProgressBarElement: function(job) {
+        /**
+         * @method makeProgressBarElement
+         * Makes a Bootstrap 3 Progress bar from the given job object.
+         *
+         * @param job - the job object
+         * @param showNumber - if truthy, includes the numberical portion of what's being shown in the progressbar, separately.
+         * @return A div containing a Bootstrap 3 progressbar, and, optionally, text describing the numbers in progress.
+         * @private
+         */
+        makeProgressBarElement: function(job, showNumber) {
             var type = job[8].toLowerCase();
             var max = job[7];
             var progress = job[6];
 
             if (type === "percent") {
-                return "<div class='progress' style='margin-bottom: 0;'>" + 
+                var bar = "";
+                if (showNumber)
+                    bar += progress + "%";
+
+                return bar + "<div class='progress' style='margin-bottom: 0;'>" + 
                            "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
                                progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
                                progress + "%;'>" +
@@ -296,7 +321,10 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                        "</div>";
             }
             else {
-                return "<div class='progress' style='margin-bottom: 0;'>" + 
+                var bar = "";
+                if (showNumber)
+                    bar += progress + " / " + max;
+                return bar + "<div class='progress' style='margin-bottom: 0;'>" + 
                            "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
                            progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
                            (progress / max * 100) + "%;'>" +
@@ -314,41 +342,51 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * @param jobId the ID of the given job.
          */
         showJobDetails: function(jobId) {
+            var self = this;
+
             var tableRow = function(elems) {
-                var row = "<tr>";
+                var row = $("<tr>");
                 for (var i=0; i<elems.length; i++) {
-                    row += "<td>" + elems[i] + "</td>";
+                    row.append($("<td>").append(elems[i]));
                 }
-                row += "</tr>";
                 return row;
             };
 
-            var self = this;
+            var parseStage = function(stage) {
+                if (stage.toLowerCase() === "error") {
+                    var $btn = $("<span/>")
+                               .addClass("glyphicon glyphicon-exclamation-sign kbujs-error")
+                               .click(function(event) { 
+                                    self.$modal.off('hidden.bs.modal');
+                                    self.$modal.on('hidden.bs.modal', function(event) {
+                                        self.showErrorDetails(jobId);
+                                    });
+                                    self.$modal.modal("hide");
+                                });
+
+                    return $("<div>")
+                           .addClass("kbujs-error-cell")
+                           .append($btn)
+                           .append(" Error");
+                }
+                return stage;
+            };
+
 
             self.userJobStateClient.get_job_info(jobId, 
                 function(job) {
-
-                    // Makes and returns a Bootstrap progress bar based on job information.
-
-                    // Parses the results section of the job into something linkable.
-                    var parseResults = function(results) {
-                        if (results && results !== null) {
-
-                        }
-
-                        return null;
-                    };
+                    self.$modal.modal("hide");
 
                     var $infoTable = $("<table>")
                                      .addClass("table table-striped table-bordered")
                                      .append(tableRow(["Job ID", job[0]]))
                                      .append(tableRow(["Service", job[1]]))
                                      .append(tableRow(["Description", job[12]]))
-                                     .append(tableRow(["Stage", job[2]]))
+                                     .append(tableRow(["Stage", parseStage(job[2])]))
                                      .append(tableRow(["Status", job[4]]))
                                      .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + " ago)"]));
 
-                    var progress = self.makeProgressBarElement(job);
+                    var progress = self.makeProgressBarElement(job, true);
                     if (progress)
                         $infoTable.append(tableRow(["Progress", progress]));
 
@@ -414,8 +452,10 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
                     }
 
-                    self.$elem.find(".modal .modal-dialog .modal-content .modal-body").html($modalBody);
-                    self.$elem.find(".modal").modal();
+                    self.$modal.find(".modal-dialog .modal-content .modal-body").html($modalBody);
+                    self.$modal.find(".modal-dialog .modal-content .modal-header .modal-title").html("Job Details");
+
+                    self.$modal.modal("show");
                 },
 
                 self.clientError
@@ -425,11 +465,25 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         showErrorDetails: function(jobId) {
             var self = this;
 
-            self.userJobStateClient.get_job_info(jobId,
-                function(job) {
-                    console.log('stuff');
-                    console.log(job);
-                }
+            self.$modal.off('hidden.bs.modal');
+            self.$modal.modal("hide");
+            self.$modal.find("modal-dialog .modal-content .modal-header .modal-title").html("Job Error");
+            self.$modal.find(".modal-dialog .modal-content .modal-body")
+                       .html("<div class='kbujs-loading-modal'><img src='" + self.options.errorLoadingImage + "'/><br/>Loading...</div>");
+            self.$modal.modal("show");
+            self.userJobStateClient.get_detailed_error(jobId,
+                function(error) {
+                    var $detailedError = $("<div>");
+                    if (error && error.length > 0)
+                        $detailedError.append($("<pre>").append(error));
+                    else
+                        $detailedError.append("No error information found.");
+
+                    self.$modal.find(".modal-dialog .modal-content .modal-body").empty();
+                    self.$modal.find(".modal-dialog .modal-content .modal-body").append($detailedError);
+                },
+
+                self.clientError
             );
         },
 
