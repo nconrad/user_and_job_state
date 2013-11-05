@@ -17,6 +17,8 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             auth: null,
             loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
             userJobStateURL: "http://140.221.84.180:7083",
+            shockURL: "http://kbase.us/services/shock/",
+            workspaceURL: "http://kbase.us/services/workspace/",
         },
 
         /**
@@ -150,73 +152,63 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 this.userJobStateClient = new UserAndJobState(this.options.userJobStateURL, this.options.auth);
                 var self = this;
 
-                this.userJobStateClient.list_job_services(
-                    function(services) {
+                this.userJobStateClient.list_jobs([], '',
+                    function(jobs) {
+                        var jobTableRows = [];
 
-                        var getServiceJobs = [];
-                        var allJobsList = [];
+                        for (var i=0; i<jobs.length; i++) {
+                            var job = jobs[i];
+                            jobTableRows.push([
+                                "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
+                                job[1],                         // service name
+                                job[12],                        // description
+                                self.makePrettyTimestamp(job[3], " ago"),        // started
+                                self.makeStatusElement(job),
+                            ]);
+                        }
 
-                        $.each(services, function(index, name) {
-                            getServiceJobs.push(self.userJobStateClient.list_jobs([name], '', 
-                                function(jobs) {
-                                    allJobsList = allJobsList.concat(jobs);
-                                },
+                        if (jobTableRows.length > 0) {
+                            self.$jobTable = $("<table id='kbujs-jobs-table'>")
+                                             .addClass("table table-striped table-bordered");
 
-                                self.clientError
-                            ));
-                        });
+                            self.$jobTable =self.$jobTable.dataTable({
+                                "bLengthChange" : false,
+                                "iDisplayLength": 20,
+                                "aaData" : jobTableRows,
+                                "aoColumns" : [
+                                    { "sTitle" : "&nbsp;", "bSortable" : false },
+                                    { "sTitle" : "Service" },
+                                    { "sTitle" : "Description" },
+                                    { "sTitle" : "Started" },
+                                    { "sTitle" : "Status" },
+                                ],
+                                "sPaginationType" : "full_numbers",
+                                "aaSorting" : [[1, "asc"]],
+                                "aoColumnDefs" : [
+                                ]
+                            });
 
-                        $.when.apply($, getServiceJobs).done(function() {
-                            var jobTableRows = [];
+                            self.$jobTable.on("click", "button[job-id]",
+                                function(event) { 
+                                    self.showJobDetails($(event.currentTarget).attr('job-id'));
+                                }
+                            );
 
-                            for (var i=0; i<allJobsList.length; i++) {
-                                var job = allJobsList[i];
-                                jobTableRows.push([
-                                    "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
-                                    job[1],                         // service name
-                                    job[12],                        // description
-                                    self.makePrettyTimestamp(job[3]),        // started
-                                    self.makeStatusElement(job),
-                                ]);
-                            }
+                            self.$jobTable.on("click", "span[error-job-id]",
+                                function(event) {
+                                    self.showErrorDetails($(event.currentTarget).attr('error-job-id'));
+                                }
+                            );
 
-                            if (jobTableRows.length > 0) {
-                                self.$jobTable = $("<table id='kbujs-jobs-table'>")
-                                                 .addClass("table table-striped table-bordered");
-
-                                self.$jobTable =self.$jobTable.dataTable({
-                                    "bLengthChange" : false,
-                                    "iDisplayLength": 20,
-                                    "aaData" : jobTableRows,
-                                    "aoColumns" : [
-                                        { "sTitle" : "&nbsp;", "bSortable" : false },
-                                        { "sTitle" : "Service" },
-                                        { "sTitle" : "Description" },
-                                        { "sTitle" : "Started" },
-                                        { "sTitle" : "Status" },
-                                    ],
-                                    "sPaginationType" : "full_numbers",
-                                    "aaSorting" : [[1, "asc"]],
-                                    "aoColumnDefs" : [
-                                    ]
-                                });
-
-                                self.$jobTable.on("click", "button[job-id]",
-                                    function(event) { 
-                                        self.showJobDetails($(event.currentTarget).attr('job-id'));
-                                    }
-                                );
-
-                                self.$tableContainer.append(self.$jobTable);
-                                $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
-                            }
-                            else {
-                                self.$noJobsDiv.css({ "display" : "" });
-                            }
-                            self.$loadingImage.css({ "display" : "none" });
-
-                        });
+                            self.$tableContainer.append(self.$jobTable);
+                            $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
+                        }
+                        else {
+                            self.$noJobsDiv.css({ "display" : "" });
+                        }
+                        self.$loadingImage.css({ "display" : "none" });
                     },
+
                     this.clientError
                 );
             }
@@ -240,7 +232,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             if (suffix)
                 timediff += " " + suffix;
 
-            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "'>" + timediff + "</div>";
+            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' class='kbujs-timestamp'>" + timediff + "</div>";
             return timeHtml;
         },
 
@@ -258,13 +250,16 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * @return a div element containing the job's status.
          */
         makeStatusElement: function(job) {
-            var status = "<div>";
+            var status;
             if (job[11] === 1)
-                status += "Error";
+                status = "<div class='kbujs-error-cell'>" + 
+                            "<span class='glyphicon glyphicon-exclamation-sign kbujs-error' error-job-id='" + job[0] + "'></span>" +
+                            " Error" +
+                         "</div>";
             else if (job[10] === 1)
-                status += "Complete: " + job[4];
+                status = "<div>Complete: " + job[4] + "</div>";
             else {
-                status += "<div>" + job[4];
+                status = "<div>" + job[4];
                 var progressType = job[8].toLowerCase();
                 var progress = job[6];
                 var max = job[7];
@@ -283,7 +278,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                     status += this.makePrettyTimestamp(job[9], " remaining");
                 }
             }
-            return status + "</div>";
+            return status;
         },
 
         makeProgressBarElement: function(job) {
@@ -367,8 +362,52 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                      // .append(tableRow(["Error?", job[11]]))
                                      // .append(tableRow(["Results", job[13]]));
 
+
                     var $modalBody = $("<div>")
                                      .append($infoTable);
+
+                    if (job[13]) {
+                        var resultsData = false;
+
+                        var $resultsDiv = $("<div>")
+                                          .append("<h2>Job Complete</h2>");
+
+                        var $resultsTable = $("<table>")
+                                           .addClass("table table-striped table-bordered");
+
+                        if (job[13].shocknodes && job[13].shocknodes.length > 0) {
+                            var shockURL = self.options.shockURL;
+                            if (job[13].shockurl)
+                                shockURL = job[13].shockurl;
+
+                            var shockNodeUrls = [];
+                            for (var i=0; i<job[13].shocknodes.length; i++) {
+                                shockNodeUrls.push("<a href='" + shockURL + job[13].shocknodes[i] + "' target='_blank'>" + job[13].shocknodes[i] + "</a>");
+                            }
+                            $resultsTable.append(tableRow(["Shock", shockNodeUrls.join("<br/>")]));
+
+                            resultsData = true;
+                        }
+
+                        if (job[13].workspaceids && job[13].workspaceids.length > 0) {
+                            var workspaceURL = self.options.workspaceURL;
+                            if (job[13].workspaceurl)
+                                workspaceURL = job[13].workspaceurl;
+
+                            var workspaceUrls = [];
+                            for (var i=0; i<job[13].workspaceids.length; i++) {
+                                workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
+                            }
+                            $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
+                            resultsData = true;
+                        }
+
+                        console.log($resultsTable);
+
+                        if (resultsData === true)
+                            $resultsDiv.append($resultsTable);
+                        $modalBody.append($resultsDiv);
+                    }
 
                     // if there's an error let the user view what might be a stacktrace.
                     if (job[11] === 1) {
@@ -382,6 +421,18 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 self.clientError
             );
         },
+
+        showErrorDetails: function(jobId) {
+            var self = this;
+
+            self.userJobStateClient.get_job_info(jobId,
+                function(job) {
+                    console.log('stuff');
+                    console.log(job);
+                }
+            );
+        },
+
 
         /**
          * @method clientError

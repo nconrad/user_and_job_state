@@ -1,3 +1,17 @@
 .kbujs-table-container {
     height: auto;
 }
+
+.kbujs-timestamp {
+	color: #0066b9;
+	cursor: pointer;
+}
+
+.kbujs-error-cell {
+	color: #c7254e;
+	font-weight: bold;
+}
+
+.kbujs-error:hover {
+	cursor: pointer;
+}
