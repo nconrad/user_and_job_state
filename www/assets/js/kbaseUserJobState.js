@@ -99,7 +99,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                                      .append("&nbsp;Job Status&nbsp;&nbsp;")
                                                      .append(this.$loadingImage)))
                                      .append($("<div>")
-                                             .addClass("col-md-1 col-md-offset-9 pull-right")
+                                             .addClass("col-md-2")
                                              .append(this.$refreshButton)))
                              .append(this.$notLoggedInDiv)
                              .append(this.$noJobsDiv)
@@ -111,8 +111,12 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         },
 
         /**
+         * @method setAuth
          * Sets a new auth token in the event that a users logs in or out.
          * This also triggers a refresh event.
+         *
+         * @param {object} token - the authentication token, expected to be a token object
+         * as retrieved by the login widget, not just the token string.
          */
         setAuth: function(token) {
             console.log("setting token");
@@ -127,15 +131,17 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             this.refresh();
         },
 
+        /**
+         * @method refresh
+         * Refreshes the job status widget. If a user is logged in, then it fetches all of that user's jobs
+         * from the user_and_job_state service, and populates the job status table with them.
+         *
+         * Otherwise, it prompts the user to log in.
+         */
         refresh: function() {
             this.$tableContainer.empty();
             this.$notLoggedInDiv.css({ "display" : "none" });
             this.$noJobsDiv.css({ "display" : "none" });
-            // if (this.$jobTable) {
-            //     this.$jobTable.off("click");
-            //     this.$jobTable.fnDestroy();
-            //     this.$jobTable.remove();
-            // }
             if (!this.options.auth || this.options.auth === null) {
                 this.$notLoggedInDiv.css({ "display" : "" });
                 return;
@@ -168,11 +174,12 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 var job = allJobsList[i];
                                 jobTableRows.push([
                                     "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
-                                    job[1],     // service name
-                                    job[2],     // stage
-                                    job[4],     // status
-                                    job[3],     // started
-                                    job[9],     // est complete
+                                    job[1],                         // service name
+                                    job[2],                         // stage
+                                    job[4],                         // status
+                                    job[12],                        // description
+                                    self.parseTimeStamp(job[3]),    // started
+                                    (job[11] === 1) ? "error" : ((job[10] === 1) ? "complete" : self.calcTimeRemaining(self.parseTimeStamp(job[9]))),     // est complete
                                 ]);
                             }
                             if (jobTableRows.length > 0) {
@@ -188,6 +195,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                         { "sTitle" : "Service" },
                                         { "sTitle" : "Stage" },
                                         { "sTitle" : "Status" },
+                                        { "sTitle" : "Description" },
                                         { "sTitle" : "Started" },
                                         { "sTitle" : "Time Remaining" },
                                     ],
@@ -236,40 +244,176 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
 
             self.userJobStateClient.get_job_info(jobId, 
                 function(job) {
-                    var $modalBody = $("<table>")
+
+                    // Makes and returns a Bootstrap progress bar based on job information.
+                    var makeProgress = function(job) {
+                        var type = job[8].toLowerCase();
+                        var max = job[7];
+                        var progress = job[6];
+                        if (type === "percent") {
+                            return progress + "%" +
+                                   "<div class='progress' style='margin-bottom: 0;'>" + 
+                                       "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
+                                       progress + "' aria-valuemin='0' aria-valuemax='100' style='width: " + 
+                                       progress + "%;'>" +
+                                           "<span class='sr-only'>" + progress + "% Complete" + "</span>" +
+                                       "</div>" +
+                                   "</div>";
+                        }
+                        else {
+                            return progress + " / " + max +
+                                   "<div class='progress' style='margin-bottom: 0;'>" + 
+                                       "<div class='progress-bar' role='progressbar' aria-valuenow='" + 
+                                       progress + "' aria-valuemin='0' aria-valuemax='" + max + "' style='width: " + 
+                                       (progress / max * 100) + "%;'>" +
+                                           "<span class='sr-only'>" + progress + " / " + max + "</span>" +
+                                       "</div>" +
+                                   "</div>";
+                        }
+                        return null;
+                    };
+
+                    // Parses the results section of the job into something linkable.
+                    var parseResults = function(results) {
+                        if (results && results !== null) {
+
+                        }
+
+                        return null;
+                    };
+
+                    var $infoTable = $("<table>")
                                      .addClass("table table-striped table-bordered")
                                      .append(tableRow(["Job ID", job[0]]))
                                      .append(tableRow(["Service", job[1]]))
-                                     .append(tableRow(["Stage", job[2]]))
-                                     .append(tableRow(["Started", job[3]]))
-                                     .append(tableRow(["Status", job[4]]))
-                                     .append(tableRow(["Last Update", job[5]]))
-                                     .append(tableRow(["Progress", job[6]]))
-                                     .append(tableRow(["Max Progress", job[7]]))
-                                     .append(tableRow(["Progress Type", job[8]]))
-                                     .append(tableRow(["Estimated Completion Time", job[9]]))
-                                     .append(tableRow(["Complete?", job[10]]))
-                                     .append(tableRow(["Error?", job[11]]))
                                      .append(tableRow(["Description", job[12]]))
-                                     .append(tableRow(["Results", job[13]]));
+                                     .append(tableRow(["Stage", job[2]]))
+                                     .append(tableRow(["Status", job[4]]))
+                                     .append(tableRow(["Started", self.parseTimeStamp(job[3])]));
 
+                    var progress = makeProgress(job);
+                    if (progress)
+                        $infoTable.append(tableRow(["Progress", progress]));
+
+                    $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5])]))
+                              .append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (~" + self.calcTimeRemaining(job[9]) + ")"]));
+                                     // .append(tableRow(["Progress", job[6]]))
+                                     // .append(tableRow(["Max Progress", job[7]]))
+                                     // .append(tableRow(["Progress Type", job[8]]))
+                                     // .append(tableRow(["Complete?", job[10]]))
+                                     // .append(tableRow(["Error?", job[11]]))
+                                     // .append(tableRow(["Results", job[13]]));
+
+                    var $modalBody = $("<div>")
+                                     .append($infoTable);
+
+                    // if there's an error let the user view what might be a stacktrace.
+                    if (job[11] === 1) {
+
+                    }
 
                     self.$elem.find(".modal .modal-dialog .modal-content .modal-body").html($modalBody);
                     self.$elem.find(".modal").modal();
-
                 },
 
-               self.clientError
+                self.clientError
             );
         },
 
         /**
+         * @method clientError
          * Communicates a fairly simple error to the user when something goes wrong with a service.
          *
+         * @param {object} error - the error object returned from a KBase service.
          * @private
          */
         clientError: function(error) {
             console.debug(error);
+        },
+
+        /**
+         * @method parseTimeStamp
+         * Parses the user_and_job_state timestamp and returns it as a user-
+         * readable string in the UTC time.
+         *
+         * This assumes that the timestamp string is in the following format:
+         * 
+         * YYYY-MM-DDThh:mm:ssZ, where Z is the difference
+         * in time to UTC in the format +/-HHMM, eg:
+         *   2012-12-17T23:24:06-0500 (EST time)
+         *   2013-04-03T08:56:32+0000 (UTC time)
+         * 
+         * If the string is not in that format, this method returns the unchanged
+         * timestamp.
+         *        
+         * @param timestamp - the timestamp string returned by the service
+         * @private
+         */
+        parseTimeStamp: function(timestamp) {
+            var d = new Date(timestamp);
+
+            if (!d)
+                return timestamp;
+
+            var addLeadingZeroes = function(value) {
+                value = String(value);
+                if (value.length === 1)
+                    return "0" + value;
+                return value;
+            };
+
+            return d.getUTCFullYear() + "-" + 
+                   addLeadingZeroes(d.getUTCMonth()) + "-" + 
+                   addLeadingZeroes(d.getUTCDate()) + " " + 
+                   addLeadingZeroes(d.getUTCHours()) + ":" + 
+                   addLeadingZeroes(d.getUTCMinutes()) + ":" + 
+                   addLeadingZeroes(d.getUTCSeconds());
+        },
+
+        /**
+         * @method calcTimeRemaining
+         * From two timestamps (i.e. Date.parse() parseable), calculate the
+         * time difference and return it as a human readable string.
+         *
+         * @param {string} finish - the (estimated) finish timestamp
+         * @return a string representing the time difference between the two parameter strings
+         */
+        calcTimeRemaining: function(finish) {
+            // start with seconds
+            var timeRem = (Math.abs(new Date(finish) - new Date()) / 1000 );
+            var unit = " sec";
+
+            // if > 60 seconds, go to minutes.
+            if (timeRem >= 60) {
+                timeRem /= 60;
+                unit = " min";
+            }
+
+            // if > 60 minutes, go to hours.
+            if (timeRem >= 60) {
+                timeRem /= 60;
+                unit = " hrs";
+            }
+
+            // if > 24 hours, go to days
+            if (timeRem >= 24) {
+                timeRem /= 24;
+                unit = " days";
+            }
+
+            // now we're in days. if > 364.25, go to years)
+            if (timeRem >= 364.25) {
+                timeRem /= 264.25;
+                unit = " yrs";
+            }
+
+            // now we're in years. just for fun, if we're over a century, do that too.
+            if (timeRem >= 100) {
+                timeRem /= 100;
+                unit = " centuries";
+            }
+
+            return "~" + timeRem.toFixed(2) + unit;
         },
 
         /**
