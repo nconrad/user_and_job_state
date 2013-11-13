@@ -648,6 +648,10 @@ public class JSONRPCLayerTest {
 		testCompleteJob(jobid, TOKEN1, "s", null, null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
+		Results badres = new Results();
+		badres.setAdditionalProperties("foo", "bar");
+		testCompleteJob(jobid, TOKEN1, "s", null, badres,
+				"Unexpected arguments in Results: foo");
 	}
 	
 	private void testCompleteJob(String jobid, String token, String status,

@@ -213,6 +213,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		if (res == null) {
 			return null;
 		}
+		checkAddlArgs(res.getAdditionalProperties(), Results.class);
 		final Map<String, Object> ret = new HashMap<String, Object>();
 		ret.put("shocknodes", res.getShocknodes());
 		ret.put("shockurl", res.getShockurl());
