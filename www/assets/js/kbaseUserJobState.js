@@ -144,6 +144,8 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * as retrieved by the login widget, not just the token string.
          */
         setAuth: function(token) {
+            console.log('setting auth');
+            console.log(token);
             if (token)
                 this.options.auth = token;
             else {
@@ -602,45 +604,51 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             var now = new Date();
             time = new Date(time);
 
+            console.log('timestamp diffs');
+            console.log(now);
+            console.log(time);
+
             // start with seconds
-            var timeRem = Math.abs((new Date(time) - now) / 1000 );
+            var timeRem = Math.abs((time - now) / 1000 );
+            console.log(timeRem);
             var unit = " sec";
 
             // if > 60 seconds, go to minutes.
             if (timeRem >= 60) {
                 timeRem /= 60;
                 unit = " min";
-            }
 
-            // if > 60 minutes, go to hours.
-            if (timeRem >= 60) {
-                timeRem /= 60;
-                unit = " hrs";
-            }
+                // if > 60 minutes, go to hours.
+                if (timeRem >= 60) {
+                    timeRem /= 60;
+                    unit = " hrs";
 
-            // if > 24 hours, go to days
-            if (timeRem >= 24) {
-                timeRem /= 24;
-                unit = " days";
-            }
+                    // if > 24 hours, go to days
+                    if (timeRem >= 24) {
+                        timeRem /= 24;
+                        unit = " days";
+                    }
 
-            // now we're in days. if > 364.25, go to years)
-            if (timeRem >= 364.25) {
-                timeRem /= 364.25;
-                unit = " yrs";
+                    // now we're in days. if > 364.25, go to years)
+                    if (timeRem >= 364.25) {
+                        timeRem /= 364.25;
+                        unit = " yrs";
 
-                // now we're in years. just for fun, if we're over a century, do that too.
-                if (timeRem >= 100) {
-                    timeRem /= 100;
-                    unit = " centuries";
+                        // now we're in years. just for fun, if we're over a century, do that too.
+                        if (timeRem >= 100) {
+                            timeRem /= 100;
+                            unit = " centuries";
+
+                            // ok, fine, i'll do millennia, too.
+                            if (timeRem >= 10) {
+                                timeRem /= 10;
+                                unit = " millennia";
+                            }
+                        }
+                    }
                 }
-    
-                // ok, fine, i'll do millennia, too.
-                if (timeRem >= 10) {
-                    timeRem /= 10;
-                    unit = " millennia";
-                }
             }
+
 
             var timediff = "~" + timeRem.toFixed(1) + unit;
             if (time > now)
