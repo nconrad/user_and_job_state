@@ -320,8 +320,8 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          */
         makeProgressBarElement: function(job, showNumber) {
             var type = job[8].toLowerCase();
-            var max = job[7];
-            var progress = job[6];
+            var max = job[7] || 0;
+            var progress = job[6] || 0;
 
             if (type === "percent") {
                 var bar = "";
