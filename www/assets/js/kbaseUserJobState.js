@@ -144,8 +144,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * as retrieved by the login widget, not just the token string.
          */
         setAuth: function(token) {
-            console.log('setting auth');
-            console.log(token);
             if (token)
                 this.options.auth = token;
             else {
@@ -538,21 +536,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         },
 
         /**
-         * @method isValidTimestamp
-         * Checks if the given timestamp string is a valid format or not.
-         * It does this by making a Date() object from the timestamp and testing if 
-         * d.getFullYear() is a number or not.
-         * 
-         * @param {String} timestamp - the timestamp to check
-         * @returns {Boolean} true if the timestamp is valid, false otherwise. 
-         * @private
-         */
-        isValidTimestamp: function(timestamp) {
-            var d = new Date(timestamp);
-            return !isNaN(d.getFullYear());
-        },
-
-        /**
          * @method parseTimeStamp
          * Parses the user_and_job_state timestamp and returns it as a user-
          * readable string in the UTC time.
@@ -572,10 +555,9 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * @private
          */
         parseTimeStamp: function(timestamp) {
-            if (!this.isValidTimestamp(timestamp))
+            var d = this.parseDate(timestamp);
+            if (d === null)
                 return timestamp;
-
-            var d = new Date(timestamp);
 
             var addLeadingZeroes = function(value) {
                 value = String(value);
@@ -667,11 +649,15 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         parseDate: function(time) {
             var d = new Date(time);
             if (Object.prototype.toString.call(d) === "[object Date]") {
-                if (isNaN(d.getTime()))
+                if (isNaN(d.getTime())) {
+                    console.log("Invalid time: " + time);
                     return null;
-                else
+                }
+                else {
                     return d;
+                }
             }
+            console.log("Invalid time: " + time);
             return null
         },
 
