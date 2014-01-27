@@ -239,14 +239,41 @@ public class JSONRPCLayerTest {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is("Auth token is in the incorrect format, near 'boogabooga'"));
 		}
-		/* TODO restore when auth service is fixed
 		try {
-			CLIENT1.setStateAuth(token2 + "a", "key", new UObject("foo"));
+			CLIENT1.setStateAuth(TOKEN2 + "a", "key", new UObject("foo"));
 			fail("set state w/ bad token");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is("Service token is invalid"));
-		}*/
+		}
+		try {
+			CLIENT1.removeStateAuth(null, "key");
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token cannot be null or the empty string"));
+		}
+		try {
+			CLIENT1.removeStateAuth("", "key");
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token cannot be null or the empty string"));
+		}
+		try {
+			CLIENT1.removeStateAuth("boogabooga", "key");
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Auth token is in the incorrect format, near 'boogabooga'"));
+		}
+		try {
+			CLIENT1.removeStateAuth(TOKEN2 + "a", "key");
+			fail("set state w/ bad token");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is("Service token is invalid"));
+		}
 	}
 	
 	private String[] getNearbyTimes() {
@@ -301,9 +328,8 @@ public class JSONRPCLayerTest {
 				null, "Service token cannot be null or the empty string");
 		startJobBadArgs(jobid, "foo", "s", "d", new InitProgress().withPtype("none"),
 				null, "Auth token is in the incorrect format, near 'foo'");
-		//TODO restore when auth service is fixed
-//		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
-//				"id cannot be null or the empty string");
+		startJobBadArgs(jobid, TOKEN2 + "a", "s", "d", new InitProgress().withPtype("none"),
+				null, "Service token is invalid");
 		
 		startJobBadArgs(jobid, TOKEN2, "s", "d",
 				new InitProgress().withPtype("none"),
@@ -573,10 +599,8 @@ public class JSONRPCLayerTest {
 		updateJobBadArgs(jobid, TOKEN1, "s", null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
-		
-		//TODO restore when auth service is fixed
-//		testStartJob(jobid, token2 + "a", "s", "d", new InitProgress().withPtype("none"),
-//				"id cannot be null or the empty string");
+		updateJobBadArgs(jobid, TOKEN2 + "a", "s", null,
+				"Service token is invalid");
 	}
 	
 	private void updateJobBadArgs(String jobid, String token, String status,
@@ -645,6 +669,8 @@ public class JSONRPCLayerTest {
 				"Service token cannot be null or the empty string");
 		testCompleteJob(jobid, "foo", "s", null, null,
 				"Auth token is in the incorrect format, near 'foo'");
+		testCompleteJob(jobid, TOKEN2 + "w", "s", null, null,
+				"Service token is invalid");
 		testCompleteJob(jobid, TOKEN1, "s", null, null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
@@ -731,6 +757,8 @@ public class JSONRPCLayerTest {
 				"Service token cannot be null or the empty string", true);
 		failToDeleteJob(jobid, "foo",
 				"Auth token is in the incorrect format, near 'foo'");
+		failToDeleteJob(jobid, TOKEN2 + 'w',
+				"Service token is invalid");
 		failToDeleteJob(jobid, TOKEN1, String.format(
 				"There is no job %s for user kbasetest and service kbasetest",
 				jobid, USER1, USER1));
