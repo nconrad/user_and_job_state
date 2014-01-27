@@ -602,15 +602,13 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          */
         calcTimeDifference: function(time) {
             var now = new Date();
-            time = new Date(time);
+            time = this.parseDate(time);
 
-            console.log('timestamp diffs');
-            console.log(now);
-            console.log(time);
+            if (time === null)
+                return "Unknown time";
 
             // start with seconds
             var timeRem = Math.abs((time - now) / 1000 );
-            console.log(timeRem);
             var unit = " sec";
 
             // if > 60 seconds, go to minutes.
@@ -657,6 +655,24 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                 timediff += " ago";
 
             return timediff;
+        },
+
+        /**
+         * VERY simple date parser.
+         * Returns a valid Date object if that time stamp's real. 
+         * Returns null otherwise.
+         * @param {String} time - the timestamp to convert to a Date
+         * @returns {Object} - a Date object or null if the timestamp's invalid.
+         */
+        parseDate: function(time) {
+            var d = new Date(time);
+            if (Object.prototype.toString.call(d) === "[object Date]") {
+                if (isNaN(d.getTime()))
+                    return null;
+                else
+                    return d;
+            }
+            return null
         },
 
         /**
