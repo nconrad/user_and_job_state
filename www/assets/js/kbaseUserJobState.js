@@ -26,6 +26,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
             errorLoadingImage: "assets/external/kbase/images/ajax-loader.gif",
             userJobStateURL: "http://140.221.84.180:7083",
+//            userJobStateURL: "https://kbase.us/services/userandjobstate",
             shockURL: "http://kbase.us/services/shock/",
             workspaceURL: "http://kbase.us/services/workspace/",
             refreshTime: 60000,
@@ -45,6 +46,21 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                    .css({ 'display' : 'none' });
             this.$noJobsDiv = $("<div>You have no running jobs</div>")
                               .css({ 'display' : 'none' });
+
+
+            jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
+                var ts1 = new Date($(x).attr('title'));
+                var ts2 = new Date($(y).attr('title'));
+
+                return ((ts1 < ts2) ? 1 : ((ts1 > ts2) ? -1 : 0));
+            };
+
+            jQuery.fn.dataTableExt.oSort['timestamp-desc'] = function(x, y) {
+                var ts1 = new Date($(x).attr('title'));
+                var ts2 = new Date($(y).attr('title'));
+
+                return ((ts1 < ts2) ? -1 : ((ts1 > ts2) ? 1 : 0));
+            };
 
             this.render();
             this.refresh();
@@ -144,8 +160,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * as retrieved by the login widget, not just the token string.
          */
         setAuth: function(token) {
-            console.log('setting auth');
-            console.log(token);
             if (token)
                 this.options.auth = token;
             else {
@@ -187,7 +201,8 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
                                 job[1],                         // service name
                                 job[12],                        // description
-                                self.makePrettyTimestamp(job[3], " ago"),        // started
+//                                self.makePrettyTimestamp(job[3], " ago"),        // started
+                                job[3],
                                 self.makeStatusElement(job),
                             ]);
                         }
@@ -206,12 +221,18 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                     { "sTitle" : "&nbsp;", "bSortable" : false, "bSearchable" : false },
                                     { "sTitle" : "Service", "bSearchable" : true },
                                     { "sTitle" : "Description", "bSearchable" : true },
-                                    { "sTitle" : "Started", "bSearchable" : true },
+                                    { "sTitle" : "Started", "bSearchable" : true, "sType" : "timestamp" },
                                     { "sTitle" : "Status", "bSearchable" : true },
                                 ],
                                 "sPaginationType" : "full_numbers",
                                 "aaSorting" : [[1, "asc"]],
                                 "aoColumnDefs" : [
+                                    {
+                                        "fnRender" : function( oObj ) {
+                                            return self.makePrettyTimestamp(oObj.aData[3], " ago");
+                                        },
+                                        "aTargets": [3]
+                                    }
                                 ]
                             });
 
