@@ -20,7 +20,7 @@ fi
 
 asadmin=$GLASSFISH_HOME/glassfish/bin/asadmin
 
-ps ax | grep "\-Dcom.sun.aas.installRoot=\/kb/runtime/glassfish3/glassfish " > /dev/null
+ps ax | grep "\-Dcom.sun.aas.installRoot=$KB_RUNTIME/glassfish3/glassfish " > /dev/null
 if [ $? -eq 0 ]; then
     echo "Glassfish is already running."
 else
