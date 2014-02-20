@@ -3,8 +3,11 @@ SERVICE = userandjobstate
 SERVICE_CAPS = UserAndJobState
 CLIENT_JAR = UserAndJobStateClient.jar
 WAR = UserAndJobStateService.war
+URL = https://kbase.us/services/userandjobstate/
 
 THREADPOOL_SIZE = 20
+MEMORY = 1000
+MAX_MEMORY = 2000
 
 #End of user defined variables
 
@@ -22,6 +25,9 @@ endif
 DEPLOY_RUNTIME ?= /kb/runtime
 TARGET ?= /kb/deployment
 SERVICE_DIR ?= $(TARGET)/services/$(SERVICE)
+GLASSFISH_HOME ?= $(DEPLOY_RUNTIME)/glassfish3
+
+ASADMIN = $(GLASSFISH_HOME)/glassfish/bin/asadmin
 
 ANT = ant
 
@@ -52,7 +58,7 @@ build-docs: build-libs
 compile: compile-typespec compile-java
 
 compile-java:
-	gen_java_types -S -o . -u http://kbase.us/services/$(SERVICE)/ $(SERVICE).spec
+	gen_java_types -S -o . -u $(URL) $(SERVICE).spec
 	-rm lib/*.jar
 
 compile-typespec:
@@ -64,7 +70,7 @@ compile-typespec:
 		--client Bio::KBase::$(SERVICE)::Client \
 		--py biokbase.$(SERVICE).client \
 		--js javascript/$(SERVICE)/Client \
-		--url http://kbase.us/services/$(SERVICE)/ \
+		--url $(URL) \
 		$(SERVICE).spec lib
 	-rm lib/$(SERVICE_CAPS)Server.p?
 	-rm lib/$(SERVICE_CAPS)Impl.p?
@@ -115,9 +121,9 @@ deploy-service-scripts:
 	echo "then" >> $(SERVICE_DIR)/start_service
 	echo "    export KB_DEPLOYMENT_CONFIG=$(TARGET)/deployment.cfg" >> $(SERVICE_DIR)/start_service
 	echo "fi" >> $(SERVICE_DIR)/start_service
-	echo "$(SERVICE_DIR)/glassfish_start_service.sh $(SERVICE_DIR)/$(WAR) $(SERVICE_PORT) $(THREADPOOL_SIZE)" >> $(SERVICE_DIR)/start_service
+	echo "$(SERVICE_DIR)/glassfish_administer_service.py -a $(ASADMIN) -d $(SERVICE_CAPS) -w $(SERVICE_DIR)/$(WAR) -p $(SERVICE_PORT) -t $(THREADPOOL_SIZE) -s $(MEMORY) -x $(MAX_MEMORY) -r KB_DEPLOYMENT_CONFIG=\$$KB_DEPLOYMENT_CONFIG" >> $(SERVICE_DIR)/start_service
 	chmod +x $(SERVICE_DIR)/start_service
-	echo "$(SERVICE_DIR)/glassfish_stop_service.sh $(SERVICE_PORT)" > $(SERVICE_DIR)/stop_service
+	echo "$(SERVICE_DIR)/glassfish_administer_service.py -a $(ASADMIN) -d $(SERVICE_CAPS) -p $(SERVICE_PORT)" > $(SERVICE_DIR)/stop_service
 	chmod +x $(SERVICE_DIR)/stop_service
 
 undeploy:
