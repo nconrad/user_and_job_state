@@ -87,16 +87,21 @@ public class JobState {
 		ensureIndexes();
 	}
 
-	private void ensureIndexes() { //TODO index on shared - what's the best index?
-		final DBObject idx = new BasicDBObject();
-		idx.put(USER, 1);
-		idx.put(SERVICE, 1);
-		idx.put(COMPLETE, 1);
-		jobcol.ensureIndex(idx);
+	private void ensureIndexes() {
+		ensureUserIndex(USER);
+		ensureUserIndex(SHARED);
 		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
 		final DBObject opts = new BasicDBObject("expireAfterSeconds",
 				JOB_EXPIRES);
 		jobcol.ensureIndex(ttlidx, opts);
+	}
+
+	private void ensureUserIndex(final String userField) {
+		final DBObject idx = new BasicDBObject();
+		idx.put(userField, 1);
+		idx.put(SERVICE, 1);
+		idx.put(COMPLETE, 1);
+		jobcol.ensureIndex(idx);
 	}
 	
 	public String createJob(final String user) throws CommunicationException {
@@ -423,7 +428,9 @@ public class JobState {
 	public Set<String> listServices(final String user)
 			throws CommunicationException {
 		checkString(user, "user");
-		final DBObject query = new BasicDBObject(USER, user);
+		final DBObject query = new BasicDBObject("$or", Arrays.asList(
+				new BasicDBObject(USER, user),
+				new BasicDBObject(SHARED, user)));
 		query.put(SERVICE, new BasicDBObject("$ne", null));
 		final DBObject match = new BasicDBObject("$match", query);
 		
@@ -443,10 +450,16 @@ public class JobState {
 	
 	public List<Job> listJobs(final String user, final List<String> services,
 			final boolean running, final boolean complete,
-			final boolean error)
+			final boolean error, final boolean shared)
 			throws CommunicationException {
 		checkString(user, "user");
-		String query = String.format("{%s: '%s'", USER, user);
+		String query;
+		if (shared) {
+			query = String.format("{$or: [{%s: '%s'}, {%s: '%s'}]",
+					USER, user, SHARED, user);
+		} else {
+			query = String.format("{%s: '%s'", USER, user);
+		}
 		if (services != null && !services.isEmpty()) {
 			for (final String s: services) {
 				checkString(s, "service", MAX_LEN_SERVICE);

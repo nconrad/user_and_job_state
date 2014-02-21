@@ -739,7 +739,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				String, String, Long, Long, String, String, Long,
 				Long, String, Results>>();
 		for (final Job j: js.listJobs(authPart.getUserName(), services,
-				running, complete, error)) {
+				running, complete, error, false)) { //TODO fix 
 			returnVal.add(jobToJobInfo(j));
 		}
         //END list_jobs
