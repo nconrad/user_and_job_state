@@ -499,14 +499,22 @@ public class JobState {
 		return jobs;
 	}
 	
+	//note sharing with an already shared user or sharing with the owner has
+	//no effect
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
 		final ObjectId id = checkShareParams(owner, jobID, users, "owner");
+		final List<String> us = new LinkedList<String>();
+		for (final String u: users) {
+			if (u != owner) {
+				us.add(u);
+			}
+		}
 		final WriteResult wr;
 		try {
 			wr = jobjong.update(QRY_FIND_JOB_BY_OWNER, id, owner)
-					.with("{$addToSet: {" + SHARED + ": {$each: #}}}", users);
+					.with("{$addToSet: {" + SHARED + ": {$each: #}}}", us);
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
@@ -517,22 +525,23 @@ public class JobState {
 		}
 	}
 
-	private ObjectId checkShareParams(final String owner, final String jobID,
+	private ObjectId checkShareParams(final String user, final String jobID,
 			final List<String> users, final String userType) {
-		checkString(owner, userType);
+		checkString(user, userType);
 		if (users == null) {
 			throw new IllegalArgumentException("The users list cannot be null");
 		}
 		if (users.isEmpty()) {
 			throw new IllegalArgumentException("The users list is empty");
 		}
-		for (final String user: users) {
-			checkString(user, "user");
+		for (final String u: users) {
+			checkString(u, "user");
 		}
 		final ObjectId id = checkJobID(jobID);
 		return id;
 	}
 	
+	//removing the owner or an unshared user has no effect
 	public void unshareJob(final String user, final String jobID,
 			final List<String> users) throws CommunicationException,
 			NoSuchJobException {
