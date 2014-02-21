@@ -100,14 +100,14 @@ public class JobStateTests {
 			fail("Got a non-existant job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no job %s for user foo1", jobid)));
+					is(String.format("There is no job %s viewable by user foo1", jobid)));
 		}
 		try {
 			js.getJob("foo", "a" + jobid.substring(1));
 			fail("Got a non-existant job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no job %s for user foo",
+					is(String.format("There is no job %s viewable by user foo",
 					"a" + jobid.substring(1))));
 		}
 		try {
@@ -608,7 +608,7 @@ public class JobStateTests {
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
 					is(String.format(
-					"There is no job %s for user %s", jobid, user)));
+					"There is no job %s viewable by user %s", jobid, user)));
 		}
 	}
 	
@@ -621,7 +621,7 @@ public class JobStateTests {
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
 					is(String.format(
-					"There is no job %s for user %s", jobid, user)));
+					"There is no job %s viewable by user %s", jobid, user)));
 		}
 	}
 	
@@ -759,7 +759,9 @@ public class JobStateTests {
 		js.shareJob(sh, jobid, Arrays.asList("foo", "bar", "baz", "boop"));
 		js.unshareJob("bar", jobid, Arrays.asList("bar"));
 		js.unshareJob(sh, jobid, Arrays.asList("baz"));
-		js.unshareJob("foo", jobid, Arrays.asList("boop"));
+		System.out.println(js.getJob("foo", jobid));
+		
+//		js.unshareJob("foo", jobid, Arrays.asList("boop")); //should fail
 		
 		
 	}

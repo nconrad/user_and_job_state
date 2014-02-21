@@ -128,8 +128,10 @@ public class JobState {
 		return oi;
 	}
 	
-	private final static String QRY_FIND_JOB = String.format(
+	private final static String QRY_FIND_JOB_BY_OWNER = String.format(
 			"{%s: #, %s: #}", MONGO_ID, USER);
+	private final static String QRY_FIND_JOB_BY_USER = String.format(
+			"{%s: #, $or: [{%s: #}, {%s: #}]}", MONGO_ID, USER, SHARED);
 	private final static String QRY_FIND_JOB_NO_USER = String.format(
 			"{%s: #}", MONGO_ID);
 	
@@ -147,7 +149,8 @@ public class JobState {
 			if (user == null) {
 				j = jobjong.findOne(QRY_FIND_JOB_NO_USER, jobID).as(Job.class);
 			} else {
-				j = jobjong.findOne(QRY_FIND_JOB, jobID, user).as(Job.class);
+				j = jobjong.findOne(QRY_FIND_JOB_BY_USER, jobID, user, user)
+						.as(Job.class);
 			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
@@ -155,7 +158,7 @@ public class JobState {
 		}
 		if (j == null) {
 			throw new NoSuchJobException(String.format(
-					"There is no job %s for user %s", jobID, user));
+					"There is no job %s viewable by user %s", jobID, user));
 		}
 		return j;
 	}
@@ -489,7 +492,7 @@ public class JobState {
 		final ObjectId id = checkShareParams(owner, jobID, users, "owner");
 		final WriteResult wr;
 		try {
-			wr = jobjong.update(QRY_FIND_JOB, id, owner)
+			wr = jobjong.update(QRY_FIND_JOB_BY_OWNER, id, owner)
 					.with("{$addToSet: {" + SHARED + ": {$each: #}}}", users);
 		} catch (MongoException me) {
 			throw new CommunicationException(
@@ -542,7 +545,7 @@ public class JobState {
 			throw e;
 		}
 		try {
-			jobjong.update(QRY_FIND_JOB, id, j.getUser())
+			jobjong.update(QRY_FIND_JOB_BY_OWNER, id, j.getUser())
 					.with("{$pullAll: {" + SHARED + ": #}}", users);
 		} catch (MongoException me) {
 			throw new CommunicationException(
