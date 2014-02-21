@@ -747,4 +747,20 @@ public class JobStateTests {
 		}
 		assertThat("got expected jobs back", res, is(new HashSet<FakeJob>(expected)));
 	}
+	
+	@Test
+	public void shareJob() throws Exception {
+		//TODO these are not tests, just trying things out
+		String sh = "share";
+		String jobid = js.createAndStartJob(sh, "shareserv", "st", "dsc",
+				null);
+		js.shareJob(sh, jobid, Arrays.asList("foo", "bar"));
+		js.shareJob(sh, jobid, Arrays.asList("foo", "bar"));
+		js.shareJob(sh, jobid, Arrays.asList("foo", "bar", "baz", "boop"));
+		js.unshareJob("bar", jobid, Arrays.asList("bar"));
+		js.unshareJob(sh, jobid, Arrays.asList("baz"));
+		js.unshareJob("foo", jobid, Arrays.asList("boop"));
+		
+		
+	}
 }

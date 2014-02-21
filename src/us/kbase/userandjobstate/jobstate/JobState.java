@@ -5,6 +5,7 @@ import static us.kbase.common.utils.StringUtils.checkMaxLen;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -56,6 +57,7 @@ public class JobState {
 	private final static String MAXPROG = "maxprog";
 	private final static String STATUS = "status";
 	private final static String RESULT = "results";
+	private final static String SHARED = "shared";
 	
 	private final static String MONGO_ID = "_id";
 	
@@ -85,7 +87,7 @@ public class JobState {
 		ensureIndexes();
 	}
 
-	private void ensureIndexes() {
+	private void ensureIndexes() { //TODO index on shared - what's the best index?
 		final DBObject idx = new BasicDBObject();
 		idx.put(USER, 1);
 		idx.put(SERVICE, 1);
@@ -128,15 +130,25 @@ public class JobState {
 	
 	private final static String QRY_FIND_JOB = String.format(
 			"{%s: #, %s: #}", MONGO_ID, USER);
+	private final static String QRY_FIND_JOB_NO_USER = String.format(
+			"{%s: #}", MONGO_ID);
 	
 	public Job getJob(final String user, final String jobID)
 			throws CommunicationException, NoSuchJobException {
 		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId oi = checkJobID(jobID);
+		return getJob(user, oi);
+	}
+		
+	private Job getJob(final String user, final ObjectId jobID)
+			throws CommunicationException, NoSuchJobException {
 		final Job j;
 		try {
-			j = jobjong.findOne(QRY_FIND_JOB,
-					oi, user).as(Job.class);
+			if (user == null) {
+				j = jobjong.findOne(QRY_FIND_JOB_NO_USER, jobID).as(Job.class);
+			} else {
+				j = jobjong.findOne(QRY_FIND_JOB, jobID, user).as(Job.class);
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
@@ -469,5 +481,72 @@ public class JobState {
 			jobs.add(job);
 		}
 		return jobs;
+	}
+	
+	public void shareJob(final String owner, final String jobID,
+			final List<String> users)
+			throws CommunicationException, NoSuchJobException {
+		final ObjectId id = checkShareParams(owner, jobID, users, "owner");
+		final WriteResult wr;
+		try {
+			wr = jobjong.update(QRY_FIND_JOB, id, owner)
+					.with("{$addToSet: {" + SHARED + ": {$each: #}}}", users);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if (wr.getN() != 1) {
+			throw new NoSuchJobException(String.format(
+					"There is no job %s for user %s", jobID, owner));
+		}
+	}
+
+	private ObjectId checkShareParams(final String owner, final String jobID,
+			final List<String> users, final String userType) {
+		checkString(owner, userType);
+		if (users == null) {
+			throw new IllegalArgumentException("The users list cannot be null");
+		}
+		if (users.isEmpty()) {
+			throw new IllegalArgumentException("The users list is empty");
+		}
+		for (final String user: users) {
+			checkString(user, "user");
+		}
+		final ObjectId id = checkJobID(jobID);
+		return id;
+	}
+	
+	public void unshareJob(final String user, final String jobID,
+			final List<String> users) throws CommunicationException,
+			NoSuchJobException {
+		final NoSuchJobException e = new NoSuchJobException(String.format(
+				"There is no job %s visible to user %s", jobID, user));
+		final ObjectId id = checkShareParams(user, jobID, users, "user");
+		final Job j;
+		try {
+			j= getJob(null, id);
+		} catch (NoSuchJobException nsje) {
+			throw e;
+		}
+		if (j.getUser().equals(user)) {
+			//it's the owner, can do whatever
+		} else if (j.getShared().contains(user)) {
+			if (!users.equals(Arrays.asList(user))) {
+				throw new IllegalArgumentException(String.format(
+						"User %s may only stop sharing job %s for themselves",
+						user, jobID));
+			}
+			//shared user removing themselves, no prob
+		} else {
+			throw e;
+		}
+		try {
+			jobjong.update(QRY_FIND_JOB, id, j.getUser())
+					.with("{$pullAll: {" + SHARED + ": #}}", users);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
 	}
 }
