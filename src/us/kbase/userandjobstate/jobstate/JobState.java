@@ -513,7 +513,7 @@ public class JobState {
 		}
 		if (wr.getN() != 1) {
 			throw new NoSuchJobException(String.format(
-					"There is no job %s for user %s", jobID, owner));
+					"There is no job %s owned by user %s", jobID, owner));
 		}
 	}
 

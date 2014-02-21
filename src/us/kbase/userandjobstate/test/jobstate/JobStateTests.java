@@ -661,10 +661,13 @@ public class JobStateTests {
 		checkListServ("listserv2", new ArrayList<String>());
 		js.createAndStartJob("listserv", "serv2", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
-		js.createAndStartJob("listserv2", "serv3", null, null, null);
+		jobid = js.createAndStartJob("listserv2", "serv3", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
 		checkListServ("listserv2", Arrays.asList("serv3"));
-		
+		js.shareJob("listserv2", jobid, Arrays.asList("listserv"));
+		checkListServ("listserv", Arrays.asList("serv1", "serv2", "serv3"));
+		js.unshareJob("listserv2", jobid, Arrays.asList("listserv"));
+		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
 	}
 	
 	private void checkListServ(String user, List<String> expected) throws Exception {
@@ -737,6 +740,22 @@ public class JobStateTests {
 				js.listJobs(lj, Arrays.asList("serv1"), true, true, false, false));
 		checkListJobs(Arrays.asList(multi),
 				js.listJobs(lj, Arrays.asList("serv2"), true, true, true, false));
+		
+		//check on shared jobs
+		jobid = js.createAndStartJob("listJobsShare", "shareserv", "sst", "sdsc", null);
+		FakeJob shared = new FakeJob(jobid, "listJobsShare", "shareserv", "started",
+				null, "sdsc", "none", null, null, "sst", false, false, null, null);
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		js.shareJob("listJobsShare", jobid, Arrays.asList(lj));
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, false));
+		checkListJobs(Arrays.asList(started, shared),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		js.unshareJob("listJobsShare", jobid, Arrays.asList(lj));
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		
 	}
 	
 	private void checkListJobs(List<FakeJob> expected, List<Job> result)
