@@ -492,7 +492,7 @@ public class JSONRPCLayerTest {
 			jobid = "a" + jobid.substring(1);
 		}
 		testGetJobBadArgs(jobid, String.format(
-				"There is no job %s for user kbasetest", jobid));
+				"There is no job %s viewable by user kbasetest", jobid));
 	}
 	
 	private void testGetJobBadArgs(String jobid, String exception)
@@ -692,41 +692,37 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void deleteJob() throws Exception {
+		String nojob = "There is no job %s viewable by user %s";
+		
 		InitProgress noprog = new InitProgress().withPtype("none");
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "d stat", "d desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d stat2", null, null);
 		CLIENT1.deleteJob(jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "e stat", "e desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "e stat2", "err", null);
 		CLIENT1.deleteJob(jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d2 stat", "d2 desc", noprog, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d3 stat", "d3 desc", noprog, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "d3 stat2", 3L, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d4 stat", "d4 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d4 stat2", null, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d5 stat", "d5 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d5 stat2", "err", null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		testGetJobBadArgs(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createJob();
 		failToDeleteJob(jobid, String.format(
