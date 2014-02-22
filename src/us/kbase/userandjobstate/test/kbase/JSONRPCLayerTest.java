@@ -790,12 +790,22 @@ public class JSONRPCLayerTest {
 	public void listServices() throws Exception {
 		checkListServices(CLIENT2, new HashSet<String>());
 		InitProgress noprog = new InitProgress().withPtype("none");
-		CLIENT1.createAndStartJob(TOKEN2, "ls stat", "ls desc", noprog, null);
+		String jobid1 = CLIENT1.createAndStartJob(TOKEN2, "ls stat", "ls desc",
+				noprog, null);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER2)));
-		String jobid = CLIENT1.createAndStartJob(TOKEN1, "ls2 stat",
+		String jobid2 = CLIENT1.createAndStartJob(TOKEN1, "ls2 stat",
 				"ls2 desc", noprog, null);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER1, USER2)));
-		CLIENT1.forceDeleteJob(TOKEN1, jobid);
+		checkListServices(CLIENT2, new HashSet<String>());
+		CLIENT1.shareJob(jobid2, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER1)));
+		CLIENT1.shareJob(jobid1, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER1, USER2)));
+		CLIENT1.unshareJob(jobid2, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER2)));
+		
+		CLIENT1.forceDeleteJob(TOKEN1, jobid2);
+		CLIENT1.forceDeleteJob(TOKEN2, jobid1);
 	}
 	
 	private void checkListServices(UserAndJobStateClient client,
@@ -812,16 +822,51 @@ public class JSONRPCLayerTest {
 		
 		checkListJobs(USER1, null, empty);
 		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "S", empty);
 		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "RS", empty);
 		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "RCS", empty);
 		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
 		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RES", empty);
 		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RCES", empty);
 		checkListJobs(USER1, "RCEX", empty);
+		checkListJobs(USER1, "RCEXS", empty);
 		
-		String jobid = CLIENT2.createJob();
+		String jobid = CLIENT1.createAndStartJob(TOKEN1, "ljs stat", "ljs desc", noprog, null);
+		FakeJob shared = new FakeJob(jobid, null, USER1, "started", null, "ljs desc",
+				"none", null, null, "ljs stat", false, false, null, null);
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2));
+		Set<FakeJob> setsharedonly = new HashSet<FakeJob>(Arrays.asList(shared)); 
+		
+		checkListJobs(USER1, null, empty);
+		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "S", setsharedonly);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "RS", setsharedonly);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "RCS", setsharedonly);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
+		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RES", setsharedonly);
+		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RCES", setsharedonly);
+		checkListJobs(USER1, "RCEX", empty);
+		checkListJobs(USER1, "RCEXS", setsharedonly);
+		
+		jobid = CLIENT2.createJob();
 		checkListJobs(USER1, null, empty);
 		checkListJobs(USER1, "", empty);
 		checkListJobs(USER1, "R", empty);
@@ -837,16 +882,27 @@ public class JSONRPCLayerTest {
 		FakeJob started = new FakeJob(jobid, null, USER1, "started", null, "lj desc",
 				"none", null, null, "lj stat", false, false, null, null);
 		Set<FakeJob> setstarted = new HashSet<FakeJob>(Arrays.asList(started));
+		Set<FakeJob> setstartshare = new HashSet<FakeJob>(setstarted);
+		setstartshare.add(shared);
 		checkListJobs(USER1, null, setstarted);
 		checkListJobs(USER1, "", setstarted);
+		checkListJobs(USER1, "S", setstartshare);
 		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "RS", setstartshare);
 		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", setstarted);
+		checkListJobs(USER1, "RCS", setstartshare);
 		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
 		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RES", setstartshare);
 		checkListJobs(USER1, "RCE", setstarted);
+		checkListJobs(USER1, "RCES", setstartshare);
 		checkListJobs(USER1, "!RCE", setstarted);
+		checkListJobs(USER1, "!RCES", setstartshare);
 		
 		jobid = CLIENT2.createAndStartJob(TOKEN1, "lj2 stat", "lj2 desc",
 				new InitProgress().withPtype("percent"), null);
@@ -882,16 +938,27 @@ public class JSONRPCLayerTest {
 		Set<FakeJob> setstartcomp = new HashSet<FakeJob>();
 		setstartcomp.addAll(setstarted);
 		setstartcomp.addAll(setcomplete);
+		Set<FakeJob> setstartcompshare = new HashSet<FakeJob>(setstartcomp);
+		setstartcompshare.add(shared);
 		checkListJobs(USER1, null, setstartcomp);
 		checkListJobs(USER1, "", setstartcomp);
+		checkListJobs(USER1, "S", setstartcompshare);
 		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "RS", setstartshare);
 		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "CS", setcomplete);
 		checkListJobs(USER1, "C0", setcomplete);
+		checkListJobs(USER1, "C0S", setcomplete);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", setstartcomp);
+		checkListJobs(USER1, "RCS", setstartcompshare);
 		checkListJobs(USER1, "CE", setcomplete);
+		checkListJobs(USER1, "CES", setcomplete);
 		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RES", setstartshare);
 		checkListJobs(USER1, "RCE", setstartcomp);
+		checkListJobs(USER1, "RCES", setstartcompshare);
 		
 		jobid = CLIENT2.createAndStartJob(TOKEN1, "lj3 stat", "lj3 desc",
 				new InitProgress().withPtype("task").withMax(55L), null);
