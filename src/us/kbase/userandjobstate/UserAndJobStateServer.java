@@ -714,7 +714,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * services.
      * </pre>
      * @param   services   instance of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
-     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all jobs that have been started are returned.)
+     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. 'S' - shared jobs are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all self-owned jobs that have been started are returned. If only the S filter is present, all jobs that have been started are returned.)
      * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 14: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
@@ -724,6 +724,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		boolean running = false;
 		boolean complete = false;
 		boolean error = false;
+		boolean shared = false;
 		if (filter != null) {
 			if (filter.indexOf("R") > -1) {
 				running = true;
@@ -734,12 +735,15 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			if (filter.indexOf("E") > -1) {
 				error = true;
 			}
+			if (filter.indexOf("S") > -1) {
+				shared = true;
+			}
 		}
 		returnVal = new LinkedList<Tuple14<String, String, String, String,
 				String, String, Long, Long, String, String, Long,
 				Long, String, Results>>();
 		for (final Job j: js.listJobs(authPart.getUserName(), services,
-				running, complete, error, false)) { //TODO fix 
+				running, complete, error, shared)) {
 			returnVal.add(jobToJobInfo(j));
 		}
         //END list_jobs
@@ -770,10 +774,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * has no effect.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     * @param   users   instance of list of original type "username" (Login name of a KBase user account.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.share_job")
-    public void shareJob(String job, List<String> arg2, AuthToken authPart) throws Exception {
+    public void shareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN share_job
         //END share_job
     }
@@ -785,10 +789,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * shared with or the job owner has no effect.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     * @param   users   instance of list of original type "username" (Login name of a KBase user account.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.unshare_job")
-    public void unshareJob(String job, List<String> arg2, AuthToken authPart) throws Exception {
+    public void unshareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN unshare_job
         //END unshare_job
     }
@@ -799,7 +803,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * Get the owner of a job.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @return   instance of original type "username" (Login name of a KBase user account.)
+     * @return   parameter "owner" of original type "username" (Login name of a KBase user account.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_owner")
     public String getJobOwner(String job, AuthToken authPart) throws Exception {
@@ -816,7 +820,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * may access this method.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
-     * @return   instance of list of original type "username" (Login name of a KBase user account.)
+     * @return   parameter "users" of list of original type "username" (Login name of a KBase user account.)
      */
     @JsonServerMethod(rpc = "UserAndJobState.get_job_shared")
     public List<String> getJobShared(String job, AuthToken authPart) throws Exception {

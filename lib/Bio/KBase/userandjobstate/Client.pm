@@ -2082,7 +2082,7 @@ sub list_job_services
 
 =head2 share_job
 
-  $obj->share_job($job, $arg_2)
+  $obj->share_job($job, $users)
 
 =over 4
 
@@ -2092,7 +2092,7 @@ sub list_job_services
 
 <pre>
 $job is a UserAndJobState.job_id
-$arg_2 is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2103,7 +2103,7 @@ username is a string
 =begin text
 
 $job is a UserAndJobState.job_id
-$arg_2 is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2131,11 +2131,11 @@ sub share_job
 							       "Invalid argument count for function share_job (received $n, expecting 2)");
     }
     {
-	my($job, $arg_2) = @args;
+	my($job, $users) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (ref($arg_2) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"arg_2\" (value was \"$arg_2\")");
+        (ref($users) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"users\" (value was \"$users\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to share_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -2169,7 +2169,7 @@ sub share_job
 
 =head2 unshare_job
 
-  $obj->unshare_job($job, $arg_2)
+  $obj->unshare_job($job, $users)
 
 =over 4
 
@@ -2179,7 +2179,7 @@ sub share_job
 
 <pre>
 $job is a UserAndJobState.job_id
-$arg_2 is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2190,7 +2190,7 @@ username is a string
 =begin text
 
 $job is a UserAndJobState.job_id
-$arg_2 is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2218,11 +2218,11 @@ sub unshare_job
 							       "Invalid argument count for function unshare_job (received $n, expecting 2)");
     }
     {
-	my($job, $arg_2) = @args;
+	my($job, $users) = @args;
 
 	my @_bad_arguments;
         (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
-        (ref($arg_2) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"arg_2\" (value was \"$arg_2\")");
+        (ref($users) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"users\" (value was \"$users\")");
         if (@_bad_arguments) {
 	    my $msg = "Invalid arguments passed to unshare_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
 	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
@@ -2256,7 +2256,7 @@ sub unshare_job
 
 =head2 get_job_owner
 
-  $return = $obj->get_job_owner($job)
+  $owner = $obj->get_job_owner($job)
 
 =over 4
 
@@ -2266,7 +2266,7 @@ sub unshare_job
 
 <pre>
 $job is a UserAndJobState.job_id
-$return is a UserAndJobState.username
+$owner is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2277,7 +2277,7 @@ username is a string
 =begin text
 
 $job is a UserAndJobState.job_id
-$return is a UserAndJobState.username
+$owner is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2341,7 +2341,7 @@ sub get_job_owner
 
 =head2 get_job_shared
 
-  $return = $obj->get_job_shared($job)
+  $users = $obj->get_job_shared($job)
 
 =over 4
 
@@ -2351,7 +2351,7 @@ sub get_job_owner
 
 <pre>
 $job is a UserAndJobState.job_id
-$return is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -2362,7 +2362,7 @@ username is a string
 =begin text
 
 $job is a UserAndJobState.job_id
-$return is a reference to a list where each element is a UserAndJobState.username
+$users is a reference to a list where each element is a UserAndJobState.username
 job_id is a string
 username is a string
 
@@ -3295,9 +3295,11 @@ A string-based filter for listing jobs.
                 'R' - running jobs are returned.
                 'C' - completed jobs are returned.
                 'E' - jobs that errored out are returned.
+                'S' - shared jobs are returned.
         The string can contain any combination of these codes in any order.
-        If the string contains none of the codes or is null, all jobs that have
-        been started are returned.
+        If the string contains none of the codes or is null, all self-owned 
+        jobs that have been started are returned. If only the S filter is
+        present, all jobs that have been started are returned.
 
 
 =item Definition

@@ -852,10 +852,10 @@ class UserAndJobState(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def share_job(self, job, arg_2):
+    def share_job(self, job, users):
 
         arg_hash = {'method': 'UserAndJobState.share_job',
-                    'params': [job, arg_2],
+                    'params': [job, users],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }
@@ -887,10 +887,10 @@ class UserAndJobState(object):
         else:
             raise ServerError('Unknown', 0, 'An unknown server error occurred')
 
-    def unshare_job(self, job, arg_2):
+    def unshare_job(self, job, users):
 
         arg_hash = {'method': 'UserAndJobState.unshare_job',
-                    'params': [job, arg_2],
+                    'params': [job, users],
                     'version': '1.1',
                     'id': str(random.random())[2:]
                     }

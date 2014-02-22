@@ -238,9 +238,11 @@ module UserAndJobState {
 			'R' - running jobs are returned.
 			'C' - completed jobs are returned.
 			'E' - jobs that errored out are returned.
+			'S' - shared jobs are returned.
 		The string can contain any combination of these codes in any order.
-		If the string contains none of the codes or is null, all jobs that have
-		been started are returned.
+		If the string contains none of the codes or is null, all self-owned 
+		jobs that have been started are returned. If only the S filter is
+		present, all jobs that have been started are returned.
 	*/
 	typedef string job_filter;
 	
@@ -256,20 +258,20 @@ module UserAndJobState {
 	/* Share a job. Sharing a job to the same user twice or with the job owner
 		has no effect.
 	*/
-	funcdef share_job(job_id job, list<username>) returns();
+	funcdef share_job(job_id job, list<username> users) returns();
 	
 	/* Stop sharing a job. Removing sharing from a user that the job is not
 		shared with or the job owner has no effect.
 	*/
-	funcdef unshare_job(job_id job, list<username>) returns();
+	funcdef unshare_job(job_id job, list<username> users) returns();
 	
 	/* Get the owner of a job. */
-	funcdef get_job_owner(job_id job) returns(username);
+	funcdef get_job_owner(job_id job) returns(username owner);
 	
 	/* Get the list of users with which a job is shared. Only the job owner
 		may access this method.
 	*/
-	funcdef get_job_shared(job_id job) returns(list<username>);
+	funcdef get_job_shared(job_id job) returns(list<username> users);
 	
 	/* Delete a job. Will fail if the job is not complete. */
 	funcdef delete_job(job_id job) returns();
