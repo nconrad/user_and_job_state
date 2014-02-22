@@ -67,7 +67,7 @@ public class UserAndJobStateClient {
     private static URL DEFAULT_URL = null;
     static {
         try {
-            DEFAULT_URL = new URL("http://kbase.us/services/userandjobstate/");
+            DEFAULT_URL = new URL("https://kbase.us/services/userandjobstate/");
         } catch (MalformedURLException mue) {
             throw new RuntimeException("Compile error in client - bad url compiled");
         }
@@ -509,6 +509,81 @@ public class UserAndJobStateClient {
         List<Object> args = new ArrayList<Object>();
         TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
         List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_job_services", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: share_job</p>
+     * <pre>
+     * Share a job. Sharing a job to the same user twice or with the job owner
+     * has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void shareJob(String job, List<String> arg2) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        args.add(arg2);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.share_job", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: unshare_job</p>
+     * <pre>
+     * Stop sharing a job. Removing sharing from a user that the job is not
+     * shared with or the job owner has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void unshareJob(String job, List<String> arg2) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        args.add(arg2);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.unshare_job", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_owner</p>
+     * <pre>
+     * Get the owner of a job.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   instance of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public String getJobOwner(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<List<String>> retType = new TypeReference<List<String>>() {};
+        List<String> res = caller.jsonrpcCall("UserAndJobState.get_job_owner", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_shared</p>
+     * <pre>
+     * Get the list of users with which a job is shared. Only the job owner
+     * may access this method.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   instance of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public List<String> getJobShared(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.get_job_shared", args, retType, true, true);
         return res.get(0);
     }
 

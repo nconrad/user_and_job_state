@@ -60,6 +60,9 @@ module UserAndJobState {
 	/* A boolean. 0 = false, other = true. */
 	typedef int boolean;
 	
+	/* Login name of a KBase user account. */
+	typedef string username;
+	
 	/* A service name. Alphanumerics and the underscore are allowed. */
 	typedef string service_name;
 	
@@ -249,6 +252,24 @@ module UserAndJobState {
 	
 	/* List all job services. */
 	funcdef list_job_services() returns(list<service_name> services);
+	
+	/* Share a job. Sharing a job to the same user twice or with the job owner
+		has no effect.
+	*/
+	funcdef share_job(job_id job, list<username>) returns();
+	
+	/* Stop sharing a job. Removing sharing from a user that the job is not
+		shared with or the job owner has no effect.
+	*/
+	funcdef unshare_job(job_id job, list<username>) returns();
+	
+	/* Get the owner of a job. */
+	funcdef get_job_owner(job_id job) returns(username);
+	
+	/* Get the list of users with which a job is shared. Only the job owner
+		may access this method.
+	*/
+	funcdef get_job_shared(job_id job) returns(list<username>);
 	
 	/* Delete a job. Will fail if the job is not complete. */
 	funcdef delete_job(job_id job) returns();

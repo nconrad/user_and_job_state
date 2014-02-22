@@ -5,11 +5,11 @@ OVERVIEW
 A service for 1) maintaining global KBase user state, and 2) maintaining
 job state. See the API docs for more details.
 
-VERSION: 0.0.1 (Released 10/14/2013)
+VERSION: 0.0.2 (Released TBD)
 --------------------------------------
 
 NEW FEATURES:
-- First release.
+- Share jobs with another user.
 
 UPDATED FEATURES / MAJOR BUG FIXES:
 - N/A
@@ -37,3 +37,15 @@ Type "help", "copyright", "credits" or "license" for more information.
 u'525c7bb0e4b0ade4bb6a6593'
 
 The above call will fail if the server has started incorrectly.
+
+VERSION: 0.0.1 (Released 10/14/2013)
+--------------------------------------
+
+NEW FEATURES:
+- First release.
+
+UPDATED FEATURES / MAJOR BUG FIXES:
+- N/A
+
+ANTICIPATED FUTURE DEVELOPMENTS:
+- None

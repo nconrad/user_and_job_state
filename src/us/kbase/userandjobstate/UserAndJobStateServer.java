@@ -764,6 +764,69 @@ public class UserAndJobStateServer extends JsonServerServlet {
     }
 
     /**
+     * <p>Original spec-file function name: share_job</p>
+     * <pre>
+     * Share a job. Sharing a job to the same user twice or with the job owner
+     * has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.share_job")
+    public void shareJob(String job, List<String> arg2, AuthToken authPart) throws Exception {
+        //BEGIN share_job
+        //END share_job
+    }
+
+    /**
+     * <p>Original spec-file function name: unshare_job</p>
+     * <pre>
+     * Stop sharing a job. Removing sharing from a user that the job is not
+     * shared with or the job owner has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   arg2   instance of list of original type "username" (Login name of a KBase user account.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.unshare_job")
+    public void unshareJob(String job, List<String> arg2, AuthToken authPart) throws Exception {
+        //BEGIN unshare_job
+        //END unshare_job
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_owner</p>
+     * <pre>
+     * Get the owner of a job.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   instance of original type "username" (Login name of a KBase user account.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.get_job_owner")
+    public String getJobOwner(String job, AuthToken authPart) throws Exception {
+        String returnVal = null;
+        //BEGIN get_job_owner
+        //END get_job_owner
+        return returnVal;
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_shared</p>
+     * <pre>
+     * Get the list of users with which a job is shared. Only the job owner
+     * may access this method.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   instance of list of original type "username" (Login name of a KBase user account.)
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.get_job_shared")
+    public List<String> getJobShared(String job, AuthToken authPart) throws Exception {
+        List<String> returnVal = null;
+        //BEGIN get_job_shared
+        //END get_job_shared
+        return returnVal;
+    }
+
+    /**
      * <p>Original spec-file function name: delete_job</p>
      * <pre>
      * Delete a job. Will fail if the job is not complete.
