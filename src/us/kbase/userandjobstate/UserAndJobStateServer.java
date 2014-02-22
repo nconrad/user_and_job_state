@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.auth.TokenExpiredException;
 import us.kbase.auth.TokenFormatException;
@@ -224,6 +225,24 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		
 	private Date parseDate(final String date) throws ParseException {
 		return date == null ? null : dateFormat.parseDate(date);
+	}
+	
+	private void checkUsers(final List<String> users, AuthToken token)
+			throws IOException, AuthException {
+		//token is guaranteed to not be null since all calls require
+		//authentication
+		if (users == null || users.isEmpty()) {
+			throw new IllegalArgumentException(
+					"The user list may not be null or empty");
+		}
+		final Map<String, Boolean> userok = AuthService.isValidUserName(
+				users, token);
+		for (String u: userok.keySet()) {
+			if (!userok.get(u)) {
+				throw new IllegalArgumentException(String.format(
+						"User %s is not a valid user", u));
+			}
+		}
 	}
     //END_CLASS_HEADER
 
@@ -779,6 +798,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.share_job")
     public void shareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN share_job
+		checkUsers(users, authPart);
+		js.shareJob(authPart.getUserName(), job, users);
         //END share_job
     }
 
@@ -794,6 +815,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.unshare_job")
     public void unshareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN unshare_job
+		checkUsers(users, authPart);
+		js.unshareJob(authPart.getUserName(), job, users);
         //END unshare_job
     }
 
@@ -809,6 +832,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public String getJobOwner(String job, AuthToken authPart) throws Exception {
         String returnVal = null;
         //BEGIN get_job_owner
+		returnVal = js.getJob(authPart.getUserName(), job).getUser();
         //END get_job_owner
         return returnVal;
     }
@@ -826,6 +850,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<String> getJobShared(String job, AuthToken authPart) throws Exception {
         List<String> returnVal = null;
         //BEGIN get_job_shared
+		final Job j = js.getJob(authPart.getUserName(), job);
+		if (!j.getUser().equals(authPart.getUserName())) {
+			throw new IllegalArgumentException(String.format(
+					"User %s may not access the sharing list of job %s",
+					authPart.getUserName(), job));
+		}
+		returnVal = j.getShared();
         //END get_job_shared
         return returnVal;
     }
