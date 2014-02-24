@@ -58,13 +58,13 @@ class CommandGlassfishDomain(object):
         self.domain = domain
         self.path = None
         if (domainpath):
-            domaindir = os.path.abspath(os.path.expanduser(domainpath));
+            domaindir = os.path.abspath(os.path.expanduser(domainpath))
             if not os.path.isdir(domaindir):
                 if not os.path.exists(domaindir):
                     os.mkdir(domaindir)
                 else:
-                    print('Domain path ' + domainpath + ' must be a directory');
-                    sys.exit(1);
+                    print('Domain path ' + domainpath + ' must be a directory')
+                    sys.exit(1)
             self.path = domaindir
         p = (' at ' + self.path) if(self.path) else ''
         if self.exists():

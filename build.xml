@@ -7,7 +7,6 @@
   <!-- set global properties for this build -->
   <property name="package" value="user and job state service"/>
   <property name="src" location="src"/>
-  <property name="common-src" location="../java_common/src"/>
   <property name="lib" location="lib"/>
   <property name="dist" location="dist"/>
   <property name="test" location="test"/>
@@ -24,6 +23,8 @@
     <include name="jna/jna-3.4.0.jar"/>
     <include name="servlet/servlet-api-2.5.jar"/>
     <include name="syslog4j/syslog4j-0.9.46.jar"/>
+    <include name="kbase/kbase-common-0.0.1.jar"/>
+    <include name="apache_commons/commons-lang3-3.1.jar"/>
   </fileset>
 
   <fileset dir="${jardir}" id="clientserverlib">
@@ -40,15 +41,10 @@
     <include name="mongo/mongo-java-driver-2.11.2.jar"/>
   </fileset>
 
-  <fileset dir="${jardir}" id="commonlib">
-    <include name="apache_commons/commons-lang3-3.1.jar"/>
-  </fileset>
-
   <union id="serverside">
     <fileset refid="serverlib"/>
     <fileset refid="clientserverlib"/>
     <fileset refid="applicationlib"/>
-    <fileset refid="commonlib"/>
   </union>
 
   <fileset id="client-jdoc-files" dir="${src}/us/kbase" defaultexcludes="yes">
@@ -93,7 +89,6 @@
     <javac destdir="${classes}" includeantruntime="false"
       debug="true" classpathref="compile.classpath">
       <src path="${src}"/>
-      <src path="${common-src}"/>
     </javac>
     <!-- Make main jar file-->
     <jar destfile="${dist}/${jar.file}" basedir="${classes}"/>
