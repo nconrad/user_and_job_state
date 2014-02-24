@@ -23,8 +23,6 @@
     <include name="jna/jna-3.4.0.jar"/>
     <include name="servlet/servlet-api-2.5.jar"/>
     <include name="syslog4j/syslog4j-0.9.46.jar"/>
-    <include name="kbase/kbase-common-0.0.1.jar"/>
-    <include name="apache_commons/commons-lang3-3.1.jar"/>
   </fileset>
 
   <fileset dir="${jardir}" id="clientserverlib">
@@ -39,6 +37,8 @@
     <include name="bson4jackson/bson4jackson-2.2.0-2.2.0.jar"/>
     <include name="jongo/jongo-0.5-early-20130912-1506.jar"/>
     <include name="mongo/mongo-java-driver-2.11.2.jar"/>
+    <include name="kbase/kbase-common-0.0.1.jar"/>
+    <include name="apache_commons/commons-lang3-3.1.jar"/>
   </fileset>
 
   <union id="serverside">
