@@ -121,9 +121,15 @@ deploy-service-scripts:
 	echo "then" >> $(SERVICE_DIR)/start_service
 	echo "    export KB_DEPLOYMENT_CONFIG=$(TARGET)/deployment.cfg" >> $(SERVICE_DIR)/start_service
 	echo "fi" >> $(SERVICE_DIR)/start_service
-	echo "$(SERVICE_DIR)/glassfish_administer_service.py -a $(ASADMIN) -d $(SERVICE_CAPS) -w $(SERVICE_DIR)/$(WAR) -p $(SERVICE_PORT) -t $(THREADPOOL_SIZE) -s $(MEMORY) -x $(MAX_MEMORY) -r KB_DEPLOYMENT_CONFIG=\$$KB_DEPLOYMENT_CONFIG" >> $(SERVICE_DIR)/start_service
+	echo "$(SERVICE_DIR)/glassfish_administer_service.py --admin $(ASADMIN)\
+		--domain $(SERVICE_CAPS) --domain-dir $(SERVICE_DIR)/glassfish_domain\
+		--war $(SERVICE_DIR)/$(WAR) --port $(SERVICE_PORT)\
+		--threads $(THREADPOOL_SIZE) --Xms $(MEMORY) --Xmx $(MAX_MEMORY)\
+		--properties KB_DEPLOYMENT_CONFIG=\$$KB_DEPLOYMENT_CONFIG" >> $(SERVICE_DIR)/start_service
 	chmod +x $(SERVICE_DIR)/start_service
-	echo "$(SERVICE_DIR)/glassfish_administer_service.py -a $(ASADMIN) -d $(SERVICE_CAPS) -p $(SERVICE_PORT)" > $(SERVICE_DIR)/stop_service
+	echo "$(SERVICE_DIR)/glassfish_administer_service.py --admin $(ASADMIN)\
+		--domain $(SERVICE_CAPS) --domain-dir $(SERVICE_DIR)/glassfish_domain\
+		--port $(SERVICE_PORT)" > $(SERVICE_DIR)/stop_service
 	chmod +x $(SERVICE_DIR)/stop_service
 
 undeploy:
