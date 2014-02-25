@@ -79,7 +79,7 @@ sub new
     
     if (!defined($url))
     {
-	$url = 'http://kbase.us/services/userandjobstate/';
+	$url = 'https://kbase.us/services/userandjobstate/';
     }
 
     my $self = {
@@ -191,8 +191,9 @@ sub set_state
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'set_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -277,8 +278,9 @@ sub set_state_auth
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'set_state_auth',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -369,8 +371,9 @@ sub get_state
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -452,8 +455,9 @@ sub remove_state
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'remove_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -535,8 +539,9 @@ sub remove_state_auth
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'remove_state_auth',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -624,8 +629,9 @@ sub list_state
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'list_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -710,8 +716,9 @@ sub list_state_services
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'list_state_services',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -779,8 +786,9 @@ sub create_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'create_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -892,8 +900,9 @@ sub start_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'start_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -1004,8 +1013,9 @@ sub create_and_start_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'create_and_start_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1104,8 +1114,9 @@ sub update_job_progress
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'update_job_progress',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -1199,8 +1210,9 @@ sub update_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'update_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -1299,8 +1311,9 @@ sub get_job_description
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_job_description',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1403,8 +1416,9 @@ sub get_job_status
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_job_status',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1513,8 +1527,9 @@ sub complete_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'complete_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -1605,8 +1620,9 @@ sub get_results
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_results',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1689,8 +1705,9 @@ sub get_detailed_error
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_detailed_error',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1829,8 +1846,9 @@ sub get_job_info
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'get_job_info',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -1975,8 +1993,9 @@ sub list_jobs
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'list_jobs',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -2044,8 +2063,9 @@ sub list_job_services
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'list_job_services',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return wantarray ? @{$result->result} : $result->result->[0];
@@ -2054,6 +2074,351 @@ sub list_job_services
         Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method list_job_services",
 					    status_line => $self->{client}->status_line,
 					    method_name => 'list_job_services',
+				       );
+    }
+}
+
+
+
+=head2 share_job
+
+  $obj->share_job($job, $users)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+
+=end text
+
+=item Description
+
+Share a job. Sharing a job to the same user twice or with the job owner
+has no effect.
+
+=back
+
+=cut
+
+sub share_job
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 2)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function share_job (received $n, expecting 2)");
+    }
+    {
+	my($job, $users) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        (ref($users) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"users\" (value was \"$users\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to share_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'share_job');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.share_job",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'share_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method share_job",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'share_job',
+				       );
+    }
+}
+
+
+
+=head2 unshare_job
+
+  $obj->unshare_job($job, $users)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+
+=end text
+
+=item Description
+
+Stop sharing a job. Removing sharing from a user that the job is not
+shared with or the job owner has no effect.
+
+=back
+
+=cut
+
+sub unshare_job
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 2)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function unshare_job (received $n, expecting 2)");
+    }
+    {
+	my($job, $users) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        (ref($users) eq 'ARRAY') or push(@_bad_arguments, "Invalid type for argument 2 \"users\" (value was \"$users\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to unshare_job:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'unshare_job');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.unshare_job",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'unshare_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return;
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method unshare_job",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'unshare_job',
+				       );
+    }
+}
+
+
+
+=head2 get_job_owner
+
+  $owner = $obj->get_job_owner($job)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+$owner is a UserAndJobState.username
+job_id is a string
+username is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+$owner is a UserAndJobState.username
+job_id is a string
+username is a string
+
+
+=end text
+
+=item Description
+
+Get the owner of a job.
+
+=back
+
+=cut
+
+sub get_job_owner
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_job_owner (received $n, expecting 1)");
+    }
+    {
+	my($job) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_job_owner:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_job_owner');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.get_job_owner",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_job_owner',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_job_owner",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_job_owner',
+				       );
+    }
+}
+
+
+
+=head2 get_job_shared
+
+  $users = $obj->get_job_shared($job)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+$job is a UserAndJobState.job_id
+$users is a reference to a list where each element is a UserAndJobState.username
+job_id is a string
+username is a string
+
+
+=end text
+
+=item Description
+
+Get the list of users with which a job is shared. Only the job owner
+may access this method.
+
+=back
+
+=cut
+
+sub get_job_shared
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 1)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_job_shared (received $n, expecting 1)");
+    }
+    {
+	my($job) = @args;
+
+	my @_bad_arguments;
+        (!ref($job)) or push(@_bad_arguments, "Invalid type for argument 1 \"job\" (value was \"$job\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_job_shared:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_job_shared');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.get_job_shared",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_job_shared',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_job_shared",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_job_shared',
 				       );
     }
 }
@@ -2124,8 +2489,9 @@ sub delete_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'delete_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -2211,8 +2577,9 @@ sub force_delete_job
     if ($result) {
 	if ($result->is_error) {
 	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
-					       code => $result->content->{code},
+					       code => $result->content->{error}->{code},
 					       method_name => 'force_delete_job',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
 					      );
 	} else {
 	    return;
@@ -2308,6 +2675,37 @@ an int
 =begin text
 
 an int
+
+=end text
+
+=back
+
+
+
+=head2 username
+
+=over 4
+
+
+
+=item Description
+
+Login name of a KBase user account.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a string
+</pre>
+
+=end html
+
+=begin text
+
+a string
 
 =end text
 
@@ -2897,9 +3295,11 @@ A string-based filter for listing jobs.
                 'R' - running jobs are returned.
                 'C' - completed jobs are returned.
                 'E' - jobs that errored out are returned.
+                'S' - shared jobs are returned.
         The string can contain any combination of these codes in any order.
-        If the string contains none of the codes or is null, all jobs that have
-        been started are returned.
+        If the string contains none of the codes or is null, all self-owned 
+        jobs that have been started are returned. If only the S filter is
+        present, all jobs that have been started are returned.
 
 
 =item Definition

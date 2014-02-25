@@ -100,14 +100,14 @@ public class JobStateTests {
 			fail("Got a non-existant job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no job %s for user foo1", jobid)));
+					is(String.format("There is no job %s viewable by user foo1", jobid)));
 		}
 		try {
 			js.getJob("foo", "a" + jobid.substring(1));
 			fail("Got a non-existant job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception", nsje.getLocalizedMessage(),
-					is(String.format("There is no job %s for user foo",
+					is(String.format("There is no job %s viewable by user foo",
 					"a" + jobid.substring(1))));
 		}
 		try {
@@ -289,6 +289,26 @@ public class JobStateTests {
 			String user, String status, String service, String desc,
 			String progtype, Integer prog, Integer maxproj, Boolean complete,
 			Boolean error, String errmsg, Map<String, Object> results) {
+		checkJob(j, id, stage, estComplete, user, status, service, desc,
+				progtype, prog, maxproj, complete, error, errmsg, results,
+				null);
+	}
+	
+	private void checkJob(String id, String stage, Date estComplete, 
+			String user, String status, String service, String desc,
+			String progtype, Integer prog, Integer maxproj, Boolean complete,
+			Boolean error, String errmsg, Map<String, Object> results,
+			List<String> shared) throws Exception {
+		checkJob(js.getJob(user, id), id, stage, estComplete, user, status,
+				service, desc, progtype, prog, maxproj, complete, error, errmsg,
+				results, shared);
+	}
+	
+	private void checkJob(Job j, String id, String stage, Date estComplete, 
+			String user, String status, String service, String desc,
+			String progtype, Integer prog, Integer maxproj, Boolean complete,
+			Boolean error, String errmsg, Map<String, Object> results,
+			List<String> shared) {
 		assertThat("job id ok", j.getID(), is(id));
 		assertThat("job stage ok", j.getStage(), is(stage));
 		assertThat("job user ok", j.getUser(), is(user));
@@ -307,6 +327,9 @@ public class JobStateTests {
 		assertThat("job error ok", j.hasError(), is(error));
 		assertThat("job results ok", j.getResults(), is(results));
 		assertThat("job error ok", j.getErrorMsg(), is(errmsg));
+		if (shared != null) {
+			assertThat("shared list ok", j.getShared(), is(shared));
+		}
 	}
 	
 	@Test
@@ -608,7 +631,7 @@ public class JobStateTests {
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
 					is(String.format(
-					"There is no job %s for user %s", jobid, user)));
+					"There is no job %s viewable by user %s", jobid, user)));
 		}
 	}
 	
@@ -621,7 +644,7 @@ public class JobStateTests {
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
 					is(String.format(
-					"There is no job %s for user %s", jobid, user)));
+					"There is no job %s viewable by user %s", jobid, user)));
 		}
 	}
 	
@@ -661,10 +684,13 @@ public class JobStateTests {
 		checkListServ("listserv2", new ArrayList<String>());
 		js.createAndStartJob("listserv", "serv2", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
-		js.createAndStartJob("listserv2", "serv3", null, null, null);
+		jobid = js.createAndStartJob("listserv2", "serv3", null, null, null);
 		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
 		checkListServ("listserv2", Arrays.asList("serv3"));
-		
+		js.shareJob("listserv2", jobid, Arrays.asList("listserv"));
+		checkListServ("listserv", Arrays.asList("serv1", "serv2", "serv3"));
+		js.unshareJob("listserv2", jobid, Arrays.asList("listserv"));
+		checkListServ("listserv", Arrays.asList("serv1", "serv2"));
 	}
 	
 	private void checkListServ(String user, List<String> expected) throws Exception {
@@ -677,16 +703,16 @@ public class JobStateTests {
 	public void listJobs() throws Exception {
 		String lj = "listjobs";
 		List<FakeJob> empty = new ArrayList<FakeJob>();
-		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true, false));
 		String jobid = js.createJob(lj);
-		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv1"), true, true, true, false));
 		
 		jobid = js.createAndStartJob(lj, "serv1", "lst", "ldsc", 42, MAX_DATE);
 		FakeJob started = new FakeJob(jobid, lj, "serv1", "started",
 				MAX_DATE,"ldsc", "task", 0, 42, "lst", false, false, null, null);
-		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
-		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv2"), true, true, true));
-		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), false, false, false));
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), true, true, true, false));
+		checkListJobs(empty, js.listJobs(lj, Arrays.asList("serv2"), true, true, true, false));
+		checkListJobs(Arrays.asList(started), js.listJobs(lj, Arrays.asList("serv1"), false, false, false, false));
 		
 		jobid = js.createAndStartJob(lj, "serv1", "comp-st", "comp-dsc",
 				MAX_DATE);
@@ -704,39 +730,55 @@ public class JobStateTests {
 		
 		//all 3
 		List<FakeJob> all = Arrays.asList(started, complete, error);
-		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), true, true, true));
-		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), false, false, false));
+		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), true, true, true, false));
+		checkListJobs(all, js.listJobs(lj, Arrays.asList("serv1"), false, false, false, false));
 		
 		//1 of 3
 		checkListJobs(Arrays.asList(started),
-				js.listJobs(lj, Arrays.asList("serv1"), true, false, false));
+				js.listJobs(lj, Arrays.asList("serv1"), true, false, false, false));
 		checkListJobs(Arrays.asList(complete),
-				js.listJobs(lj, Arrays.asList("serv1"), false, true, false));
+				js.listJobs(lj, Arrays.asList("serv1"), false, true, false, false));
 		checkListJobs(Arrays.asList(error),
-				js.listJobs(lj, Arrays.asList("serv1"), false, false, true));
+				js.listJobs(lj, Arrays.asList("serv1"), false, false, true, false));
 		
 		//2 of 3
 		checkListJobs(Arrays.asList(started, complete),
-				js.listJobs(lj, Arrays.asList("serv1"), true, true, false));
+				js.listJobs(lj, Arrays.asList("serv1"), true, true, false, false));
 		checkListJobs(Arrays.asList(complete, error),
-				js.listJobs(lj, Arrays.asList("serv1"), false, true, true));
+				js.listJobs(lj, Arrays.asList("serv1"), false, true, true, false));
 		checkListJobs(Arrays.asList(started, error),
-				js.listJobs(lj, Arrays.asList("serv1"), true, false, true));
+				js.listJobs(lj, Arrays.asList("serv1"), true, false, true, false));
 		
 		//check on jobs from multiple services
 		jobid = js.createAndStartJob(lj, "serv2", "mst", "mdsc", 42, MAX_DATE);
 		FakeJob multi = new FakeJob(jobid, lj, "serv2", "started",
 				MAX_DATE, "mdsc", "task", 0, 42, "mst", false, false, null, null);
 		checkListJobs(Arrays.asList(started, complete, error, multi),
-				js.listJobs(lj, new ArrayList<String>(), true, true, true));
+				js.listJobs(lj, new ArrayList<String>(), true, true, true, false));
 		checkListJobs(Arrays.asList(started, complete, error, multi),
-				js.listJobs(lj, null, true, true, true));
+				js.listJobs(lj, null, true, true, true, false));
 		checkListJobs(Arrays.asList(started, complete, error, multi),
-				js.listJobs(lj, Arrays.asList("serv1", "serv2"), true, true, true));
+				js.listJobs(lj, Arrays.asList("serv1", "serv2"), true, true, true, false));
 		checkListJobs(Arrays.asList(started, complete),
-				js.listJobs(lj, Arrays.asList("serv1"), true, true, false));
+				js.listJobs(lj, Arrays.asList("serv1"), true, true, false, false));
 		checkListJobs(Arrays.asList(multi),
-				js.listJobs(lj, Arrays.asList("serv2"), true, true, true));
+				js.listJobs(lj, Arrays.asList("serv2"), true, true, true, false));
+		
+		//check on shared jobs
+		jobid = js.createAndStartJob("listJobsShare", "shareserv", "sst", "sdsc", null);
+		FakeJob shared = new FakeJob(jobid, "listJobsShare", "shareserv", "started",
+				null, "sdsc", "none", null, null, "sst", false, false, null, null);
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		js.shareJob("listJobsShare", jobid, Arrays.asList(lj));
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, false));
+		checkListJobs(Arrays.asList(started, shared),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		js.unshareJob("listJobsShare", jobid, Arrays.asList(lj));
+		checkListJobs(Arrays.asList(started),
+				js.listJobs(lj, Arrays.asList("serv1", "shareserv"), true, false, false, true));
+		
 	}
 	
 	private void checkListJobs(List<FakeJob> expected, List<Job> result)
@@ -746,5 +788,123 @@ public class JobStateTests {
 			res.add(new FakeJob(j));
 		}
 		assertThat("got expected jobs back", res, is(new HashSet<FakeJob>(expected)));
+	}
+	
+	@Test
+	public void sharing() throws Exception {
+		String sh = "share";
+		String jobid = js.createAndStartJob(sh, "shareserv", "st", "dsc",
+				null);
+		failGetJob("foo", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "foo")));
+		js.shareJob(sh, jobid, Arrays.asList("foo", "bar"));
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, Arrays.asList("foo", "bar"));
+		js.getJob("share", jobid); //should work
+		js.getJob("foo", jobid); //should work
+		js.getJob("bar", jobid); //should work
+		failGetJob("baz", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "baz")));
+		
+		js.shareJob(sh, jobid, Arrays.asList("foo", "bar", "baz"));
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, Arrays.asList("foo", "bar", "baz"));
+		js.shareJob(sh, jobid, Arrays.asList(sh)); //noop
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, Arrays.asList("foo", "bar", "baz"));
+		
+		failShareJob("foo", jobid, Arrays.asList("bag"), new NoSuchJobException(
+				String.format("There is no job %s owned by user %s", jobid, "foo")));
+		failShareJob(null, jobid, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("owner cannot be null or the empty string")));
+		failShareJob("", jobid, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("owner cannot be null or the empty string")));
+		failShareUnshareJob("foo", jobid, null, new IllegalArgumentException(
+				String.format("The users list cannot be null")));
+		failShareUnshareJob("foo", jobid, new ArrayList<String>(), new IllegalArgumentException(
+				String.format("The users list is empty")));
+		failShareUnshareJob("foo", jobid, Arrays.asList("bag", null), new IllegalArgumentException(
+				String.format("user cannot be null or the empty string")));
+		failShareUnshareJob("foo", jobid, Arrays.asList("bag", ""), new IllegalArgumentException(
+				String.format("user cannot be null or the empty string")));
+		failShareUnshareJob(sh, null, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("id cannot be null or the empty string")));
+		failShareUnshareJob(sh, "", Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("id cannot be null or the empty string")));
+		failShareUnshareJob(sh, "bleargh", Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("Job ID bleargh is not a legal ID")));
+		failGetJob("bag", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "bag")));
+		
+		String nojob = new ObjectId().toString();
+		failUnshareJob(sh, nojob, Arrays.asList("bag"), new NoSuchJobException(
+				String.format("There is no job %s visible to user %s", nojob, sh)));
+		failUnshareJob("bag", jobid, Arrays.asList("bag"), new NoSuchJobException(
+				String.format("There is no job %s visible to user %s", jobid, "bag")));
+		failUnshareJob("foo", jobid, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("User %s may only stop sharing job %s for themselves", "foo", jobid)));
+		failUnshareJob(null, jobid, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("user cannot be null or the empty string")));
+		failUnshareJob("", jobid, Arrays.asList("bag"), new IllegalArgumentException(
+				String.format("user cannot be null or the empty string")));
+		
+		js.unshareJob(sh, jobid, Arrays.asList("bar", "baz"));
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, Arrays.asList("foo"));
+		failGetJob("bar", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "bar")));
+		failGetJob("baz", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "baz")));
+		js.getJob("foo", jobid); //should work
+		js.unshareJob("foo", jobid, Arrays.asList("foo"));
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, new ArrayList<String>());
+		failGetJob("foo", jobid, new NoSuchJobException(String.format(
+				"There is no job %s viewable by user %s", jobid, "foo")));
+		js.unshareJob(sh, jobid, Arrays.asList(sh, "bar", "baz")); //noop
+		checkJob(jobid, "started", null, sh, "st", "shareserv", "dsc", "none",
+				null, null, false, false, null, null, new ArrayList<String>());
+		js.getJob(sh, jobid); //should work
+	}
+	
+	private void failGetJob(String user, String jobid, Exception e) {
+		try {
+			js.getJob(user, jobid);
+			fail("got job sucessfully but expected fail");
+		} catch (Exception exp) {
+			assertThat("correct exception", exp.getLocalizedMessage(),
+					is(e.getLocalizedMessage()));
+			assertThat("correct exception type", exp, is(e.getClass()));
+		}
+	}
+	
+	private void failShareJob(String user, String jobid, List<String> users,
+			Exception e) {
+		try {
+			js.shareJob(user, jobid, users);
+			fail("got job sucessfully but expected fail");
+		} catch (Exception exp) {
+			assertThat("correct exception", exp.getLocalizedMessage(),
+					is(e.getLocalizedMessage()));
+			assertThat("correct exception type", exp, is(e.getClass()));
+		}
+	}
+	
+	private void failShareUnshareJob(String user, String jobid, List<String> users,
+			Exception e) {
+		failShareJob(user, jobid, users, e);
+		failUnshareJob(user, jobid, users, e);
+	}
+
+	private void failUnshareJob(String user, String jobid, List<String> users,
+			Exception e) {
+		try {
+			js.unshareJob(user, jobid, users);
+			fail("unshared job sucessfully but expected fail");
+		} catch (Exception exp) {
+			assertThat("correct exception", exp.getLocalizedMessage(),
+					is(e.getLocalizedMessage()));
+			assertThat("correct exception type", exp, is(e.getClass()));
+		}
 	}
 }

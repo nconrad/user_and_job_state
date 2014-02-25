@@ -67,7 +67,7 @@ public class UserAndJobStateClient {
     private static URL DEFAULT_URL = null;
     static {
         try {
-            DEFAULT_URL = new URL("http://kbase.us/services/userandjobstate/");
+            DEFAULT_URL = new URL("https://kbase.us/services/userandjobstate/");
         } catch (MalformedURLException mue) {
             throw new RuntimeException("Compile error in client - bad url compiled");
         }
@@ -482,7 +482,7 @@ public class UserAndJobStateClient {
      * services.
      * </pre>
      * @param   services   instance of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
-     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all jobs that have been started are returned.)
+     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. 'S' - shared jobs are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all self-owned jobs that have been started are returned. If only the S filter is present, all jobs that have been started are returned.)
      * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 14: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      * @throws IOException if an IO exception occurs
      * @throws JsonClientException if a JSON RPC exception occurs
@@ -509,6 +509,81 @@ public class UserAndJobStateClient {
         List<Object> args = new ArrayList<Object>();
         TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
         List<List<String>> res = caller.jsonrpcCall("UserAndJobState.list_job_services", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: share_job</p>
+     * <pre>
+     * Share a job. Sharing a job to the same user twice or with the job owner
+     * has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   users   instance of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void shareJob(String job, List<String> users) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        args.add(users);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.share_job", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: unshare_job</p>
+     * <pre>
+     * Stop sharing a job. Removing sharing from a user that the job is not
+     * shared with or the job owner has no effect.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @param   users   instance of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public void unshareJob(String job, List<String> users) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        args.add(users);
+        TypeReference<Object> retType = new TypeReference<Object>() {};
+        caller.jsonrpcCall("UserAndJobState.unshare_job", args, retType, false, true);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_owner</p>
+     * <pre>
+     * Get the owner of a job.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   parameter "owner" of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public String getJobOwner(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<List<String>> retType = new TypeReference<List<String>>() {};
+        List<String> res = caller.jsonrpcCall("UserAndJobState.get_job_owner", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_job_shared</p>
+     * <pre>
+     * Get the list of users with which a job is shared. Only the job owner
+     * may access this method.
+     * </pre>
+     * @param   job   instance of original type "job_id" (A job id.)
+     * @return   parameter "users" of list of original type "username" (Login name of a KBase user account.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public List<String> getJobShared(String job) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(job);
+        TypeReference<List<List<String>>> retType = new TypeReference<List<List<String>>>() {};
+        List<List<String>> res = caller.jsonrpcCall("UserAndJobState.get_job_shared", args, retType, true, true);
         return res.get(0);
     }
 

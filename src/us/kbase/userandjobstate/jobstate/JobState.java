@@ -5,6 +5,7 @@ import static us.kbase.common.utils.StringUtils.checkMaxLen;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -56,6 +57,7 @@ public class JobState {
 	private final static String MAXPROG = "maxprog";
 	private final static String STATUS = "status";
 	private final static String RESULT = "results";
+	private final static String SHARED = "shared";
 	
 	private final static String MONGO_ID = "_id";
 	
@@ -86,15 +88,20 @@ public class JobState {
 	}
 
 	private void ensureIndexes() {
-		final DBObject idx = new BasicDBObject();
-		idx.put(USER, 1);
-		idx.put(SERVICE, 1);
-		idx.put(COMPLETE, 1);
-		jobcol.ensureIndex(idx);
+		ensureUserIndex(USER);
+		ensureUserIndex(SHARED);
 		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
 		final DBObject opts = new BasicDBObject("expireAfterSeconds",
 				JOB_EXPIRES);
 		jobcol.ensureIndex(ttlidx, opts);
+	}
+
+	private void ensureUserIndex(final String userField) {
+		final DBObject idx = new BasicDBObject();
+		idx.put(userField, 1);
+		idx.put(SERVICE, 1);
+		idx.put(COMPLETE, 1);
+		jobcol.ensureIndex(idx);
 	}
 	
 	public String createJob(final String user) throws CommunicationException {
@@ -126,24 +133,37 @@ public class JobState {
 		return oi;
 	}
 	
-	private final static String QRY_FIND_JOB = String.format(
+	private final static String QRY_FIND_JOB_BY_OWNER = String.format(
 			"{%s: #, %s: #}", MONGO_ID, USER);
+	private final static String QRY_FIND_JOB_BY_USER = String.format(
+			"{%s: #, $or: [{%s: #}, {%s: #}]}", MONGO_ID, USER, SHARED);
+	private final static String QRY_FIND_JOB_NO_USER = String.format(
+			"{%s: #}", MONGO_ID);
 	
 	public Job getJob(final String user, final String jobID)
 			throws CommunicationException, NoSuchJobException {
 		checkString(user, "user", MAX_LEN_USER);
 		final ObjectId oi = checkJobID(jobID);
+		return getJob(user, oi);
+	}
+		
+	private Job getJob(final String user, final ObjectId jobID)
+			throws CommunicationException, NoSuchJobException {
 		final Job j;
 		try {
-			j = jobjong.findOne(QRY_FIND_JOB,
-					oi, user).as(Job.class);
+			if (user == null) {
+				j = jobjong.findOne(QRY_FIND_JOB_NO_USER, jobID).as(Job.class);
+			} else {
+				j = jobjong.findOne(QRY_FIND_JOB_BY_USER, jobID, user, user)
+						.as(Job.class);
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
 		if (j == null) {
 			throw new NoSuchJobException(String.format(
-					"There is no job %s for user %s", jobID, user));
+					"There is no job %s viewable by user %s", jobID, user));
 		}
 		return j;
 	}
@@ -408,7 +428,9 @@ public class JobState {
 	public Set<String> listServices(final String user)
 			throws CommunicationException {
 		checkString(user, "user");
-		final DBObject query = new BasicDBObject(USER, user);
+		final DBObject query = new BasicDBObject("$or", Arrays.asList(
+				new BasicDBObject(USER, user),
+				new BasicDBObject(SHARED, user)));
 		query.put(SERVICE, new BasicDBObject("$ne", null));
 		final DBObject match = new BasicDBObject("$match", query);
 		
@@ -428,10 +450,16 @@ public class JobState {
 	
 	public List<Job> listJobs(final String user, final List<String> services,
 			final boolean running, final boolean complete,
-			final boolean error)
+			final boolean error, final boolean shared)
 			throws CommunicationException {
 		checkString(user, "user");
-		String query = String.format("{%s: '%s'", USER, user);
+		String query;
+		if (shared) {
+			query = String.format("{$or: [{%s: '%s'}, {%s: '%s'}]",
+					USER, user, SHARED, user);
+		} else {
+			query = String.format("{%s: '%s'", USER, user);
+		}
 		if (services != null && !services.isEmpty()) {
 			for (final String s: services) {
 				checkString(s, "service", MAX_LEN_SERVICE);
@@ -469,5 +497,81 @@ public class JobState {
 			jobs.add(job);
 		}
 		return jobs;
+	}
+	
+	//note sharing with an already shared user or sharing with the owner has
+	//no effect
+	public void shareJob(final String owner, final String jobID,
+			final List<String> users)
+			throws CommunicationException, NoSuchJobException {
+		final ObjectId id = checkShareParams(owner, jobID, users, "owner");
+		final List<String> us = new LinkedList<String>();
+		for (final String u: users) {
+			if (u != owner) {
+				us.add(u);
+			}
+		}
+		final WriteResult wr;
+		try {
+			wr = jobjong.update(QRY_FIND_JOB_BY_OWNER, id, owner)
+					.with("{$addToSet: {" + SHARED + ": {$each: #}}}", us);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		if (wr.getN() != 1) {
+			throw new NoSuchJobException(String.format(
+					"There is no job %s owned by user %s", jobID, owner));
+		}
+	}
+
+	private ObjectId checkShareParams(final String user, final String jobID,
+			final List<String> users, final String userType) {
+		checkString(user, userType);
+		if (users == null) {
+			throw new IllegalArgumentException("The users list cannot be null");
+		}
+		if (users.isEmpty()) {
+			throw new IllegalArgumentException("The users list is empty");
+		}
+		for (final String u: users) {
+			checkString(u, "user");
+		}
+		final ObjectId id = checkJobID(jobID);
+		return id;
+	}
+	
+	//removing the owner or an unshared user has no effect
+	public void unshareJob(final String user, final String jobID,
+			final List<String> users) throws CommunicationException,
+			NoSuchJobException {
+		final NoSuchJobException e = new NoSuchJobException(String.format(
+				"There is no job %s visible to user %s", jobID, user));
+		final ObjectId id = checkShareParams(user, jobID, users, "user");
+		final Job j;
+		try {
+			j= getJob(null, id);
+		} catch (NoSuchJobException nsje) {
+			throw e;
+		}
+		if (j.getUser().equals(user)) {
+			//it's the owner, can do whatever
+		} else if (j.getShared().contains(user)) {
+			if (!users.equals(Arrays.asList(user))) {
+				throw new IllegalArgumentException(String.format(
+						"User %s may only stop sharing job %s for themselves",
+						user, jobID));
+			}
+			//shared user removing themselves, no prob
+		} else {
+			throw e;
+		}
+		try {
+			jobjong.update(QRY_FIND_JOB_BY_OWNER, id, j.getUser())
+					.with("{$pullAll: {" + SHARED + ": #}}", users);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
 	}
 }

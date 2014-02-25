@@ -8,6 +8,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -481,9 +482,9 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void getJobInfoBadArgs() throws Exception {
-		testGetJobBadArgs(null, "id cannot be null or the empty string");
-		testGetJobBadArgs("", "id cannot be null or the empty string");
-		testGetJobBadArgs("foo", "Job ID foo is not a legal ID");
+		failcheckJob(null, "id cannot be null or the empty string");
+		failcheckJob("", "id cannot be null or the empty string");
+		failcheckJob("foo", "Job ID foo is not a legal ID");
 		
 		String jobid = CLIENT1.createJob();
 		if (jobid.charAt(0) == 'a') {
@@ -491,11 +492,11 @@ public class JSONRPCLayerTest {
 		} else {
 			jobid = "a" + jobid.substring(1);
 		}
-		testGetJobBadArgs(jobid, String.format(
-				"There is no job %s for user kbasetest", jobid));
+		failcheckJob(jobid, String.format(
+				"There is no job %s viewable by user kbasetest", jobid));
 	}
 	
-	private void testGetJobBadArgs(String jobid, String exception)
+	private void failcheckJob(String jobid, String exception)
 			throws Exception {
 		try {
 			CLIENT1.getJobInfo(jobid);
@@ -521,6 +522,12 @@ public class JSONRPCLayerTest {
 		try {
 			CLIENT1.getResults(jobid);
 			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			CLIENT1.getDetailedError(jobid);
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
@@ -692,41 +699,37 @@ public class JSONRPCLayerTest {
 	
 	@Test
 	public void deleteJob() throws Exception {
+		String nojob = "There is no job %s viewable by user %s";
+		
 		InitProgress noprog = new InitProgress().withPtype("none");
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "d stat", "d desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d stat2", null, null);
 		CLIENT1.deleteJob(jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "e stat", "e desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "e stat2", "err", null);
 		CLIENT1.deleteJob(jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d2 stat", "d2 desc", noprog, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d3 stat", "d3 desc", noprog, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "d3 stat2", 3L, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d4 stat", "d4 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d4 stat2", null, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d5 stat", "d5 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d5 stat2", "err", null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		testGetJobBadArgs(jobid, String.format("There is no job %s for user %s",
-				jobid, USER1));
+		failcheckJob(jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createJob();
 		failToDeleteJob(jobid, String.format(
@@ -794,12 +797,22 @@ public class JSONRPCLayerTest {
 	public void listServices() throws Exception {
 		checkListServices(CLIENT2, new HashSet<String>());
 		InitProgress noprog = new InitProgress().withPtype("none");
-		CLIENT1.createAndStartJob(TOKEN2, "ls stat", "ls desc", noprog, null);
+		String jobid1 = CLIENT1.createAndStartJob(TOKEN2, "ls stat", "ls desc",
+				noprog, null);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER2)));
-		String jobid = CLIENT1.createAndStartJob(TOKEN1, "ls2 stat",
+		String jobid2 = CLIENT1.createAndStartJob(TOKEN1, "ls2 stat",
 				"ls2 desc", noprog, null);
 		checkListServices(CLIENT1, new HashSet<String>(Arrays.asList(USER1, USER2)));
-		CLIENT1.forceDeleteJob(TOKEN1, jobid);
+		checkListServices(CLIENT2, new HashSet<String>());
+		CLIENT1.shareJob(jobid2, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER1)));
+		CLIENT1.shareJob(jobid1, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER1, USER2)));
+		CLIENT1.unshareJob(jobid2, Arrays.asList(USER2));
+		checkListServices(CLIENT2, new HashSet<String>(Arrays.asList(USER2)));
+		
+		CLIENT1.forceDeleteJob(TOKEN1, jobid2);
+		CLIENT1.forceDeleteJob(TOKEN2, jobid1);
 	}
 	
 	private void checkListServices(UserAndJobStateClient client,
@@ -816,16 +829,51 @@ public class JSONRPCLayerTest {
 		
 		checkListJobs(USER1, null, empty);
 		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "S", empty);
 		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "RS", empty);
 		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "RCS", empty);
 		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
 		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RES", empty);
 		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RCES", empty);
 		checkListJobs(USER1, "RCEX", empty);
+		checkListJobs(USER1, "RCEXS", empty);
 		
-		String jobid = CLIENT2.createJob();
+		String jobid = CLIENT1.createAndStartJob(TOKEN1, "ljs stat", "ljs desc", noprog, null);
+		FakeJob shared = new FakeJob(jobid, null, USER1, "started", null, "ljs desc",
+				"none", null, null, "ljs stat", false, false, null, null);
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2));
+		Set<FakeJob> setsharedonly = new HashSet<FakeJob>(Arrays.asList(shared)); 
+		
+		checkListJobs(USER1, null, empty);
+		checkListJobs(USER1, "", empty);
+		checkListJobs(USER1, "S", setsharedonly);
+		checkListJobs(USER1, "R", empty);
+		checkListJobs(USER1, "RS", setsharedonly);
+		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
+		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
+		checkListJobs(USER1, "RC", empty);
+		checkListJobs(USER1, "RCS", setsharedonly);
+		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
+		checkListJobs(USER1, "RE", empty);
+		checkListJobs(USER1, "RES", setsharedonly);
+		checkListJobs(USER1, "RCE", empty);
+		checkListJobs(USER1, "RCES", setsharedonly);
+		checkListJobs(USER1, "RCEX", empty);
+		checkListJobs(USER1, "RCEXS", setsharedonly);
+		
+		jobid = CLIENT2.createJob();
 		checkListJobs(USER1, null, empty);
 		checkListJobs(USER1, "", empty);
 		checkListJobs(USER1, "R", empty);
@@ -841,16 +889,27 @@ public class JSONRPCLayerTest {
 		FakeJob started = new FakeJob(jobid, null, USER1, "started", null, "lj desc",
 				"none", null, null, "lj stat", false, false, null, null);
 		Set<FakeJob> setstarted = new HashSet<FakeJob>(Arrays.asList(started));
+		Set<FakeJob> setstartshare = new HashSet<FakeJob>(setstarted);
+		setstartshare.add(shared);
 		checkListJobs(USER1, null, setstarted);
 		checkListJobs(USER1, "", setstarted);
+		checkListJobs(USER1, "S", setstartshare);
 		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "RS", setstartshare);
 		checkListJobs(USER1, "C", empty);
+		checkListJobs(USER1, "CS", empty);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", setstarted);
+		checkListJobs(USER1, "RCS", setstartshare);
 		checkListJobs(USER1, "CE", empty);
+		checkListJobs(USER1, "CES", empty);
 		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RES", setstartshare);
 		checkListJobs(USER1, "RCE", setstarted);
+		checkListJobs(USER1, "RCES", setstartshare);
 		checkListJobs(USER1, "!RCE", setstarted);
+		checkListJobs(USER1, "!RCES", setstartshare);
 		
 		jobid = CLIENT2.createAndStartJob(TOKEN1, "lj2 stat", "lj2 desc",
 				new InitProgress().withPtype("percent"), null);
@@ -886,16 +945,27 @@ public class JSONRPCLayerTest {
 		Set<FakeJob> setstartcomp = new HashSet<FakeJob>();
 		setstartcomp.addAll(setstarted);
 		setstartcomp.addAll(setcomplete);
+		Set<FakeJob> setstartcompshare = new HashSet<FakeJob>(setstartcomp);
+		setstartcompshare.add(shared);
 		checkListJobs(USER1, null, setstartcomp);
 		checkListJobs(USER1, "", setstartcomp);
+		checkListJobs(USER1, "S", setstartcompshare);
 		checkListJobs(USER1, "R", setstarted);
+		checkListJobs(USER1, "RS", setstartshare);
 		checkListJobs(USER1, "C", setcomplete);
+		checkListJobs(USER1, "CS", setcomplete);
 		checkListJobs(USER1, "C0", setcomplete);
+		checkListJobs(USER1, "C0S", setcomplete);
 		checkListJobs(USER1, "E", empty);
+		checkListJobs(USER1, "ES", empty);
 		checkListJobs(USER1, "RC", setstartcomp);
+		checkListJobs(USER1, "RCS", setstartcompshare);
 		checkListJobs(USER1, "CE", setcomplete);
+		checkListJobs(USER1, "CES", setcomplete);
 		checkListJobs(USER1, "RE", setstarted);
+		checkListJobs(USER1, "RES", setstartshare);
 		checkListJobs(USER1, "RCE", setstartcomp);
+		checkListJobs(USER1, "RCES", setstartcompshare);
 		
 		jobid = CLIENT2.createAndStartJob(TOKEN1, "lj3 stat", "lj3 desc",
 				new InitProgress().withPtype("task").withMax(55L), null);
@@ -1004,11 +1074,90 @@ public class JSONRPCLayerTest {
 		assertThat("got the correct jobs", got, is(expected));
 	}
 	
-	public void testListJobsWithBadArgs(String service, String exception)
+	private void testListJobsWithBadArgs(String service, String exception)
 			throws Exception{
 		try {
 			CLIENT2.listJobs(Arrays.asList(service), "RCE");
 			fail("list jobs worked w/ bad service");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	@Test
+	public void sharing() throws Exception {
+		InitProgress noprog = new InitProgress().withPtype("none");
+		String jobid = CLIENT2.createAndStartJob(TOKEN1, "sh stat", "sh desc", noprog, null);
+		CLIENT2.shareJob(jobid, Arrays.asList(USER1));
+		//next line ensures that all job read functions are accessible to client 1
+		checkJob(jobid, "started", "sh stat", USER1, "sh desc", "none", null, null, null, 0L, 0L, null, null);
+		failShareJob(jobid, Arrays.asList(USER2), String.format(
+				"There is no job %s owned by user %s", jobid, USER1));
+		assertThat("shared list ok", CLIENT2.getJobShared(jobid), is(Arrays.asList(USER1)));
+		failGetJobShared(jobid, String.format("User %s may not access the sharing list of job %s", USER1, jobid));
+		assertThat("owner ok", CLIENT1.getJobOwner(jobid), is(USER2));
+		assertThat("owner ok", CLIENT2.getJobOwner(jobid), is(USER2));
+		CLIENT2.unshareJob(jobid, Arrays.asList(USER1));
+		failcheckJob(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		failGetJobOwner(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		failGetJobShared(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		
+		CLIENT2.shareJob(jobid, Arrays.asList(USER1));
+		failUnshareJob(jobid, Arrays.asList(USER2), String.format(
+				"User %s may only stop sharing job %s for themselves", USER1, jobid));
+		CLIENT1.unshareJob(jobid, Arrays.asList(USER1));
+		failcheckJob(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		
+		String jobid2 = CLIENT1.createAndStartJob(TOKEN1, "sh stat2", "sh desc2", noprog, null);
+		failShareUnshareJob(jobid2, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
+				"User thishadbetterbeafakeuserorthistestwillfail is not a valid user");
+		failShareUnshareJob(jobid2, null, "The user list may not be null or empty");
+		failShareUnshareJob(jobid2, new ArrayList<String>(), "The user list may not be null or empty");
+	}
+	
+	private void failShareUnshareJob(String id, List<String> users, String exception)
+			throws Exception {
+		failShareJob(id, users, exception);
+		failUnshareJob(id, users, exception);
+	}
+	
+	private void failShareJob(String id, List<String> users, String exception)
+			throws Exception {
+		try {
+			CLIENT1.shareJob(id, users);
+			fail("shared job w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	private void failUnshareJob(String id, List<String> users, String exception)
+			throws Exception {
+		try {
+			CLIENT1.unshareJob(id, users);
+			fail("shared job w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	private void failGetJobOwner(String id, String exception) throws Exception {
+		try {
+			CLIENT1.getJobOwner(id);
+			fail("got job owner w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	private void failGetJobShared(String id, String exception) throws Exception {
+		try {
+			CLIENT1.getJobShared(id);
+			fail("got job owner w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));

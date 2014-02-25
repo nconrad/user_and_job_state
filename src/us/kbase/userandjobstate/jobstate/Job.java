@@ -3,6 +3,8 @@ package us.kbase.userandjobstate.jobstate;
 import static us.kbase.userandjobstate.jobstate.JobState.PROG_NONE;
 
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
@@ -24,6 +26,7 @@ public class Job {
 	private Boolean error;
 	private String errormsg;
 	private Map<String, Object> results;
+	private List<String> shared;
 	
 	private static final String CREATED = "created";
 	private static final String STARTED = "started"; 
@@ -113,6 +116,13 @@ public class Job {
 	public Map<String, Object> getResults() {
 		return results;
 	}
+	
+	public List<String> getShared() {
+		if (shared == null) {
+			return new LinkedList<String>();
+		}
+		return new LinkedList<String>(shared);
+	}
 
 	@Override
 	public String toString() {
@@ -123,7 +133,7 @@ public class Job {
 				", started=" + started + ", estcompl=" + estcompl +
 				", updated=" + updated + ", complete=" + complete +
 				", error=" + error + ", errormsg=" + errormsg +
-				", results=" + results + "]";
+				", results=" + results + ", shared=" + shared + "]";
 	}
 
 }
