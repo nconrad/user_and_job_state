@@ -21,3 +21,19 @@
 	font-size: 16px;
 	font-weight: bold;
 }
+
+.kbujs-refresh-btn {
+    position: absolute;
+    right: 5px;
+}
+
+.kbujs-jobs-table {
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.kbujs-loading {
+    height: 100%
+    vertical-align: middle;
+    text-align: center
+}

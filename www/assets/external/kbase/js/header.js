@@ -1,8 +1,7 @@
 $(function() {
-	$("#searchspan input").on("keypress", function (evt) {
+	$("#search_terms").on("keypress", function (evt) {
         if (evt.keyCode === 13) {
-            var input = $.trim($(this).val());
-            console.log(input);
+            var input = $.trim($('#search_terms')[0].value);
             if (input !== null && input !== '') {
                 var einput = encodeURIComponent(input);
 	            var myUrl = "/search.shtml?q=" + einput;
