@@ -77,6 +77,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                                  .addClass("kbujs-loading")
                                  .hide();
 
+            this.$loadingSpinner = $("<img src='" + this.options.loadingImage + "'>")
+                                   .addClass("pull-right")
+                                   .hide();
+
             this.$loadingMessage = $("<div>")
                                    .append($("<img src='" + this.options.loadingImage + "'>"))
                                    .append($("<div>")
@@ -93,7 +97,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                                       .addClass('btn btn-xs btn-default pull-right')
                                       .click($.proxy(function(event) { this.refresh(); }, this))
                                       .append($('<span>')
-                                              .addClass('glyphicon glyphicon-refresh')));
+                                              .addClass('glyphicon glyphicon-refresh')))
+                              .append(this.$loadingSpinner);
 
             // Define and track the table container (uses Bootstrap 3 and kbaseUserJobState.css)
             this.$jobSearch = $('<input>')
@@ -232,14 +237,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
          * Otherwise, it prompts the user to log in.
          */
         refresh: function() {
-            this.showMessage(this.$loadingMessage);
+//            this.showMessage(this.$loadingMessage);
             if (!this.token || this.token === null) {
                 this.showMessage("You must log in to view your jobs.");
                 return;
             }
 
             else {
-                this.$loadingImage.css({ "display" : "" });
+                this.$loadingSpinner.show();
 
                 this.ujsClient.list_jobs([], '',
                     $.proxy(function(jobs) {
@@ -280,6 +285,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                         else {
                             this.showMessage("No jobs found");
                         }
+                        this.$loadingSpinner.hide();
 
                     }, this),
 
@@ -408,6 +414,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
         showJobDetails: function(jobId) {
             var self = this;
 
+            self.$modal.modal("hide");
+            self.$modal.modal("show");
+            
             var tableRow = function(elems) {
                 var row = $("<tr>");
                 for (var i=0; i<elems.length; i++) {
@@ -519,8 +528,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                 );
             };
 
-            self.$modal.modal("hide");
-            self.$modal.modal("show");
             refresh();
             self.modalRefreshInterval = setInterval( function() { refresh(); }, this.options.detailRefreshTime );
         },
@@ -535,7 +542,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                        .html("<div class='kbujs-loading-modal'><img src='" + self.options.errorLoadingImage + "'/><br/>Loading...</div>");
             self.$modal.modal("show");
 
-            self.userJobStateClient.get_job_info(jobId,
+            self.ujsClient.get_job_info(jobId,
                 function(job) {
                     var $table = $("<table>")
                                  .addClass("table table-striped table-bordered")
@@ -544,7 +551,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
                                  .append("<tr><td>Description</td><td>" + job[12] + "</td></tr>")
                                  .append("<tr><td>Status</td><td>" + job[4] + "</td></tr>");
 
-                    self.userJobStateClient.get_detailed_error(jobId,
+                    self.ujsClient.get_detailed_error(jobId,
                         function(error) {
                             var $detailedError = $("<div>").append("<h3>Error Details</h3>");
                             if (error && error.length > 0)
@@ -720,6 +727,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'bootstrap', 'userandj
             }
             this.$tableContainer.hide();
             this.$messagePanel.show();
+            this.$loadingSpinner.hide();
         },
 
         /**
