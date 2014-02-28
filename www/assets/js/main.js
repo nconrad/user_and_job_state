@@ -8,6 +8,7 @@ requirejs.config({
 		'kbaseLogin': kbasePath + 'kbaseLoginFuncSite',
 		'kbasePrompt': kbasePath + 'kbasePrompt',
 		'kbaseAuthenticatedWidget': kbasePath + 'kbaseAuthenticatedWidget',
+		'kbaseAccordion': kbasePath + 'kbaseAccordion',
 		'bootstrap': '../external/bootstrap/js/bootstrap.min',
 		'header': kbasePath + '/header',
 		'jquery.cookie': '../external/jquery.cookie.min',
@@ -22,6 +23,7 @@ requirejs.config({
 		'kbasePrompt': ['jquery', 'kbwidget', 'bootstrap'],
 		'kbaseLogin': ['jquery', 'kbwidget', 'kbasePrompt', 'bootstrap'],
 		'kbaseAuthenticatedWidget': ['jquery', 'kbwidget'],
+		'kbaseAccordion': ['jquery', 'kbwidget', 'bootstrap'],
 		'jquery.cookie': ['jquery'],
 		'jquery.dataTables': ['jquery'],
 		'dataTables.bootstrap': ['jquery', 'bootstrap', 'jquery.dataTables']

@@ -60,7 +60,7 @@
 
         version: "1.0.0",
         options: {
-            controls : ['cancelButton', 'okayButton'],
+//            controls : ['cancelButton', 'okayButton'],
             modalClass : 'fade',
         },
 
