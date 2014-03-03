@@ -41,3 +41,12 @@
 .kbujs-delete-job {
 	cursor: pointer;
 }
+
+.kbujs-error-traceback {
+    white-space : nowrap;
+    float : left;
+    max-width : 516px;
+    max-height: 250px;
+    overflow-x : scroll;
+    overflow-y: scroll;
+}

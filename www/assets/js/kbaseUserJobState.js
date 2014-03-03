@@ -15,6 +15,24 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
      * refreshTime - how often to refresh the statuses (in milliseconds)
      * detailRefreshTime - how often to refresh the job details popup (in milliseconds)
      * 
+     *
+     * List of global variables and objects (e.g., all under this.)
+     *
+     * $messagePanel   - should only be hit through this.showMessage(msg)
+     * $loadingSpinner - the spinning gif that sits in the header bar
+     * $loadingMessage - a message that gets inserted into $messagePanel
+     * $loadingImage   - the image itself that's part of the $loadingMessage
+     * $jobSearch      - the search bar above the table
+     * $tableContainer - a container for the search bar and job table
+     * $jobTable       - the job dataTable (actually the datatable object, after running render())
+     * $jobDetailBody  - the the body of the modal that pops up when a job is selected.
+     * $jobDetailTitle - the title bar of the modal that pops up when a job is selected.
+     * $jobDetailModal - as it says - the kbasePrompt object containing the modal details
+     * $deleteModal    - modal that pops up when the delete job button is hit
+     * $deleteBody     - body of that modal
+     * $errorModal     - modal that pops up when a non-fatal error happens
+     * $errorBody      - body of that modal
+     *
      * @exports kbaseUserJobState
      * @version 0.1
      * @author Bill Riehl <wjriehl@lbl.gov>
@@ -32,6 +50,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             refreshTime: 60000,
             detailRefreshTime: 3000,
         },
+
+        // old token
+        // "un=kbasetest|tokenid=717e0530-a019-11e3-a89b-12313809f035|expiry=1425087688|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=b7e1d1c1c4bde2415b468ef134f7232a725d596518c4051e2312fd9b7767a380043265e15120d9b27fc6565ffd3e0aba65f8d69b5c8d2efb25634acfdf74f63ecf677b746f06547c1903fbbacb7bb36241c69886b20932657c4c04f95ae003be091d94ca95774768824b473d38fac03d2c8da9027f727fe566721a10f943aa58"
 
         /**
          * @method init
@@ -131,7 +152,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             // Build the Modal dropdown that will contain detailed job information.
             this.$jobDetailBody = $("<div>");
             this.$jobDetailTitle = $("<span>").append("Job Details");
-            this.$modal = $("<div>").kbasePrompt({
+            this.$jobDetailModal = $("<div>").kbasePrompt({
                 title : this.$jobDetailTitle,
                 body : this.$jobDetailBody,
                 controls : [
@@ -145,7 +166,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 ]
             });
             
-            this.$modal.dialogModal().on('hide.bs.modal', $.proxy(function() {
+            this.$jobDetailModal.dialogModal().on('hide.bs.modal', $.proxy(function() {
                 if (this.modalRefreshInterval)
                     clearInterval(this.modalRefreshInterval);
                 }, this)
@@ -167,6 +188,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                             this.deleteJob(this.$deleteBody.attr('job-id'));
                         }, this)
                     }
+                ]
+            });
+            this.$errorBody = $("<div>");
+            this.$errorModal = $("<div>").kbasePrompt({
+                title : "Error",
+                body : this.$errorBody,
+                controls : [
+                    'okayButton'
                 ]
             });
 
@@ -325,13 +354,16 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
         },
 
         deleteJob: function(jobId) {
-            console.debug("Deleting job " + jobId);
-            this.refresh();
-            setTimeout($.proxy(function() {
-                this.$deleteBody.html("Error! Unable to delete job!");
-                this.$deleteModal.openPrompt();
-            }, this), 1000);
-
+            this.ujsClient.delete_job(jobId,
+                $.proxy(function() {
+                    this.refresh();
+                }, this),
+                $.proxy(function(error) {
+                    this.$errorBody.empty().append(this.buildErrorDiv(error));
+                    console.debug(error);
+                    this.$errorModal.openPrompt();
+                }, this)
+            );
         },
 
         /**
@@ -370,6 +402,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          */
         makeStatusElement: function(job) {
             var status = "<div job-id='" + job[0] + "'>";
+            var deleteSpan = "<span class='pull-right glyphicon glyphicon-remove kbujs-delete-job' data-toggle='tooltip' title='Delete Job'></span>";
 
             if (job[11] === 1)
                 status += "<span class='kbujs-error-cell kbujs-error' error-job-id='" + job[0] + "'>" +
@@ -377,9 +410,9 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                               "&nbsp;Error: " +
                               job[4] +
                           "</span>" +
-                          "<span class='pull-right glyphicon glyphicon-remove kbujs-delete-job' data-toggle='tooltip' title='Delete Job'></span>";
+                          deleteSpan;
             else if (job[10] === 1)
-                status = "<div>Complete: " + job[4] + "</div>";
+                status = "<div>Complete: " + job[4] + deleteSpan + "</div>";
             else {
                 status = "<div>" + job[4];
                 var progressType = job[8].toLowerCase();
@@ -455,7 +488,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             var self = this;
 
             self.$jobDetailTitle.html("Job Details");
-            self.$modal.openPrompt();
+            self.$jobDetailModal.openPrompt();
 
             var tableRow = function(elems) {
                 var row = $("<tr>");
@@ -473,11 +506,11 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                        .addClass("glyphicon glyphicon-exclamation-sign"))
                                .append(" Error")
                                .click(function(event) {
-                                    self.$modal.off('hidden.bs.modal');
-                                    self.$modal.on('hidden.bs.modal', function(event) {
+                                    self.$jobDetailModal.off('hidden.bs.modal');
+                                    self.$jobDetailModal.on('hidden.bs.modal', function(event) {
                                         self.showErrorDetails(jobId);
                                     });
-                                    self.$modal.modal("hide");
+                                    self.$jobDetailModal.modal("hide");
                                 });
 
                     return $("<div>")
@@ -562,7 +595,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                     },
 
                     $.proxy(function(error) { 
-                        this.$modal.closePrompt();
+                        this.$jobDetailModal.closePrompt();
                         this.clientError(error); 
                     }, self)
                 );
@@ -578,13 +611,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * This assumes that a job has an error.
          */
         showErrorDetails: function(jobId) {
-            this.$modal.off('hidden.bs.modal');
-            this.$modal.closePrompt();
+            this.$jobDetailModal.off('hidden.bs.modal');
+            this.$jobDetailModal.closePrompt();
             this.$jobDetailTitle.html("Job Error");
 
             this.$jobDetailBody.html("<div class='kbujs-loading-modal'><img src='" + this.options.errorLoadingImage + "'/><br/>Loading...</div>");
 
-            this.$modal.openPrompt();
+            this.$jobDetailModal.openPrompt();
 
             this.ujsClient.get_job_info(jobId,
                 $.proxy(function(job) {
@@ -608,7 +641,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                         }, this),
 
                         $.proxy(function(apiError) {
-                            this.$modal.closePrompt();
+                            this.$jobDetailModal.closePrompt();
                             this.clientError(apiError);
                         }, this)
                     );
@@ -616,7 +649,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 }, this),
 
                 $.proxy(function(error) {
-                    this.$modal.closePrompt();
+                    this.$jobDetailModal.closePrompt();
                     this.clientError(error);
                 }, this)
             );
@@ -751,6 +784,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @private
          */
         clientError: function(error) {
+            this.showMessage(this.buildErrorDiv(error));
+        },
+
+        buildErrorDiv: function(error) {
             var $errorDiv = $("<div>");
 
             var $errorHeader = $('<div>')
@@ -766,26 +803,24 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             }
 
             // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
-            else if (typeof error === 'object') {
-                var $details = $('<div>');
-                $details.append($('<div>').append('<b>Type:</b> ' + error.ename))
-                        .append($('<div>').append('<b>Value:</b> ' + error.evalue));
+            else if (typeof error === 'object' && error.error) {
+                var $details = $('<div>')
+                               .append('<b>Type:</b> ' + error.error.name + '<br>')
+                               .append('<b>Message:</b> ' + error.error.message + '<br>');
+                $errorMessage.append($details);
 
-                if (error.traceback && error.traceback.length > 0) {
-                    var $tracebackDiv = $('<div>')
-                                     .addClass('kb-function-error-traceback');
-                    for (var i=0; i<error.traceback.length; i++) {
-                        $tracebackDiv.append(error.traceback[i] + "<br>");
-                    }
-
+                if (error.error.error && error.error.error.length > 0) {
+                    var errorMsg = error.error.error.replace(/[\r?\n]+/g, "<br>");
+                    var $tracebackDiv = $('<pre>')
+                                        .addClass('kbujs-error-traceback')
+                                        .append(errorMsg);
                     var $tracebackPanel = $('<div>');
                     var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
 
-                    this.$errorMessage.append($details)
-                                      .append($tracebackPanel);
+                    $errorMessage.append($tracebackPanel);
                     $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
                 }
-                else {
+                else if (!error.error.name || !error.error.message) {
                     $errorHeader.html('<b>Sorry, an unknown error occurred while loading KBase job information.</b>' +
                                       '<br>If this error persists, please contact the KBase team at ' +
                                       '<a href="mailto:help@kbase.us?subject=Unknown%20KBase%20Job%20Service%20Error">help@kbase.us</a>');
@@ -793,7 +828,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             }
             $errorDiv.append($errorHeader)
                      .append($errorMessage);
-            this.showMessage($errorDiv);
+
+            return $errorDiv;
         },
 
         /**
