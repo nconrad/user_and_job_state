@@ -50,6 +50,23 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             refreshTime: 60000,
             detailRefreshTime: 3000,
         },
+        mode : "normal",
+
+        createDebugJob: function(completed, errored, data) {
+            var serviceToken = {token: "un=kbasetest|tokenid=731e5ac2-a30f-11e3-b061-1231391ccf32|expiry=1425413250|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=46f629463b59997b3f320a76a4a531fe309b75c6100d788b4e018322227894258c854a19aeb0f91675663a2737f9c631b96e598b2b6dab82ad3658c578ed3a149401757fe7f1ee6034b6d6d423813c3233f992ab3ee79b89da0137c16c33ef3d6540c6ad0eab4956030ffea9360a4ddd865f9ad0e539ccff43a9361a0471ed08"};
+            var jobServiceClient = new UserAndJobState(this.options.userJobStateURL, serviceToken);
+
+            var estComplete = "2014-06-19T03:04:05-0700";
+            var jobStatus = "Started";
+            var jobDesc = "A Debugging job";
+            var progress = {
+                ptype : 'percent',
+            };
+            jobId = "531501abe4b0e676ba20b77f";
+            jobServiceClient.complete_job(jobId, this.token.token, "Complete", null, {workspaceids: ["768/3/3"]});
+//            jobServiceClient.update_job_progress("531501d2e4b0e676ba20b780", serviceToken.token, "Complete", 100, "2014-03-03T15:32:00-0700");
+//            jobServiceClient.create_and_start_job(serviceToken.token, jobStatus, jobDesc, progress, estComplete);
+        },
 
         // old token
         // "un=kbasetest|tokenid=717e0530-a019-11e3-a89b-12313809f035|expiry=1425087688|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=b7e1d1c1c4bde2415b468ef134f7232a725d596518c4051e2312fd9b7767a380043265e15120d9b27fc6565ffd3e0aba65f8d69b5c8d2efb25634acfdf74f63ecf677b746f06547c1903fbbacb7bb36241c69886b20932657c4c04f95ae003be091d94ca95774768824b473d38fac03d2c8da9027f727fe566721a10f943aa58"
@@ -62,6 +79,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          */
         init: function(options) {
             this._super(options);
+
             /* Adds a timestamp sorting function.
              * Given that the elements given have an attribute called 'title' that
              * contains a time/date that's parseable by the Javascript Date object,
@@ -94,6 +112,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @private
          */
         render: function() {
+            this.$makeDebugJobBtn = $("<button>")
+                                    .addClass('btn btn-xs btn-warning pull-left')
+                                    .append("Make Debug Job")
+                                    .click($.proxy(function(event) {
+                                        this.createDebugJob();
+                                    }, this));
+
+
             // Initialize a blank message panel
             this.$messagePanel = $("<div>")
                                  .addClass("kbujs-loading")
@@ -117,8 +143,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                  .css({"display" : "none"});
 
             // Build the header info
-            var $headerDiv = $('<div>')
-                             .append('Job Status')
+            var $headerDiv = $('<div>');
+
+            if (this.mode === "debug")
+                $headerDiv.append(this.$makeDebugJobBtn);
+
+            $headerDiv.append('Job Status')
                              .append($('<button>')
                                      .addClass('btn btn-xs btn-default pull-right')
                                      .click($.proxy(function(event) { this.refresh(); }, this))
@@ -360,7 +390,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 }, this),
                 $.proxy(function(error) {
                     this.$errorBody.empty().append(this.buildErrorDiv(error));
-                    console.debug(error);
                     this.$errorModal.openPrompt();
                 }, this)
             );
@@ -412,7 +441,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                           "</span>" +
                           deleteSpan;
             else if (job[10] === 1)
-                status = "<div>Complete: " + job[4] + deleteSpan + "</div>";
+                status += "<span>Complete: " + job[4] + "</span>" + deleteSpan;
             else {
                 status = "<div>" + job[4];
                 var progressType = job[8].toLowerCase();
@@ -558,6 +587,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                 if (job[13].shockurl)
                                     shockURL = job[13].shockurl;
 
+                                // Not sure how to parse Shock URLs...
                                 var shockNodeUrls = [];
                                 for (var i=0; i<job[13].shocknodes.length; i++) {
                                     shockNodeUrls.push("<a href='" + shockURL + job[13].shocknodes[i] + "' target='_blank'>" + job[13].shocknodes[i] + "</a>");
@@ -567,6 +597,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                 resultsData = true;
                             }
 
+                            // kb|ws.XXX.obj.YYY.ver.ZZZ
                             if (job[13].workspaceids && job[13].workspaceids.length > 0) {
                                 var workspaceURL = self.options.workspaceURL;
                                 if (job[13].workspaceurl)
@@ -589,7 +620,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                         if (job[11] === 1) {
 
                         }
-                        console.debug("refreshed!");
                         self.$jobDetailBody.html($modalBody);
 
                     },
@@ -792,7 +822,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 
             var $errorHeader = $('<div>')
                                .addClass('alert alert-danger')
-                               .append('<b>Sorry, an error occurred while loading KBase job information.</b>')
+                               .append('<b>Sorry, an error occurred.</b>')
                                .append('<br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=KBase%20Job%20Service%20Error">help@kbase.us</a> with the information below.');
 
             var $errorMessage = $('<div>');
