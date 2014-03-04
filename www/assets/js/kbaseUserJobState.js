@@ -162,20 +162,41 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                  'type' : 'text',
                                  'placeholder' : 'Search',
                               })
-                              .addClass('form-control pull-right');
+                              .addClass('form-control')
+                              .keyup($.proxy(function(event) {
+                                  var value = this.$jobSearch.val();
+                                  this.$jobTable.fnFilter(value);
+                              }, this));
 
-            this.$jobSearch.keyup($.proxy(function(event) {
-                var value = this.$jobSearch.val();
-                this.$jobTable.fnFilter(value);
-            }, this));
-
+            this.$jobFilter = $('<select>')
+                              .addClass('form-control')
+                              .append($('<option value="">').append('All Jobs'))
+                              .append($('<option value="created">').append('Created'))
+                              .append($('<option value="started">').append('Started'))
+                              .append($('<option value="complete">').append('Completed'))
+                              .append($('<option value="error">').append('Error'))
+                              .change($.proxy(function(event) {
+                                  var filterValue = "";
+                                  this.$jobFilter.find('option:selected').each(function() { filterValue = $( this ).val() });
+                                  if (filterValue.length > 0)
+                                      this.$jobTable.fnFilter(filterValue, 5, true);
+                                  else
+                                      this.$jobTable.fnFilter("", 5, true);
+                              }, this));
 
             this.$jobTable = $("<table>")
                              .addClass("table table-striped table-bordered kbujs-jobs-table");
 
             this.$tableContainer = $("<div>")
                                    .addClass("kbujs-table-container")
-                                   .append(this.$jobSearch)
+                                   .append($("<form>")
+                                           .addClass("form-inline")
+                                           .append($("<div>")
+                                                   .addClass("form-group")
+                                                   .append(this.$jobFilter))
+                                           .append($("<div>")
+                                                   .addClass("form-group")
+                                                   .append(this.$jobSearch)))
                                    .append(this.$jobTable);
 
 
@@ -255,6 +276,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                     { "sTitle" : "Description", "bSearchable" : true },
                     { "sTitle" : "Started", "bSearchable" : true, "sType" : "timestamp" },
                     { "sTitle" : "Status", "bSearchable" : true },
+                    { "sTitle" : "Stage", "bSearchable" : false, "bVisible" : false }
                 ],
                 "sPaginationType" : "bootstrap",
                 "aaSorting" : [[1, "asc"]],
@@ -268,6 +290,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 ],
                 "sDom": '<"top"ilp>rt<"bottom"><"clear">'
             });
+
+            this.$jobTable.css("width", "100%");
 
             setInterval( 
                 $.proxy(function() { this.refresh(); }, this), 
@@ -335,6 +359,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                 job[12],                        // description
                                 job[3],
                                 this.makeStatusElement(job),
+                                job[2],
                             ]);
                         }
 
@@ -680,6 +705,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 
             this.ujsClient.get_job_info(jobId,
                 $.proxy(function(job) {
+                    console.log(job);
                     var $table = $("<table>")
                                  .addClass("table table-striped table-bordered")
                                  .append("<tr><td>Job ID</td><td>" + job[0] + "</td></tr>")
