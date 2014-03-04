@@ -46,11 +46,11 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 //            userJobStateURL: "http://140.221.84.180:7083",
             userJobStateURL: "https://kbase.us/services/userandjobstate",
             shockURL: "http://kbase.us/services/shock/",
-            workspaceURL: "http://kbase.us/services/workspace/",
+            workspaceBrowserURL: "http://demo.kbase.us/functional-site/#/ws/objtable",
             refreshTime: 60000,
             detailRefreshTime: 3000,
         },
-        mode : "normal",
+        mode : "debug",
 
         createDebugJob: function(completed, errored, data) {
             var serviceToken = {token: "un=kbasetest|tokenid=731e5ac2-a30f-11e3-b061-1231391ccf32|expiry=1425413250|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=46f629463b59997b3f320a76a4a531fe309b75c6100d788b4e018322227894258c854a19aeb0f91675663a2737f9c631b96e598b2b6dab82ad3658c578ed3a149401757fe7f1ee6034b6d6d423813c3233f992ab3ee79b89da0137c16c33ef3d6540c6ad0eab4956030ffea9360a4ddd865f9ad0e539ccff43a9361a0471ed08"};
@@ -62,8 +62,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             var progress = {
                 ptype : 'percent',
             };
-            jobId = "531501abe4b0e676ba20b77f";
-            jobServiceClient.complete_job(jobId, this.token.token, "Complete", null, {workspaceids: ["768/3/3"]});
+            jobId = "531501fbe4b0e676ba20b781";
+            jobServiceClient.complete_job(jobId, this.token.token, "Complete", null, {workspaceids: ["kb|ws.768.obj.3.ver.3"]});
 //            jobServiceClient.update_job_progress("531501d2e4b0e676ba20b780", serviceToken.token, "Complete", 100, "2014-03-03T15:32:00-0700");
 //            jobServiceClient.create_and_start_job(serviceToken.token, jobStatus, jobDesc, progress, estComplete);
         },
@@ -344,19 +344,21 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                         if (jobTableRows.length > 0) {
                             this.$jobTable.fnAddData(jobTableRows);
 
-                            this.$jobTable.find("span[error-job-id]").click(
+                            var $tableNodes = $(this.$jobTable.fnGetNodes());
+
+                            $tableNodes.find("span[error-job-id]").click(
                                 $.proxy(function(event) {
                                     this.showErrorDetails($(event.currentTarget).parent().attr('job-id'));
                                 }, this)
                             );
 
-                            this.$jobTable.find("button[job-id]").click(
+                            $tableNodes.find("button[job-id]").click(
                                 $.proxy(function(event) {
                                     this.showJobDetails($(event.currentTarget).attr('job-id'));
                                 }, this)
                             );
 
-                            this.$jobTable.find("span.kbujs-delete-job").click(
+                            $tableNodes.find("span.kbujs-delete-job").click(
                                 $.proxy(function(event) {
                                     var jobId = $(event.currentTarget).parent().attr('job-id');
                                     this.$deleteBody.empty().append("Really delete this job? It'll be gone forever.");
@@ -365,7 +367,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                 }, this)
                             );
 
-                            $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
+                            $tableNodes.find("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
                             this.showJobTable();
                         }
                         else {
@@ -599,13 +601,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 
                             // kb|ws.XXX.obj.YYY.ver.ZZZ
                             if (job[13].workspaceids && job[13].workspaceids.length > 0) {
-                                var workspaceURL = self.options.workspaceURL;
+                                var wsBrowser = self.options.workspaceBrowserURL;
                                 if (job[13].workspaceurl)
-                                    workspaceURL = job[13].workspaceurl;
+                                    wsBrowser = job[13].workspaceurl;
 
                                 var workspaceUrls = [];
                                 for (var i=0; i<job[13].workspaceids.length; i++) {
-                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
+                                    workspaceUrls.push(self.parseWorkspaceLink(wsBrowser, job[13].workspaceids[i]));
+//                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
                                 }
                                 $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
                                 resultsData = true;
@@ -633,6 +636,32 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 
             refresh();
             self.modalRefreshInterval = setInterval( function() { refresh(); }, this.options.detailRefreshTime );
+        },
+
+        /**
+         * The objId is not controlled, so it could be anything!
+         * If it's any of the below, make a proper workspace browser link.
+         * otherwise, return plain text (not a hyperlink):
+         *
+         * ws/obj/ver (ws and obj can be strings or ints, ver is an int)
+         * kb|ws.XXX.obj.YYY.ver.ZZZ (XXX, YYY, ZZZ are all ints)
+         */
+        parseWorkspaceLink: function(wsBrowserUrl, objId) {
+            var wsLink = function(link, text) {
+                return "<a href='" + link + "' target='_blank'>" + text + "</a>";
+            }
+
+            var match = /(.+)\/(.+)\/(\d+)/.exec(objId);
+            if (match != null) {
+                return wsLink(wsBrowserUrl + "/" + match[1], objId);
+            }
+
+            match = /kb\|ws\.(\d+)\.obj\.(\d+)\.ver\.(\d+)/.exec(objId);
+            if (match != null) {
+                return wsLink(wsBrowserUrl + "/" + match[1], objId);
+            }
+
+            return objId;
         },
 
         /**
