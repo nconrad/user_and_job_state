@@ -50,7 +50,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             refreshTime: 60000,
             detailRefreshTime: 3000,
         },
-        mode : "debug",
+        mode : "normal",
 
         createDebugJob: function(completed, errored, data) {
             var serviceToken = {token: "un=kbasetest|tokenid=731e5ac2-a30f-11e3-b061-1231391ccf32|expiry=1425413250|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=46f629463b59997b3f320a76a4a531fe309b75c6100d788b4e018322227894258c854a19aeb0f91675663a2737f9c631b96e598b2b6dab82ad3658c578ed3a149401757fe7f1ee6034b6d6d423813c3233f992ab3ee79b89da0137c16c33ef3d6540c6ad0eab4956030ffea9360a4ddd865f9ad0e539ccff43a9361a0471ed08"};
