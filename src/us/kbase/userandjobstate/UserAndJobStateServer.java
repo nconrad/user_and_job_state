@@ -85,6 +85,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
     private static final long serialVersionUID = 1L;
 
     //BEGIN_CLASS_HEADER
+	
+	private static final String VER = "0.0.3";
+	
 	//required deploy parameters:
 	private static final String HOST = "mongodb-host";
 	private static final String DB = "mongodb-database";
@@ -295,6 +298,22 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			js = getJobState(host, dbs, user, pwd);
 		}
         //END_CONSTRUCTOR
+    }
+
+    /**
+     * <p>Original spec-file function name: ver</p>
+     * <pre>
+     * Returns the version of the userandjobstate service.
+     * </pre>
+     * @return   parameter "ver" of String
+     */
+    @JsonServerMethod(rpc = "UserAndJobState.ver")
+    public String ver() throws Exception {
+        String returnVal = null;
+        //BEGIN ver
+		returnVal = VER;
+        //END ver
+        return returnVal;
     }
 
     /**

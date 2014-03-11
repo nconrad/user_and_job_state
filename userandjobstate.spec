@@ -54,7 +54,12 @@ UI thread joins
 
 module UserAndJobState {
 
-	/* All calls require authentication. */
+	/*
+		Returns the version of the userandjobstate service.
+	*/
+	funcdef ver() returns(string ver);
+
+	/* All other calls require authentication. */
 	authentication required;
 	
 	/* A boolean. 0 = false, other = true. */

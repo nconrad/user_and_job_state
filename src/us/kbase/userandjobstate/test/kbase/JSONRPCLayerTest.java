@@ -142,6 +142,12 @@ public class JSONRPCLayerTest {
 	}
 	
 	@Test
+	public void ver() throws Exception {
+		assertThat("got correct version", CLIENT1.ver(), is("0.0.3"));
+	}
+	
+	
+	@Test
 	public void unicode() throws Exception {
 		int[] char1 = {11614};
 		String uni = new String(char1, 0, 1);

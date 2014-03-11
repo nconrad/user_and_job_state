@@ -110,6 +110,22 @@ public class UserAndJobStateClient {
     }
 
     /**
+     * <p>Original spec-file function name: ver</p>
+     * <pre>
+     * Returns the version of the userandjobstate service.
+     * </pre>
+     * @return   parameter "ver" of String
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public String ver() throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        TypeReference<List<String>> retType = new TypeReference<List<String>>() {};
+        List<String> res = caller.jsonrpcCall("UserAndJobState.ver", args, retType, true, false);
+        return res.get(0);
+    }
+
+    /**
      * <p>Original spec-file function name: set_state</p>
      * <pre>
      * Set the state of a key for a service without service authentication.
