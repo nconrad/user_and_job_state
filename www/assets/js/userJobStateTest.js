@@ -26,27 +26,27 @@ require(['jquery', 'kbaseUserJobState', 'kbaseLogin', 'jquery.cookie'], function
                      { path: '/'});
         };
 
-        $('#job-state-container').kbaseUserJobState();
-
-        var loginWidget = $("#login-widget").kbaseLogin({ 
-            style: "narrative",
+        var loginWidget = $("#signin-button").kbaseLogin({ 
             rePrompt: false,
 
             login_callback: function(args) {
                 set_cookie();
-                $('#job-state-container').kbaseUserJobState('setAuth', args);
+//                $('#job-state-container').kbaseUserJobState('setAuth', args);
             },
 
             logout_callback: function(args) {
                 $.removeCookie('kbase_session');
-                $('#job-state-container').kbaseUserJobState('setAuth');
+//                $('#job-state-container').kbaseUserJobState('setAuth');
             },
 
             prior_login_callback: function(args) {
                 set_cookie();
-                $('#job-state-container').kbaseUserJobState('setAuth', args);
+//                $('#job-state-container').kbaseUserJobState('setAuth', args);
             },
         });
+        $('#signin-button').css('padding', '0');
+        $('#job-state-container').kbaseUserJobState();
+
     });
 
 });

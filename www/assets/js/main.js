@@ -5,13 +5,16 @@ requirejs.config({
 	paths: {
 		'jquery': '../external/jquery/1.10.2/jquery-1.10.2.min',
 		'kbwidget': kbasePath + 'kbwidget',
-		'kbaseLogin': kbasePath + 'kbaseLogin',
+		'kbaseLogin': kbasePath + 'kbaseLoginFuncSite',
 		'kbasePrompt': kbasePath + 'kbasePrompt',
+		'kbaseAuthenticatedWidget': kbasePath + 'kbaseAuthenticatedWidget',
+		'kbaseAccordion': kbasePath + 'kbaseAccordion',
 		'bootstrap': '../external/bootstrap/js/bootstrap.min',
 		'header': kbasePath + '/header',
 		'jquery.cookie': '../external/jquery.cookie.min',
 		'userandjobstate': kbasePath + 'userandjobstate',
 		'jquery.dataTables': '../external/dataTables/1.9.4/js/jquery.dataTables',
+		'dataTables.bootstrap': '../external/dataTables/bootstrap/js/dataTables.bootstrap',
 	},
 	shim: {
 		'bootstrap': ['jquery'],
@@ -19,8 +22,11 @@ requirejs.config({
 		'header': ['jquery'],
 		'kbasePrompt': ['jquery', 'kbwidget', 'bootstrap'],
 		'kbaseLogin': ['jquery', 'kbwidget', 'kbasePrompt', 'bootstrap'],
+		'kbaseAuthenticatedWidget': ['jquery', 'kbwidget'],
+		'kbaseAccordion': ['jquery', 'kbwidget', 'bootstrap'],
 		'jquery.cookie': ['jquery'],
-		'jquery.dataTables': ['jquery']
+		'jquery.dataTables': ['jquery'],
+		'dataTables.bootstrap': ['jquery', 'bootstrap', 'jquery.dataTables']
 	}
 });
 

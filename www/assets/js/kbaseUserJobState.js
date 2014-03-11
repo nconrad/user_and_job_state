@@ -1,4 +1,4 @@
-define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables'], function($) {
+define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kbasePrompt', 'bootstrap', 'userandjobstate', 'dataTables.bootstrap'], function($) {
     /**
      * @module kbaseUserJobState
      *
@@ -15,23 +15,61 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
      * refreshTime - how often to refresh the statuses (in milliseconds)
      * detailRefreshTime - how often to refresh the job details popup (in milliseconds)
      * 
+     *
+     * List of global variables and objects (e.g., all under this.)
+     *
+     * $messagePanel   - should only be hit through this.showMessage(msg)
+     * $loadingSpinner - the spinning gif that sits in the header bar
+     * $loadingMessage - a message that gets inserted into $messagePanel
+     * $loadingImage   - the image itself that's part of the $loadingMessage
+     * $jobSearch      - the search bar above the table
+     * $tableContainer - a container for the search bar and job table
+     * $jobTable       - the job dataTable (actually the datatable object, after running render())
+     * $jobDetailBody  - the the body of the modal that pops up when a job is selected.
+     * $jobDetailTitle - the title bar of the modal that pops up when a job is selected.
+     * $jobDetailModal - as it says - the kbasePrompt object containing the modal details
+     * $deleteModal    - modal that pops up when the delete job button is hit
+     * $deleteBody     - body of that modal
+     * $errorModal     - modal that pops up when a non-fatal error happens
+     * $errorBody      - body of that modal
+     *
      * @exports kbaseUserJobState
      * @version 0.1
      * @author Bill Riehl <wjriehl@lbl.gov>
      */
     $.KBWidget({
         name: "kbaseUserJobState",
+        parent: "kbaseAuthenticatedWidget",
         options: {
-            auth: null,
-            loadingImage: "assets/external/kbase/images/ajax-loader-blue.gif",
+            loadingImage: "assets/images/ajax-loader-dark-blue.gif",
             errorLoadingImage: "assets/external/kbase/images/ajax-loader.gif",
-            userJobStateURL: "http://140.221.84.180:7083",
-//            userJobStateURL: "https://kbase.us/services/userandjobstate",
+//            userJobStateURL: "http://140.221.84.180:7083",
+            userJobStateURL: "https://kbase.us/services/userandjobstate",
             shockURL: "http://kbase.us/services/shock/",
-            workspaceURL: "http://kbase.us/services/workspace/",
+            workspaceBrowserURL: "http://demo.kbase.us/functional-site/#/ws/objtable",
             refreshTime: 60000,
             detailRefreshTime: 3000,
         },
+        mode : "normal",
+
+        createDebugJob: function(completed, errored, data) {
+            var serviceToken = {token: "un=kbasetest|tokenid=731e5ac2-a30f-11e3-b061-1231391ccf32|expiry=1425413250|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=46f629463b59997b3f320a76a4a531fe309b75c6100d788b4e018322227894258c854a19aeb0f91675663a2737f9c631b96e598b2b6dab82ad3658c578ed3a149401757fe7f1ee6034b6d6d423813c3233f992ab3ee79b89da0137c16c33ef3d6540c6ad0eab4956030ffea9360a4ddd865f9ad0e539ccff43a9361a0471ed08"};
+            var jobServiceClient = new UserAndJobState(this.options.userJobStateURL, serviceToken);
+
+            var estComplete = "2014-06-19T03:04:05-0700";
+            var jobStatus = "Started";
+            var jobDesc = "A Debugging job";
+            var progress = {
+                ptype : 'percent',
+            };
+            jobId = "531501fbe4b0e676ba20b781";
+            jobServiceClient.complete_job(jobId, this.token.token, "Complete", null, {workspaceids: ["kb|ws.768.obj.3.ver.3"]});
+//            jobServiceClient.update_job_progress("531501d2e4b0e676ba20b780", serviceToken.token, "Complete", 100, "2014-03-03T15:32:00-0700");
+//            jobServiceClient.create_and_start_job(serviceToken.token, jobStatus, jobDesc, progress, estComplete);
+        },
+
+        // old token
+        // "un=kbasetest|tokenid=717e0530-a019-11e3-a89b-12313809f035|expiry=1425087688|client_id=kbasetest|token_type=Bearer|SigningSubject=https://nexus.api.globusonline.org/goauth/keys/f5e1ca1a-9f28-11e3-9e85-1231391ccf32|sig=b7e1d1c1c4bde2415b468ef134f7232a725d596518c4051e2312fd9b7767a380043265e15120d9b27fc6565ffd3e0aba65f8d69b5c8d2efb25634acfdf74f63ecf677b746f06547c1903fbbacb7bb36241c69886b20932657c4c04f95ae003be091d94ca95774768824b473d38fac03d2c8da9027f727fe566721a10f943aa58"
 
         /**
          * @method init
@@ -42,12 +80,11 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         init: function(options) {
             this._super(options);
 
-            this.$notLoggedInDiv = $("<div>You are not logged in. Please log in to view your jobs.</div>")
-                                   .css({ 'display' : 'none' });
-            this.$noJobsDiv = $("<div>You have no running jobs</div>")
-                              .css({ 'display' : 'none' });
-
-
+            /* Adds a timestamp sorting function.
+             * Given that the elements given have an attribute called 'title' that
+             * contains a time/date that's parseable by the Javascript Date object,
+             * it'll sort 'em.
+             */
             jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
                 var ts1 = new Date($(x).attr('title'));
                 var ts2 = new Date($(y).attr('title'));
@@ -75,100 +112,224 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * @private
          */
         render: function() {
-            var self = this;
+            this.$makeDebugJobBtn = $("<button>")
+                                    .addClass('btn btn-xs btn-warning pull-left')
+                                    .append("Make Debug Job")
+                                    .click($.proxy(function(event) {
+                                        this.createDebugJob();
+                                    }, this));
+
+
+            // Initialize a blank message panel
+            this.$messagePanel = $("<div>")
+                                 .addClass("kbujs-loading")
+                                 .hide();
+
+            // Initialize the spinning loading image that sits in the header
+            this.$loadingSpinner = $("<img src='" + this.options.loadingImage + "'>")
+                                   .addClass("pull-right")
+                                   .css("margin-top", "-3px")
+                                   .hide();
+
+            // Initialize a "loading please wait..." message
+            this.$loadingMessage = $("<div>")
+                                   .append($("<img src='" + this.options.loadingImage + "'>"))
+                                   .append($("<div>")
+                                           .append("Loading job status information...</div>"));
 
             // Define and track a loading image spinner.
             this.$loadingImage = $("<img>")
                                  .attr("src", this.options.loadingImage)
                                  .css({"display" : "none"});
 
-            // Define and keep track of the refresh button.
-            this.$refreshButton = $("<a>")
-                                  .addClass("btn btn-primary btn-sm glyphicon glyphicon-refresh")
-                                  .click(function(event) {
-                                      self.refresh();
-                                  });
+            // Build the header info
+            var $headerDiv = $('<div>');
+
+            if (this.mode === "debug")
+                $headerDiv.append(this.$makeDebugJobBtn);
+
+            $headerDiv.append('Job Status')
+                             .append($('<button>')
+                                     .addClass('btn btn-xs btn-default pull-right')
+                                     .click($.proxy(function(event) { this.refresh(); }, this))
+                                     .append($('<span>')
+                                             .addClass('glyphicon glyphicon-refresh')))
+                             .append(this.$loadingSpinner);
 
             // Define and track the table container (uses Bootstrap 3 and kbaseUserJobState.css)
-            this.$tableContainer = $("<div>")
-                                   .addClass("row in kbujs-table-container");
+            this.$jobSearch = $('<input>')
+                              .attr({
+                                 'type' : 'text',
+                                 'placeholder' : 'Search',
+                              })
+                              .addClass('form-control')
+                              .keyup($.proxy(function(event) {
+                                  var value = this.$jobSearch.val();
+                                  this.$jobTable.fnFilter(value);
+                              }, this));
 
-            // Build the Modal dropdown (uses Bootstrap 3) that will contain detailed job information.
-            // The body of the modal can be accessed with:
-            // this.$modal.find('.modal-dialog .modal-content .modal-body')
-            this.$modal = $("<div>")
-                          .addClass("modal fade")
-                          .append($("<div>")
-                                  .addClass("modal-dialog")
-                                  .append($("<div>")
-                                          .addClass("modal-content")
-                                          .append($("<div>")
-                                                  .addClass("modal-header")
-                                                  .append("<button type='button' class='close' data-dismiss='modal' aria-hidden='true'>&times;</button>")
-                                                  .append("<h4 class='modal-title'>Job Details</h4>"))
-                                          .append($("<div>")
-                                                  .addClass("modal-body"))
-                                          .append($("<div>")
-                                                  .addClass("modal-footer")
-                                                  .append("<button type='button' class='btn btn-default btn-primary' data-dismiss='modal'>Close</button>"))));
+            this.$jobFilter = $('<select>')
+                              .addClass('form-control')
+                              .append($('<option value="">').append('All Jobs'))
+                              .append($('<option value="created">').append('Created'))
+                              .append($('<option value="started">').append('Started'))
+                              .append($('<option value="complete">').append('Completed'))
+                              .append($('<option value="error">').append('Error'))
+                              .change($.proxy(function(event) {
+                                  var filterValue = "";
+                                  this.$jobFilter.find('option:selected').each(function() { filterValue = $( this ).val() });
+                                  if (filterValue.length > 0)
+                                      this.$jobTable.fnFilter(filterValue, 5, true);
+                                  else
+                                      this.$jobTable.fnFilter("", 5, true);
+                              }, this));
+
+            this.$jobTable = $("<table>")
+                             .addClass("table table-striped table-bordered kbujs-jobs-table");
+
+            this.$tableContainer = $("<div>")
+                                   .addClass("kbujs-table-container")
+                                   .append($("<form>")
+                                           .addClass("form-inline")
+                                           .append($("<div>")
+                                                   .addClass("form-group")
+                                                   .append(this.$jobFilter))
+                                           .append($("<div>")
+                                                   .addClass("form-group")
+                                                   .append(this.$jobSearch)))
+                                   .append(this.$jobTable);
+
+
+            // Build the Modal dropdown that will contain detailed job information.
+            this.$jobDetailBody = $("<div>");
+            this.$jobDetailTitle = $("<span>").append("Job Details");
+            this.$jobDetailModal = $("<div>").kbasePrompt({
+                title : this.$jobDetailTitle,
+                body : this.$jobDetailBody,
+                controls : [
+                    {
+                        name : 'Close',
+                        type : 'primary',
+                        callback : function(e, $prompt) {
+                            $prompt.closePrompt();
+                        },
+                    },
+                ]
+            });
             
-            var self = this;
-            this.$modal.on('hide.bs.modal', function() {
-                if (self.modalRefreshInterval)
-                    clearInterval(self.modalRefreshInterval);
-                }
+            this.$jobDetailModal.dialogModal().on('hide.bs.modal', $.proxy(function() {
+                if (this.modalRefreshInterval)
+                    clearInterval(this.modalRefreshInterval);
+                }, this)
             );
 
 
-            // Build the container that will contain the main table and modal.
-            // Uses both Bootstrap 3 and kbase_stylesheet.css classes
-            var $container = $("<div>")
-                             .addClass("table_section container")
-                             .append($("<div>")
-                                     .addClass("section_title row")
-                                     .append($("<div>")
-                                             .addClass("title")
-                                             .append($("<a>")
-                                                     .attr("href", "#")
-                                                     .attr("data-toggle", "collapse")
-                                                     .attr("data-target", "#job_status_container")
-                                                     .append($("<span>")
-                                                             .addClass("glyphicon glyphicon-chevron-down"))
-                                                     .append("&nbsp;Job Status&nbsp;&nbsp;")
-                                                     .append(this.$loadingImage)))
-                                     .append($("<div>")
-                                             .addClass("col-md-2")
-                                             .append(this.$refreshButton)))
-                             .append(this.$notLoggedInDiv)
-                             .append(this.$noJobsDiv)
-                             .append(this.$tableContainer);
+            // Build the Modal dropdown that will let users delete a job.
+            this.$deleteBody = $("<div>");
+            this.$deleteModal = $("<div>").kbasePrompt({
+                title : "Delete Job?",
+                body : this.$deleteBody,
+                controls : [
+                    'cancelButton',
+                    {
+                        name : 'Delete Job',
+                        type : 'danger',
+                        callback : $.proxy(function(e, $prompt) {
+                            $prompt.closePrompt();
+                            this.deleteJob(this.$deleteBody.attr('job-id'));
+                        }, this)
+                    }
+                ]
+            });
+            this.$errorBody = $("<div>");
+            this.$errorModal = $("<div>").kbasePrompt({
+                title : "Error",
+                body : this.$errorBody,
+                controls : [
+                    'okayButton'
+                ]
+            });
 
-            this.$elem.append($container);
-            this.$elem.append(this.$modal);
+            this.$elem.append($('<div>')
+                              .addClass('panel panel-primary')
+                              .append($('<div>')
+                                      .addClass('panel-heading')
+                                      .append($('<div>')
+                                              .addClass('panel-title')
+                                              .css({'text-align': 'center'})
+                                              .append($headerDiv)))
+                              .append($('<div>')
+                                      .addClass('panel-body kb-narr-panel-body')
+                                      .css('padding', '3px')
+                                      .append(this.$messagePanel)
+                                      .append(this.$tableContainer)));
 
-            var self = this;
-            setInterval( function() { self.refresh(); }, self.options.refreshTime );
+            this.$jobTable = this.$jobTable.dataTable({
+                "oLanguage" : {
+                    "sZeroRecords" : "<div style='text-align: center'>No jobs found</div>",
+                },
+                "bLengthChange" : false,
+                "iDisplayLength": 20,
+                "aoColumns" : [
+                    { "sTitle" : "&nbsp;", "bSortable" : false, "bSearchable" : false },
+                    { "sTitle" : "Service", "bSearchable" : true },
+                    { "sTitle" : "Description", "bSearchable" : true },
+                    { "sTitle" : "Started", "bSearchable" : true, "sType" : "timestamp" },
+                    { "sTitle" : "Status", "bSearchable" : true },
+                    { "sTitle" : "Stage", "bSearchable" : false, "bVisible" : false }
+                ],
+                "sPaginationType" : "bootstrap",
+                "aaSorting" : [[1, "asc"]],
+                "aoColumnDefs" : [
+                    {
+                        "fnRender" : $.proxy(function( oObj ) {
+                            return this.makePrettyTimestamp(oObj.aData[3], " ago");
+                        }, this),
+                        "aTargets": [3]
+                    }
+                ],
+                "sDom": '<"top"ilp>rt<"bottom"><"clear">'
+            });
+
+            this.$jobTable.css("width", "100%");
+
+            setInterval( 
+                $.proxy(function() { this.refresh(); }, this), 
+                this.options.refreshTime 
+            );
+
             return this;
         },
 
         /**
-         * @method setAuth
-         * Sets a new auth token in the event that a users logs in or out.
-         * This also triggers a refresh event.
-         *
-         * @param {object} token - the authentication token, expected to be a token object
-         * as retrieved by the login widget, not just the token string.
+         * @method loggedInCallback
+         * This is associated with the login widget (through the kbaseAuthenticatedWidget parent) and
+         * is triggered when a login event occurs.
+         * It associates the new auth token with this widget and refreshes the data panel.
+         * @private
          */
-        setAuth: function(token) {
-            if (token)
-                this.options.auth = token;
-            else {
-                this.options.auth = null;
-                this.userJobStateClient = null;
-            }
-
+        loggedInCallback: function(event, auth) {
+            this.token = auth;
+            this.ujsClient = new UserAndJobState(this.options.userJobStateURL, this.token);
+            this.isLoggedIn = true;
             this.refresh();
+            return this;
         },
+
+        /**
+         * @method loggedOutCallback
+         * Like the loggedInCallback, this is triggered during a logout event (through the login widget).
+         * It throws away the auth token and workspace client, and refreshes the widget
+         * @private
+         */
+        loggedOutCallback: function(event, auth) {
+            this.token = null;
+            this.ujsClient = null;
+            this.isLoggedIn = false;
+            this.refresh();
+            return this;
+        },
+
 
         /**
          * @method refresh
@@ -178,21 +339,16 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * Otherwise, it prompts the user to log in.
          */
         refresh: function() {
-            this.$tableContainer.empty();
-            this.$notLoggedInDiv.css({ "display" : "none" });
-            this.$noJobsDiv.css({ "display" : "none" });
-            if (!this.options.auth || this.options.auth === null) {
-                this.$notLoggedInDiv.css({ "display" : "" });
+            if (!this.token || this.token === null || !this.ujsClient) {
+                this.showMessage("You must log in to view your jobs.");
                 return;
             }
 
             else {
-                this.$loadingImage.css({ "display" : "" });
-                this.userJobStateClient = new UserAndJobState(this.options.userJobStateURL, this.options.auth);
-                var self = this;
+                this.$loadingSpinner.show();
 
-                this.userJobStateClient.list_jobs([], '',
-                    function(jobs) {
+                this.ujsClient.list_jobs([], '',
+                    $.proxy(function(jobs) {
                         var jobTableRows = [];
 
                         for (var i=0; i<jobs.length; i++) {
@@ -201,66 +357,69 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 "<button class='btn btn-primary btn-med' job-id='" + job[0] + "'><span class='glyphicon glyphicon-search'/></button>",
                                 job[1],                         // service name
                                 job[12],                        // description
-//                                self.makePrettyTimestamp(job[3], " ago"),        // started
                                 job[3],
-                                self.makeStatusElement(job),
+                                this.makeStatusElement(job),
+                                job[2],
                             ]);
                         }
 
+                        this.$jobTable.fnClearTable();
+                        this.$jobTable.off("click");
+
                         if (jobTableRows.length > 0) {
-                            self.$jobTable = $("<table id='kbujs-jobs-table'>")
-                                             .addClass("table table-striped table-bordered");
+                            this.$jobTable.fnAddData(jobTableRows);
 
-                            self.$tableContainer.append(self.$jobTable);
+                            var $tableNodes = $(this.$jobTable.fnGetNodes());
 
-                            self.$jobTable = self.$jobTable.dataTable({
-                                "bLengthChange" : false,
-                                "iDisplayLength": 20,
-                                "aaData" : jobTableRows,
-                                "aoColumns" : [
-                                    { "sTitle" : "&nbsp;", "bSortable" : false, "bSearchable" : false },
-                                    { "sTitle" : "Service", "bSearchable" : true },
-                                    { "sTitle" : "Description", "bSearchable" : true },
-                                    { "sTitle" : "Started", "bSearchable" : true, "sType" : "timestamp" },
-                                    { "sTitle" : "Status", "bSearchable" : true },
-                                ],
-                                "sPaginationType" : "full_numbers",
-                                "aaSorting" : [[1, "asc"]],
-                                "aoColumnDefs" : [
-                                    {
-                                        "fnRender" : function( oObj ) {
-                                            return self.makePrettyTimestamp(oObj.aData[3], " ago");
-                                        },
-                                        "aTargets": [3]
-                                    }
-                                ]
-                            });
-
-                            self.$jobTable; 
-
-                            self.$jobTable.on("click", "button[job-id]",
-                                function(event) { 
-                                    self.showJobDetails($(event.currentTarget).attr('job-id'));
-                                }
+                            $tableNodes.find("span[error-job-id]").click(
+                                $.proxy(function(event) {
+                                    this.showErrorDetails($(event.currentTarget).parent().attr('job-id'));
+                                }, this)
                             );
 
-                            self.$jobTable.on("click", "span[error-job-id]",
-                                function(event) {
-                                    self.showErrorDetails($(event.currentTarget).attr('error-job-id'));
-                                }
+                            $tableNodes.find("button[job-id]").click(
+                                $.proxy(function(event) {
+                                    this.showJobDetails($(event.currentTarget).attr('job-id'));
+                                }, this)
                             );
 
-                            $("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
+                            $tableNodes.find("span.kbujs-delete-job").click(
+                                $.proxy(function(event) {
+                                    var jobId = $(event.currentTarget).parent().attr('job-id');
+                                    this.$deleteBody.empty().append("Really delete this job? It'll be gone forever.");
+                                    this.$deleteBody.attr('job-id', jobId);
+                                    this.$deleteModal.openPrompt();
+                                }, this)
+                            );
+
+                            $tableNodes.find("[data-toggle='tooltip']").tooltip({'placement' : 'top'});
+                            this.showJobTable();
                         }
                         else {
-                            self.$noJobsDiv.css({ "display" : "" });
+                            this.showMessage("No jobs found");
                         }
-                        self.$loadingImage.css({ "display" : "none" });
-                    },
+                        this.$loadingSpinner.hide();
 
-                    this.clientError
+                    }, this),
+
+                    $.proxy(function(error) {
+                        this.clientError(error);
+                        this.$loadingSpinner.hide();
+                    }, this)
                 );
             }
+        },
+
+        deleteJob: function(jobId) {
+            this.ujsClient.delete_job(jobId,
+                $.proxy(function() {
+                    this.refresh();
+                }, this),
+                $.proxy(function(error) {
+                    this.$errorBody.empty().append(this.buildErrorDiv(error));
+                    this.$errorModal.openPrompt();
+                }, this)
+            );
         },
 
         /**
@@ -298,17 +457,18 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          * @private
          */
         makeStatusElement: function(job) {
-            var status;
+            var status = "<div job-id='" + job[0] + "'>";
+            var deleteSpan = "<span class='pull-right glyphicon glyphicon-remove kbujs-delete-job' data-toggle='tooltip' title='Delete Job'></span>";
+
             if (job[11] === 1)
-                status = "<div class='kbujs-error-cell'>" + 
-                            "<span class='kbujs-error' error-job-id='" + job[0] + "'>" +
-                                "<span class='glyphicon glyphicon-exclamation-sign'></span>" +
-                                "&nbsp;Error: " +
-                                job[4] +
-                            "</span>" +
-                         "</div>";
+                status += "<span class='kbujs-error-cell kbujs-error' error-job-id='" + job[0] + "'>" +
+                              "<span class='glyphicon glyphicon-exclamation-sign'></span>" +
+                              "&nbsp;Error: " +
+                              job[4] +
+                          "</span>" +
+                          deleteSpan;
             else if (job[10] === 1)
-                status = "<div>Complete: " + job[4] + "</div>";
+                status += "<span>Complete: " + job[4] + "</span>" + deleteSpan;
             else {
                 status = "<div>" + job[4];
                 var progressType = job[8].toLowerCase();
@@ -329,7 +489,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                     status += this.makePrettyTimestamp(job[9], " remaining");
                 }
             }
-            return status;
+            return status + "</div>";
         },
 
         /**
@@ -383,6 +543,9 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         showJobDetails: function(jobId) {
             var self = this;
 
+            self.$jobDetailTitle.html("Job Details");
+            self.$jobDetailModal.openPrompt();
+
             var tableRow = function(elems) {
                 var row = $("<tr>");
                 for (var i=0; i<elems.length; i++) {
@@ -399,11 +562,11 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                        .addClass("glyphicon glyphicon-exclamation-sign"))
                                .append(" Error")
                                .click(function(event) {
-                                    self.$modal.off('hidden.bs.modal');
-                                    self.$modal.on('hidden.bs.modal', function(event) {
+                                    self.$jobDetailModal.off('hidden.bs.modal');
+                                    self.$jobDetailModal.on('hidden.bs.modal', function(event) {
                                         self.showErrorDetails(jobId);
                                     });
-                                    self.$modal.modal("hide");
+                                    self.$jobDetailModal.modal("hide");
                                 });
 
                     return $("<div>")
@@ -414,7 +577,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
             };
 
             var refresh = function() {
-                self.userJobStateClient.get_job_info(jobId, 
+                self.ujsClient.get_job_info(jobId, 
                     function(job) {
 
                         var $infoTable = $("<table>")
@@ -433,13 +596,6 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                         $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
                         if (job[11] !== 1 && job[10] !== 1)
                             $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
-                                         // .append(tableRow(["Progress", job[6]]))
-                                         // .append(tableRow(["Max Progress", job[7]]))
-                                         // .append(tableRow(["Progress Type", job[8]]))
-                                         // .append(tableRow(["Complete?", job[10]]))
-                                         // .append(tableRow(["Error?", job[11]]))
-                                         // .append(tableRow(["Results", job[13]]));
-
 
                         var $modalBody = $("<div>")
                                          .append($infoTable);
@@ -458,6 +614,7 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 if (job[13].shockurl)
                                     shockURL = job[13].shockurl;
 
+                                // Not sure how to parse Shock URLs...
                                 var shockNodeUrls = [];
                                 for (var i=0; i<job[13].shocknodes.length; i++) {
                                     shockNodeUrls.push("<a href='" + shockURL + job[13].shocknodes[i] + "' target='_blank'>" + job[13].shocknodes[i] + "</a>");
@@ -467,20 +624,20 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                 resultsData = true;
                             }
 
+                            // kb|ws.XXX.obj.YYY.ver.ZZZ
                             if (job[13].workspaceids && job[13].workspaceids.length > 0) {
-                                var workspaceURL = self.options.workspaceURL;
+                                var wsBrowser = self.options.workspaceBrowserURL;
                                 if (job[13].workspaceurl)
-                                    workspaceURL = job[13].workspaceurl;
+                                    wsBrowser = job[13].workspaceurl;
 
                                 var workspaceUrls = [];
                                 for (var i=0; i<job[13].workspaceids.length; i++) {
-                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
+                                    workspaceUrls.push(self.parseWorkspaceLink(wsBrowser, job[13].workspaceids[i]));
+//                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
                                 }
                                 $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
                                 resultsData = true;
                             }
-
-                            console.log($resultsTable);
 
                             if (resultsData === true)
                                 $resultsDiv.append($resultsTable);
@@ -491,34 +648,64 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                         if (job[11] === 1) {
 
                         }
-
-                        self.$modal.find(".modal-dialog .modal-content .modal-body").html($modalBody);
-                        self.$modal.find(".modal-dialog .modal-content .modal-header .modal-title").html("Job Details");
+                        self.$jobDetailBody.html($modalBody);
 
                     },
 
-                    self.clientError
+                    $.proxy(function(error) { 
+                        this.$jobDetailModal.closePrompt();
+                        this.clientError(error); 
+                    }, self)
                 );
             };
 
-            self.$modal.modal("hide");
-            self.$modal.modal("show");
             refresh();
             self.modalRefreshInterval = setInterval( function() { refresh(); }, this.options.detailRefreshTime );
         },
 
+        /**
+         * The objId is not controlled, so it could be anything!
+         * If it's any of the below, make a proper workspace browser link.
+         * otherwise, return plain text (not a hyperlink):
+         *
+         * ws/obj/ver (ws and obj can be strings or ints, ver is an int)
+         * kb|ws.XXX.obj.YYY.ver.ZZZ (XXX, YYY, ZZZ are all ints)
+         */
+        parseWorkspaceLink: function(wsBrowserUrl, objId) {
+            var wsLink = function(link, text) {
+                return "<a href='" + link + "' target='_blank'>" + text + "</a>";
+            }
+
+            var match = /(.+)\/(.+)\/(\d+)/.exec(objId);
+            if (match != null) {
+                return wsLink(wsBrowserUrl + "/" + match[1], objId);
+            }
+
+            match = /kb\|ws\.(\d+)\.obj\.(\d+)\.ver\.(\d+)/.exec(objId);
+            if (match != null) {
+                return wsLink(wsBrowserUrl + "/" + match[1], objId);
+            }
+
+            return objId;
+        },
+
+        /**
+         * Builds and shows a detailed error panel, including a stacktrace, if applicable, for a Job.
+         *
+         * This assumes that a job has an error.
+         */
         showErrorDetails: function(jobId) {
-            var self = this;
+            this.$jobDetailModal.off('hidden.bs.modal');
+            this.$jobDetailModal.closePrompt();
+            this.$jobDetailTitle.html("Job Error");
 
-            self.$modal.off('hidden.bs.modal');
-            self.$modal.modal("hide");
-            self.$modal.find("modal-dialog .modal-content .modal-header .modal-title").html("Job Error");
-            self.$modal.find(".modal-dialog .modal-content .modal-body")
-                       .html("<div class='kbujs-loading-modal'><img src='" + self.options.errorLoadingImage + "'/><br/>Loading...</div>");
-            self.$modal.modal("show");
+            this.$jobDetailBody.html("<div class='kbujs-loading-modal'><img src='" + this.options.errorLoadingImage + "'/><br/>Loading...</div>");
 
-            self.userJobStateClient.get_job_info(jobId,
-                function(job) {
+            this.$jobDetailModal.openPrompt();
+
+            this.ujsClient.get_job_info(jobId,
+                $.proxy(function(job) {
+                    console.log(job);
                     var $table = $("<table>")
                                  .addClass("table table-striped table-bordered")
                                  .append("<tr><td>Job ID</td><td>" + job[0] + "</td></tr>")
@@ -526,36 +713,31 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
                                  .append("<tr><td>Description</td><td>" + job[12] + "</td></tr>")
                                  .append("<tr><td>Status</td><td>" + job[4] + "</td></tr>");
 
-                    self.userJobStateClient.get_detailed_error(jobId,
-                        function(error) {
+                    this.ujsClient.get_detailed_error(jobId,
+                        $.proxy(function(error) {
                             var $detailedError = $("<div>").append("<h3>Error Details</h3>");
                             if (error && error.length > 0)
                                 $detailedError.append($("<pre>").append(error));
                             else
                                 $detailedError.append("No error information found.");
+                            this.$jobDetailBody.empty()
+                                               .append($table)
+                                               .append($detailedError);
+                        }, this),
 
-                            self.$modal.find(".modal-dialog .modal-content .modal-body").empty();
-                            self.$modal.find(".modal-dialog .modal-content .modal-body")
-                                       .append($table)
-                                       .append($detailedError);
-                        },
-
-                        self.clientError
+                        $.proxy(function(apiError) {
+                            this.$jobDetailModal.closePrompt();
+                            this.clientError(apiError);
+                        }, this)
                     );
 
-                })
-        },
+                }, this),
 
-
-        /**
-         * @method clientError
-         * Communicates a fairly simple error to the user when something goes wrong with a service.
-         *
-         * @param {object} error - the error object returned from a KBase service.
-         * @private
-         */
-        clientError: function(error) {
-            console.debug(error);
+                $.proxy(function(error) {
+                    this.$jobDetailModal.closePrompt();
+                    this.clientError(error);
+                }, this)
+            );
         },
 
         /**
@@ -663,6 +845,79 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
         },
 
         /**
+         * Hides the job info table and shows the given message (as an HTML object or jQuery node)
+         */
+        showMessage: function(message) {
+            this.$tableContainer.hide();
+            this.$messagePanel.empty().append(message);
+            this.$messagePanel.show();
+        },
+
+        /**
+         * Hides the message panel and shows the job table.
+         */
+        showJobTable: function() {
+            this.$messagePanel.hide();
+            this.$tableContainer.show();
+        },
+
+        /**
+         * @method clientError
+         * Communicates a fairly simple error to the user when something goes wrong with a service.
+         *
+         * @param {object} error - the error object returned from a KBase service.
+         * @private
+         */
+        clientError: function(error) {
+            this.showMessage(this.buildErrorDiv(error));
+        },
+
+        buildErrorDiv: function(error) {
+            var $errorDiv = $("<div>");
+
+            var $errorHeader = $('<div>')
+                               .addClass('alert alert-danger')
+                               .append('<b>Sorry, an error occurred.</b>')
+                               .append('<br>Please contact the KBase team at <a href="mailto:help@kbase.us?subject=KBase%20Job%20Service%20Error">help@kbase.us</a> with the information below.');
+
+            var $errorMessage = $('<div>');
+
+            // If it's a string, just dump the string.
+            if (typeof error === 'string') {
+                $errorMessage.append($('<div>').append(error));
+            }
+
+            // If it's an object, expect an error object as returned by the execute_reply callback from the IPython kernel.
+            else if (typeof error === 'object' && error.error) {
+                var $details = $('<div>')
+                               .append('<b>Type:</b> ' + error.error.name + '<br>')
+                               .append('<b>Message:</b> ' + error.error.message + '<br>');
+                $errorMessage.append($details);
+
+                if (error.error.error && error.error.error.length > 0) {
+                    var errorMsg = error.error.error.replace(/[\r?\n]+/g, "<br>");
+                    var $tracebackDiv = $('<pre>')
+                                        .addClass('kbujs-error-traceback')
+                                        .append(errorMsg);
+                    var $tracebackPanel = $('<div>');
+                    var tracebackAccordion = [{'title' : 'Traceback', 'body' : $tracebackDiv}];
+
+                    $errorMessage.append($tracebackPanel);
+                    $tracebackPanel.kbaseAccordion({ elements : tracebackAccordion });
+                }
+                else if (!error.error.name || !error.error.message) {
+                    $errorHeader.html('<b>Sorry, an unknown error occurred while loading KBase job information.</b>' +
+                                      '<br>If this error persists, please contact the KBase team at ' +
+                                      '<a href="mailto:help@kbase.us?subject=Unknown%20KBase%20Job%20Service%20Error">help@kbase.us</a>');
+                }
+            }
+            $errorDiv.append($errorHeader)
+                     .append($errorMessage);
+
+            return $errorDiv;
+        },
+
+        /**
          * VERY simple date parser.
          * Returns a valid Date object if that time stamp's real. 
          * Returns null otherwise.
@@ -671,29 +926,15 @@ define(['jquery', 'kbwidget', 'bootstrap', 'userandjobstate', 'jquery.dataTables
          */
         parseDate: function(time) {
             var d = new Date(time);
-            if (Object.prototype.toString.call(d) === "[object Date]") {
+            if (Object.prototype.toString.call(d) === '[object Date]') {
                 if (isNaN(d.getTime())) {
-                    console.log("Invalid time: " + time);
                     return null;
                 }
                 else {
                     return d;
                 }
             }
-            console.log("Invalid time: " + time);
-            return null
+            return null;
         },
-
-        /**
-         * Makes a random-ish UUID.
-         *
-         * @private
-         */
-        uuid: function() {
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-                var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
-                return v.toString(16);
-            });
-        }
     });
 });

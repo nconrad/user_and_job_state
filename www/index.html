@@ -1,45 +1,81 @@
+<!DOCTYPE HTML>
 <html>
     <head>
-        <link rel="stylesheet" href="assets/external/bootstrap/css/bootstrap.min.css" type="text/css">
-        <link rel="stylesheet" href="assets/external/dataTables/1.9.4/css/jquery.dataTables.css">
-        <link rel="stylesheet" href="assets/external/kbase/css/kbase_stylesheet.css" type="text/css">
-        <link rel="stylesheet" href="assets/css/userJobState.css" type="text/css">
-        <link rel="stylesheet" href="assets/css/kbaseUserJobState.css" type="text/css">
+        <link rel="icon" type="image/x-icon" href="assets/images/favicon.ico">
 
+        <link rel="stylesheet" type="text/css" href="assets/external/bootstrap/css/bootstrap.css">
+        <link rel="stylesheet" type="text/css" href="assets/external/dataTables/bootstrap/css/dataTables.bootstrap.css" />
+
+        <link rel="stylesheet" type="text/css" href="assets/css/userJobState.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/kbaseUserJobState.css" />
+
+
+        <link rel="stylesheet" type="text/css" href="assets/css/landing-pages.css" />
+        <link rel="stylesheet" type="text/css" href="assets/css/narrative.css" />
     </head>
 
     <body>
-        <header id="header_banner" role="banner">
-            <div id="navrow" class="row">     
-                <div id="logo" class="col-sm-1">
-                    <a href="http://www.kbase.us"><img src="assets/external/kbase/images/kbase_logo.png" alt="KBase User Home" /></a>
-                </div>
-                <div id="apps_menu" class="dropdown col-sm-1">
-                  <button type="button" class="btn btn-default" data-toggle="dropdown" href="#" onclick="$('#apps_menu_items').toggle();">Apps <span class="caret"></span></button>
-                  <ul class="dropdown-menu" role="menu" id="apps_menu_items">
-                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#"><a href="http://www.kbase.us/services/docs/invocation/Iris/iris.html">IRIS</a></li>
-                    <li role="presentation"><a role="menuitem" tablindex="-1" href="#"><a href="http://140.221.84.142/browse.html">Workspace Browser</a></li>
-                  </ul>
-                </div>
-                <div class="col-sm-8">
-                    <nav id="header_nav" role="navigation">
-                        <ul>
-                            <li><a href="home.shtml">Home</a></li>
-                            <li><a href="datastore.shtml">My Stuff</a></li>
-                            <li id="searchlabel"><a href="search.shtml">Search</a><span id="searchspan"><input type="text" class="form-control" name="search_terms" id="search_terms" placeholder="Search the KBase Central Data Store"></input></span></li>
-                        </ul>
-                    </nav>
-                </div>
-                <div class="col-sm-2">
-                    <div id="login-widget" class="pull-right" />
-                </div>
-            </div>
-        </header>
+        <div id="wrap">
 
-        <div id="main" class="container">
-            <div id="job-state-container"></div>
+        <div class="nav navbar-kbase navbar-fixed-top nav-collapse nav-collapse-scrollable bs-navbar-scroll-collapse">
+            <a href="http://www.kbase.us" class="pull-left">
+                <img id="logo" src="assets/images/kbase_logo.png" width="46">
+            </a>
+
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+              <ul class="nav navbar-nav"> 
+                <li class="dropdown" ng-class="{ active: $state.includes('narrative')}">
+                  <a href="#" class="dropdown-toggle" data-toggle="dropdown">Narrative <b class="caret"></b></a>
+                  <ul class="dropdown-menu">
+                    <li><a href="#/narrative/">Newsfeed</a></li>                
+                    <li><a href="#/narrative/projects/">Projects</a></li>
+                    <!--<li class="divider"></li>     
+                    <li><a href="#">Profile</a></li>-->
+                  </ul>
+                </li>
+                <li ng-class="{ active: $state.includes('ws')}"><a href="#/ws/" >Workspaces</a></li>
+                <li><a href="http://kbase.us/services/docs/uploader/uploader.html">Upload</a></li>          
+              </ul>
+
+              <form ng-controller="SearchController" ng-submit="startSearch(searchquery)" class="navbar-form navbar-left" role="search" style="width: 40%">
+                <div class="input-group">
+                    <input class="form-control" ng-model="searchquery" name="search" placeholder=" Search KBase Data" autocomplete="off" type="text"> 
+                   <!-- <div class="input-group-addon">
+                        <span class="glyphicon glyphicon-search"></span>
+                    </div>  -->         
+                    <div class="input-group-btn">
+                        <button class="btn" type="submit" style="background-color: #ebebeb; border-color: #adadad; border-left:none"><span class="glyphicon glyphicon-search" style="line-height: .9"></span></button>
+                    </div>
+                </div>
+
+
+                
+              </form>
+
+              <div id="signin-button" class="pull-right"></div>
+              <ul class="nav navbar-nav pull-right">
+                  <li class="dropdown help-dropdown"></li>
+              </ul>
+            </div> 
         </div>
 
+        <div id="app" class="wrapper" ui-view></div>
+            <div id="job-state-container" style="padding:5px 25px"></div>
+        </div> <!-- end wrap, this pushes the footer down -->
+
+        <div id="footer">
+            <ul>
+                <li><a href="http://kbase.us/about/about/" target="_blank">About KBase</a></li>
+                <li><a href="http://kbase.us/for-users/user-home/" target="_blank">Documentation</a></li>
+                <li><a href="http://kbase.us/about/kbase-data-policy/" target="_blank">KBase Data Policy</a></li>
+                <li><a href="http://kbase.us/contact-us/" target="_blank">Contact Us</a></li>
+                <li><a href="http://science.energy.gov/" target="_blank"><img class="center-block" src="./assets/images/doe_sc_logo.png" /></a></li>
+            </ul>
+            
+            <div class="disclaimer">This site is for demonstration purposes only.</div>
+
+        </div>
         <script data-main="assets/js/main" src="assets/external/require/2.1.9/require.js"></script>
-    </body>
+    </body>        
+
 </html>
