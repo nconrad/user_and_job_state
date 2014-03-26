@@ -165,15 +165,22 @@ class CommandGlassfishDomain(object):
             urllib2.urlopen('http://localhost:' + portstr)
         except urllib2.HTTPError as h:
             resp = h.read()
+        else:
+            print('Unexpected response from server - the server did not ' +
+                  'start up successfully. Please check the glassfish logs.')
+            return False
         if '32603' in resp:
             print('The server failed to start up successfully and is ' +
                   'running in protected mode. Please check the system and ' +
                   'glassfish logs.')
+            return False
         elif '32300' in resp:
             print('The server started successfully.')
+            return True
         else:
             print('The server failed to start up successfully and is not '
                   + 'running. Please check the system and glassfish logs.')
+            return False
 
     def stop_service(self, port):
         portstr = str(port)
@@ -286,4 +293,6 @@ if __name__ == '__main__':
         gf.set_min_max_memory(args.Xms, args.Xmx)
         for p in args.properties:
             gf.create_property(p)
-        gf.start_service(args.war, args.port, args.threads)
+        success = gf.start_service(args.war, args.port, args.threads)
+        if not success:
+            sys.exit(1)
