@@ -175,17 +175,18 @@ public class UserState {
 		query.put(AUTH, auth);
 		final DBObject projection = new BasicDBObject();
 		projection.put(KEY, 1);
-		final DBCursor mret;
+		final Set<String> keys = new HashSet<String>();
 		try {
-			mret = uscol.find(query, projection);
+			final DBCursor mret = uscol.find(query, projection);
+			for (DBObject o: mret) {
+				keys.add((String) o.get(KEY));
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		final Set<String> keys = new HashSet<String>();
-		for (DBObject o: mret) {
-			keys.add((String) o.get(KEY));
-		}
+		//TODO update startup scripts like workspace
+		//TODO upstart script
 		return keys;
 	}
 	
@@ -205,17 +206,17 @@ public class UserState {
 		final DBObject mfields = new BasicDBObject(USER, user);
 		mfields.put(AUTH, auth);
 		final DBObject match = new BasicDBObject("$match", mfields);
-		
-		final AggregationOutput mret;
+		//TODO just use distinct?
+		final Set<String> services = new HashSet<String>();
 		try {
-			mret = uscol.aggregate(match, SERV_PROJ, SERV_GROUP);
+			final AggregationOutput mret = uscol.aggregate(
+					match, SERV_PROJ, SERV_GROUP);
+			for (DBObject o: mret.results()) {
+				services.add((String) o.get(MONGO_ID));
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
-		}
-		final Set<String> services = new HashSet<String>();
-		for (DBObject o: mret.results()) {
-			services.add((String) o.get(MONGO_ID));
 		}
 		return services;
 	}

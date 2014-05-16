@@ -428,22 +428,21 @@ public class JobState {
 	public Set<String> listServices(final String user)
 			throws CommunicationException {
 		checkString(user, "user");
+		//TODO just use distinct
 		final DBObject query = new BasicDBObject("$or", Arrays.asList(
 				new BasicDBObject(USER, user),
 				new BasicDBObject(SHARED, user)));
 		query.put(SERVICE, new BasicDBObject("$ne", null));
 		final DBObject match = new BasicDBObject("$match", query);
-		
-		final AggregationOutput mret;
+		final Set<String> services = new HashSet<String>();
 		try {
-			mret = jobcol.aggregate(match, SERV_GROUP);
+			final AggregationOutput mret = jobcol.aggregate(match, SERV_GROUP);
+			for (DBObject o: mret.results()) {
+				services.add((String) o.get(MONGO_ID));
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
-		}
-		final Set<String> services = new HashSet<String>();
-		for (DBObject o: mret.results()) {
-			services.add((String) o.get(MONGO_ID));
 		}
 		return services;
 	}
@@ -485,16 +484,15 @@ public class JobState {
 		} else {
 			query += "}";
 		}
-		final Iterable<Job> j;
+		final List<Job> jobs = new LinkedList<Job>();
 		try {
-			j = jobjong.find(query).as(Job.class);
+			final Iterable<Job> j  = jobjong.find(query).as(Job.class);
+			for (final Job job: j) {
+				jobs.add(job);
+			}
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
-		}
-		final List<Job> jobs = new LinkedList<Job>();
-		for (final Job job: j) {
-			jobs.add(job);
 		}
 		return jobs;
 	}
