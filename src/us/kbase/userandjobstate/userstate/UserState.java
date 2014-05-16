@@ -5,13 +5,13 @@ import static us.kbase.common.utils.StringUtils.checkString;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -37,7 +37,6 @@ public class UserState {
 	private final static String KEY = "key";
 	private final static String AUTH = "auth";
 	private final static String VALUE = "value";
-	private final static String MONGO_ID = "_id";
 	
 	private final static String IDX_UNIQ = "unique";
 	
@@ -190,30 +189,16 @@ public class UserState {
 		return keys;
 	}
 	
-	final static DBObject SERV_GROUP;
-	final static DBObject SERV_PROJ;
-	static {
-		final DBObject pfields = new BasicDBObject(SERVICE, 1);
-		pfields.put(MONGO_ID, 0);
-		SERV_PROJ = new BasicDBObject("$project", pfields);
-		SERV_GROUP = new BasicDBObject("$group",
-				new BasicDBObject(MONGO_ID, "$" + SERVICE));
-	}
-
 	public Set<String> listServices(final String user, final boolean auth)
 			throws CommunicationException {
 		checkString(user, "user");
 		final DBObject mfields = new BasicDBObject(USER, user);
 		mfields.put(AUTH, auth);
-		final DBObject match = new BasicDBObject("$match", mfields);
-		//TODO just use distinct?
 		final Set<String> services = new HashSet<String>();
 		try {
-			final AggregationOutput mret = uscol.aggregate(
-					match, SERV_PROJ, SERV_GROUP);
-			for (DBObject o: mret.results()) {
-				services.add((String) o.get(MONGO_ID));
-			}
+			@SuppressWarnings("unchecked")
+			final List<String> servs = uscol.distinct(SERVICE, mfields);
+			services.addAll(servs);
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
