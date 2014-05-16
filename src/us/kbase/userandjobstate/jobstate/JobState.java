@@ -24,7 +24,6 @@ import us.kbase.common.mongo.exceptions.MongoAuthException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
 
-import com.mongodb.AggregationOutput;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DB;
 import com.mongodb.DBCollection;
@@ -417,29 +416,18 @@ public class JobState {
 		}
 	}
 	
-	final static DBObject SERV_GROUP;
-	static {
-		final DBObject pfields = new BasicDBObject(SERVICE, 1);
-		pfields.put(MONGO_ID, 0);
-		SERV_GROUP = new BasicDBObject("$group",
-				new BasicDBObject(MONGO_ID, "$" + SERVICE));
-	}
-	
 	public Set<String> listServices(final String user)
 			throws CommunicationException {
 		checkString(user, "user");
-		//TODO just use distinct
 		final DBObject query = new BasicDBObject("$or", Arrays.asList(
 				new BasicDBObject(USER, user),
 				new BasicDBObject(SHARED, user)));
 		query.put(SERVICE, new BasicDBObject("$ne", null));
-		final DBObject match = new BasicDBObject("$match", query);
 		final Set<String> services = new HashSet<String>();
 		try {
-			final AggregationOutput mret = jobcol.aggregate(match, SERV_GROUP);
-			for (DBObject o: mret.results()) {
-				services.add((String) o.get(MONGO_ID));
-			}
+			@SuppressWarnings("unchecked")
+			final List<String> servs = jobcol.distinct(SERVICE, query);
+			services.addAll(servs);
 		} catch (MongoException me) {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
