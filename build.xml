@@ -12,10 +12,16 @@
   <property name="test" location="test"/>
   <property name="jardir" location="../jars/lib/jars/"/>
   <property name="classes" location="classes"/>
+  <property name="doc" location="docs/javadoc"/>
+  <property name="tempunpack" location="unpackedjars"/>
   <property name="jar.file" value="UserAndJobStateService.jar"/>
   <property name="war.file" value="UserAndJobStateService.war"/>
   <property name="clientjar.file" value="UserAndJobStateClient.jar"/>
   <property name="war.dir" value="war"/>
+
+  <fileset dir="${jardir}" id="sourceslib">
+    <include name="kbase/kbase-common-0.0.2.jar"/>
+  </fileset>
 
   <fileset dir="${jardir}" id="serverlib">
     <include name="ini4j/ini4j-0.5.2.jar"/>
@@ -23,6 +29,7 @@
     <include name="jna/jna-3.4.0.jar"/>
     <include name="servlet/servlet-api-2.5.jar"/>
     <include name="syslog4j/syslog4j-0.9.46.jar"/>
+    <include name="joda/joda-time-2.2.jar"/>
   </fileset>
 
   <fileset dir="${jardir}" id="clientserverlib">
@@ -56,6 +63,13 @@
       <exclude name="common/service/KBaseJsonParser.java"/>
       <exclude name="common/service/JacksonTupleModule.java"/>
       <exclude name="common/service/JsonClientCaller.java"/>
+  </fileset>
+
+  <fileset id="sources-jdoc-files" dir="${tempunpack}/us/kbase/common/service"
+    defaultexcludes="yes">
+    <include name="UObject.java"/>
+    <include name="JsonTokenStream.java"/>
+    <include name="*Exception.java"/>
   </fileset>
 
   <fileset id="client-class-files" dir="${classes}" defaultexcludes="yes">
@@ -113,15 +127,20 @@
   </target>
 
   <target name="javadoc" description="build javadocs">
+    <unzip dest="${tempunpack}">
+      <fileset refid="sourceslib"/>
+    </unzip>
     <javadoc access="protected" author="false" classpathref="compile.classpath"
-      destdir="docs/javadoc" nodeprecated="false" nodeprecatedlist="false"
+      destdir="${doc}" nodeprecated="false" nodeprecatedlist="false"
       noindex="false" nonavbar="false" notree="false"
       source="1.7" splitindex="true" use="true" version="true">
       <link href="http://download.oracle.com/javase/7/docs/api/"/>
       <link href="http://fasterxml.github.io/jackson-core/javadoc/2.2.0/"/>
       <link href="http://fasterxml.github.io/jackson-databind/javadoc/2.2.0/"/>
       <fileset refid="client-jdoc-files"/>
+      <fileset refid="sources-jdoc-files"/>
     </javadoc>
+    <delete dir="${tempunpack}"/>
   </target>
 
   <target name="test" depends="compile" description="run tests">

@@ -87,7 +87,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 
     //BEGIN_CLASS_HEADER
 	
-	private static final String VER = "0.0.3";
+	private static final String VER = "0.0.4";
 	
 	//required deploy parameters:
 	private static final String HOST = "mongodb-host";
