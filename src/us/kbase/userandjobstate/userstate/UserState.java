@@ -184,7 +184,6 @@ public class UserState {
 			throw new CommunicationException(
 					"There was a problem communicating with the database", me);
 		}
-		//TODO upstart script
 		return keys;
 	}
 	

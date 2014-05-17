@@ -1,6 +1,7 @@
 package us.kbase.userandjobstate;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -10,6 +11,7 @@ import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonClientCaller;
 import us.kbase.common.service.JsonClientException;
 import us.kbase.common.service.Tuple14;
+import us.kbase.common.service.Tuple2;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple7;
 import us.kbase.common.service.UObject;
@@ -97,9 +99,13 @@ public class UserAndJobStateClient {
         caller = new JsonClientCaller(DEFAULT_URL, user, password);
     }
 
-	public void setConnectionReadTimeOut(Integer milliseconds) {
-		this.caller.setConnectionReadTimeOut(milliseconds);
-	}
+    public URL getURL() {
+        return caller.getURL();
+    }
+
+    public void setConnectionReadTimeOut(Integer milliseconds) {
+        this.caller.setConnectionReadTimeOut(milliseconds);
+    }
 
     public boolean isAuthAllowedForHttp() {
         return caller.isAuthAllowedForHttp();
@@ -107,6 +113,14 @@ public class UserAndJobStateClient {
 
     public void setAuthAllowedForHttp(boolean isAuthAllowedForHttp) {
         caller.setAuthAllowedForHttp(isAuthAllowedForHttp);
+    }
+
+    public AuthToken getToken() {
+        return caller.getToken();
+    }
+
+    public void _setFileForNextRpcResponse(File f) {
+        caller.setFileForNextRpcResponse(f);
     }
 
     /**
@@ -185,6 +199,52 @@ public class UserAndJobStateClient {
         TypeReference<List<UObject>> retType = new TypeReference<List<UObject>>() {};
         List<UObject> res = caller.jsonrpcCall("UserAndJobState.get_state", args, retType, true, true);
         return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: has_state</p>
+     * <pre>
+     * Determine if a key exists for a service.
+     * </pre>
+     * @param   service   instance of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   key   instance of String
+     * @param   auth   instance of original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; original type "boolean" (A boolean. 0 = false, other = true.)
+     * @return   parameter "has_key" of original type "boolean" (A boolean. 0 = false, other = true.)
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public Long hasState(String service, String key, Long auth) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(service);
+        args.add(key);
+        args.add(auth);
+        TypeReference<List<Long>> retType = new TypeReference<List<Long>>() {};
+        List<Long> res = caller.jsonrpcCall("UserAndJobState.has_state", args, retType, true, true);
+        return res.get(0);
+    }
+
+    /**
+     * <p>Original spec-file function name: get_has_state</p>
+     * <pre>
+     * Get the state of a key for a service, and do not throw an error if the
+     * key doesn't exist. If the key doesn't exist, has_key will be false
+     * and the key value will be null.
+     * </pre>
+     * @param   service   instance of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
+     * @param   key   instance of String
+     * @param   auth   instance of original type "authed" (Specifies whether results returned should be from key/value pairs set with service authentication (true) or without (false).) &rarr; original type "boolean" (A boolean. 0 = false, other = true.)
+     * @return   multiple set: (1) parameter "has_key" of original type "boolean" (A boolean. 0 = false, other = true.), (2) parameter "value" of unspecified object
+     * @throws IOException if an IO exception occurs
+     * @throws JsonClientException if a JSON RPC exception occurs
+     */
+    public Tuple2<Long, UObject> getHasState(String service, String key, Long auth) throws IOException, JsonClientException {
+        List<Object> args = new ArrayList<Object>();
+        args.add(service);
+        args.add(key);
+        args.add(auth);
+        TypeReference<Tuple2<Long, UObject>> retType = new TypeReference<Tuple2<Long, UObject>>() {};
+        Tuple2<Long, UObject> res = caller.jsonrpcCall("UserAndJobState.get_has_state", args, retType, true, true);
+        return res;
     }
 
     /**

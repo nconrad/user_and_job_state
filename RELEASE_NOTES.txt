@@ -9,7 +9,10 @@ VERSION: 0.0.4 (Released TBD)
 --------------------------------------
 
 NEW FEATURES:
-- N/A
+- deploy-upstart target deploys an upstart script (note that only start works,
+  stop does not - see the upstart script for more info)
+- has_state function
+- get_has_state function
 
 UPDATED FEATURES / MAJOR BUG FIXES:
 - Update deployment scripts to latest versions

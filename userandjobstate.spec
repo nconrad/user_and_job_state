@@ -91,6 +91,16 @@ module UserAndJobState {
 	/* Get the state of a key for a service. */
 	funcdef get_state(service_name service, string key, authed auth)
 		returns(UnspecifiedObject value);
+		
+	/* Determine if a key exists for a service. */
+	funcdef has_state(service_name service, string key, authed auth)
+		returns(boolean has_key);
+		
+	/* Get the state of a key for a service, and do not throw an error if the
+		key doesn't exist. If the key doesn't exist, has_key will be false
+		and the key value will be null. */
+	funcdef get_has_state(service_name service, string key, authed auth)
+		returns(boolean has_key, UnspecifiedObject value);
 	
 	/* Remove a key value pair without service authentication. */
 	funcdef remove_state(service_name service, string key) returns ();
