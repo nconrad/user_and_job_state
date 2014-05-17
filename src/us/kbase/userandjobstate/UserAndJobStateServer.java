@@ -33,8 +33,8 @@ import us.kbase.common.utils.UTCDateFormat;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
-//END_HEADER
 import us.kbase.userandjobstate.userstate.UserState.KeyState;
+//END_HEADER
 
 /**
  * <p>Original spec-file module name: UserAndJobState</p>

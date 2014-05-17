@@ -448,6 +448,196 @@ sub get_state
 
 
 
+=head2 has_state
+
+  $has_key = $obj->has_state($service, $key, $auth)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$service is a UserAndJobState.service_name
+$key is a string
+$auth is a UserAndJobState.authed
+$has_key is a UserAndJobState.boolean
+service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+$service is a UserAndJobState.service_name
+$key is a string
+$auth is a UserAndJobState.authed
+$has_key is a UserAndJobState.boolean
+service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
+
+
+=end text
+
+=item Description
+
+Determine if a key exists for a service.
+
+=back
+
+=cut
+
+sub has_state
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 3)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function has_state (received $n, expecting 3)");
+    }
+    {
+	my($service, $key, $auth) = @args;
+
+	my @_bad_arguments;
+        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 3 \"auth\" (value was \"$auth\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to has_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'has_state');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.has_state",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'has_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method has_state",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'has_state',
+				       );
+    }
+}
+
+
+
+=head2 get_has_state
+
+  $has_key, $value = $obj->get_has_state($service, $key, $auth)
+
+=over 4
+
+=item Parameter and return types
+
+=begin html
+
+<pre>
+$service is a UserAndJobState.service_name
+$key is a string
+$auth is a UserAndJobState.authed
+$has_key is a UserAndJobState.boolean
+$value is an UnspecifiedObject, which can hold any non-null object
+service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
+
+</pre>
+
+=end html
+
+=begin text
+
+$service is a UserAndJobState.service_name
+$key is a string
+$auth is a UserAndJobState.authed
+$has_key is a UserAndJobState.boolean
+$value is an UnspecifiedObject, which can hold any non-null object
+service_name is a string
+authed is a UserAndJobState.boolean
+boolean is an int
+
+
+=end text
+
+=item Description
+
+Get the state of a key for a service, and do not throw an error if the
+key doesn't exist. If the key doesn't exist, has_key will be false
+and the key value will be null.
+
+=back
+
+=cut
+
+sub get_has_state
+{
+    my($self, @args) = @_;
+
+# Authentication: required
+
+    if ((my $n = @args) != 3)
+    {
+	Bio::KBase::Exceptions::ArgumentValidationError->throw(error =>
+							       "Invalid argument count for function get_has_state (received $n, expecting 3)");
+    }
+    {
+	my($service, $key, $auth) = @args;
+
+	my @_bad_arguments;
+        (!ref($service)) or push(@_bad_arguments, "Invalid type for argument 1 \"service\" (value was \"$service\")");
+        (!ref($key)) or push(@_bad_arguments, "Invalid type for argument 2 \"key\" (value was \"$key\")");
+        (!ref($auth)) or push(@_bad_arguments, "Invalid type for argument 3 \"auth\" (value was \"$auth\")");
+        if (@_bad_arguments) {
+	    my $msg = "Invalid arguments passed to get_has_state:\n" . join("", map { "\t$_\n" } @_bad_arguments);
+	    Bio::KBase::Exceptions::ArgumentValidationError->throw(error => $msg,
+								   method_name => 'get_has_state');
+	}
+    }
+
+    my $result = $self->{client}->call($self->{url}, {
+	method => "UserAndJobState.get_has_state",
+	params => \@args,
+    });
+    if ($result) {
+	if ($result->is_error) {
+	    Bio::KBase::Exceptions::JSONRPC->throw(error => $result->error_message,
+					       code => $result->content->{error}->{code},
+					       method_name => 'get_has_state',
+					       data => $result->content->{error}->{error} # JSON::RPC::ReturnObject only supports JSONRPC 1.1 or 1.O
+					      );
+	} else {
+	    return wantarray ? @{$result->result} : $result->result->[0];
+	}
+    } else {
+        Bio::KBase::Exceptions::HTTP->throw(error => "Error invoking method get_has_state",
+					    status_line => $self->{client}->status_line,
+					    method_name => 'get_has_state',
+				       );
+    }
+}
+
+
+
 =head2 remove_state
 
   $obj->remove_state($service, $key)
