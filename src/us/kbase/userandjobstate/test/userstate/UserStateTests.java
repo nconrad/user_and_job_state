@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.userstate.UserState;
+import us.kbase.userandjobstate.userstate.UserState.KeyState;
 import us.kbase.userandjobstate.userstate.exceptions.NoSuchKeyException;
 
 import com.mongodb.BasicDBObject;
@@ -137,20 +138,32 @@ public class UserStateTests {
 	public void getNonExistantState() throws Exception {
 		us.setState("u", "nostate", false, "thing1", "foo");
 		us.setState("u", "nostate", true, "thing1", "foo");
+		failGetHasState("u", "nostate", false, "thing");
+		failGetHasState("u", "nostate", true, "thing");
+	}
+	
+	private void failGetHasState(String user, String service, boolean auth, String key)
+			throws Exception {
+		String exp = String.format("There is no key %s for the %sauthorized service %s",
+				key, auth ? "" : "un", service);
 		try {
-			us.getState("u", "nostate", false, "thing");
-			fail("got non-existant state");
-		} catch (NoSuchKeyException iae) {
-			assertThat("correct exception", iae.getLocalizedMessage(),
-					is("There is no key thing for the unauthorized service nostate"));
-		}
-		try {
-			us.getState("u", "nostate", true, "thing");
+			us.getState(user, service, auth, key);
 			fail("got non-existant state");
 		} catch (NoSuchKeyException nske) {
 			assertThat("correct exception", nske.getLocalizedMessage(),
-					is("There is no key thing for the authorized service nostate"));
+					is(exp));
 		}
+		try {
+			us.getState(user, service, auth, key, true);
+			fail("got non-existant state");
+		} catch (NoSuchKeyException nske) {
+			assertThat("correct exception", nske.getLocalizedMessage(),
+					is(exp));
+		}
+		KeyState ks = us.getState(user, service, auth, key, false);
+		assertThat("key exists is false", ks.exists(), is(false));
+		assertThat("value is null", ks.getValue(), is((Object) null));
+		assertThat("no key exists", us.hasState(user, service, auth, key), is(false));
 	}
 	
 	@Test
@@ -193,15 +206,13 @@ public class UserStateTests {
 		Map<String, Object> data = new HashMap<String, Object>();
 		data.put("bar", "baz");
 		us.setState("foo", "serv1", false, "key1", data);
-		assertThat("got correct data back",
-				us.getState("foo", "serv1", false, "key1"),
-				is((Object) new BasicDBObject(data)));
+		succeedGetHasState("foo", "serv1", false, "key1", data);
+
 		Map<String, Object> data2 = new HashMap<String, Object>();
 		data2.put("bar", data);
 		us.setState("foo", "authserv1", true, "authkey1", data2);
-		assertThat("got correct data back",
-				us.getState("foo", "authserv1", true, "authkey1"),
-				is((Object) new BasicDBObject(data2)));
+		succeedGetHasState("foo", "authserv1", true, "authkey1", data2);
+		
 		us.setState("foo", "serv1", false, "key2", data);
 		us.setState("foo", "serv2", false, "key", data);
 		us.setState("foo", "authserv1", true, "authkey2", data2);
@@ -221,12 +232,24 @@ public class UserStateTests {
 		
 		us.setState("foo", "nullserv", false, "null", null);
 		us.setState("foo", "nullserv", true, "null", null);
+		succeedGetHasState("foo", "nullserv", true, "null", null);
+		succeedGetHasState("foo", "nullserv", false, "null", null);
+	}
+	
+	private void succeedGetHasState(String user, String service, boolean auth,
+			String key, Map<String, Object> data)
+			throws Exception {
+		Object d = data == null ? null : (Object) new BasicDBObject(data);
 		assertThat("got correct data back",
-				us.getState("foo", "nullserv", true, "null"),
-				is((Object) null));
-		assertThat("got correct data back",
-				us.getState("foo", "nullserv", false, "null"),
-				is((Object) null));
+				us.getState(user, service, auth, key), is(d));
+		KeyState ks = us.getState(user, service, auth, key, true);
+		assertThat("key exists is true", ks.exists(), is(true));
+		assertThat("value is correct", ks.getValue(), is(d));
+		ks = us.getState(user, service, auth, key, false);
+		assertThat("key exists is true", ks.exists(), is(true));
+		assertThat("value is correct", ks.getValue(), is(d));
+		assertThat("has state is correct", us.hasState(user, service, auth, key),
+				is(true));
 	}
 	
 	private void checkListServ(String user, boolean auth,

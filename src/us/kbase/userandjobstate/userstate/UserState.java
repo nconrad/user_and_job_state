@@ -134,13 +134,11 @@ public class UserState {
 		return getState(user, service, auth, key, true).getValue();
 	}
 	
-	//TODO test
 	public KeyState getState(final String user, final String service, 
 			final boolean auth, final String key, final boolean exceptOnNoKey)
 			throws CommunicationException, NoSuchKeyException {
 		final DBObject query = generateQuery(user, service, auth, key);
-		final DBObject projection = new BasicDBObject();
-		projection.put(VALUE, 1);
+		final DBObject projection = new BasicDBObject(VALUE, 1);
 		final DBObject mret;
 		try {
 			mret = uscol.findOne(query, projection);
@@ -160,14 +158,13 @@ public class UserState {
 		//might make sense to run through this and switch all DBObjects to 
 		//Maps, but doesn't really matter for the application, so pass
 		return new KeyState(true, mret.get(VALUE));
-		//TODO test always true here
 	}
 	
 	public static class KeyState {
 		private final Object value;
 		private final boolean exists;
 		
-		public KeyState(final boolean exists, final Object value) {
+		private KeyState(final boolean exists, final Object value) {
 			super();
 			this.exists = exists;
 			this.value = value;
@@ -182,7 +179,6 @@ public class UserState {
 		}
 	}
 	
-	//TODO test
 	public boolean hasState(final String user, final String service, 
 			final boolean auth, final String key)
 			throws CommunicationException, NoSuchKeyException {
