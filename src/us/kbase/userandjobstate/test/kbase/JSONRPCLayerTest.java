@@ -28,6 +28,7 @@ import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple14;
+import us.kbase.common.service.Tuple2;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple7;
 import us.kbase.common.service.UObject;
@@ -167,22 +168,12 @@ public class JSONRPCLayerTest {
 		CLIENT2.setState("serv1", "2key1", new UObject(data2));
 		CLIENT1.setStateAuth(TOKEN2, "akey1", new UObject(data));
 		CLIENT2.setStateAuth(TOKEN1, "2akey1", new UObject(data2));
-		assertThat("get correct data back",
-				CLIENT1.getState("serv1", "key1", 0L)
-				.asClassInstance(Object.class),
-				is((Object) data));
-		assertThat("get correct data back",
-				CLIENT2.getState("serv1", "2key1", 0L)
-				.asClassInstance(Object.class),
-				is((Object) data2));
-		assertThat("get correct data back",
-				CLIENT1.getState(USER2, "akey1", 1L)
-				.asClassInstance(Object.class),
-				is((Object) data));
-		assertThat("get correct data back",
-				CLIENT2.getState(USER1, "2akey1", 1L)
-				.asClassInstance(Object.class),
-				is((Object) data2));
+		
+		succeedGetHasState(CLIENT1, "serv1", "key1", 0L, data);
+		succeedGetHasState(CLIENT2, "serv1", "2key1", 0L, data2);
+		succeedGetHasState(CLIENT1, USER2, "akey1", 1L, data);
+		succeedGetHasState(CLIENT2, USER1, "2akey1", 1L, data2);
+
 		CLIENT1.setState("serv1", "key2", new UObject(data));
 		CLIENT1.setState("serv2", "key", new UObject(data));
 		CLIENT1.setStateAuth(TOKEN2, "akey2", new UObject(data));
@@ -205,22 +196,43 @@ public class JSONRPCLayerTest {
 		assertThat("get correct services",
 				new HashSet<String>(CLIENT1.listStateServices(1L)),
 				is(new HashSet<String>(Arrays.asList(USER1, USER2))));
+		
 		CLIENT1.removeState("serv1", "key1");
 		CLIENT1.removeStateAuth(TOKEN2, "akey1");
+		failGetHasState(CLIENT1, "serv1", "key1", 0L);
+		failGetHasState(CLIENT1, USER2, "akey1", 1L);
+	}
+	
+	private void failGetHasState(UserAndJobStateClient client, String service,
+			String key, long auth) throws Exception {
+		String exp = String.format("There is no key %s for the %sauthorized service %s",
+				key, auth == 1 ? "" : "un", service);
 		try {
-			CLIENT1.getState("serv1", "key1", 0L);
+			client.getState(service, key, auth);
 			fail("got deleted state");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
-					is("There is no key key1 for the unauthorized service serv1"));
+					is(exp));
 		}
-		try {
-			CLIENT1.getState(USER2, "akey1", 1L);
-			fail("got deleted state");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is("There is no key akey1 for the authorized service " + USER2));
-		}
+		Tuple2<Long, UObject> t2 = client.getHasState(service, key, auth);
+		assertThat("key does not exist", t2.getE1(), is(0L));
+		assertThat("null value", t2.getE2(),
+				is((Object) null));
+		assertThat("has key returns false", client.hasState(service, key, auth),
+				is(0L));
+	}
+	
+	private void succeedGetHasState(UserAndJobStateClient client, String service,
+			String key, long auth, Object data) throws Exception {
+		assertThat("get correct data back",
+				client.getState(service, key, auth).asClassInstance(Object.class),
+				is(data));
+		Tuple2<Long, UObject> t2 = client.getHasState(service, key, auth);
+		assertThat("key exists", t2.getE1(), is(1L));
+		assertThat("correct value", t2.getE2().asClassInstance(Object.class),
+				is(data));
+		assertThat("has key returns true", client.hasState(service, key, auth),
+				is(1L));
 	}
 	
 	@Test

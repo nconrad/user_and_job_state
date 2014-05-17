@@ -34,6 +34,7 @@ import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
 //END_HEADER
+import us.kbase.userandjobstate.userstate.UserState.KeyState;
 
 /**
  * <p>Original spec-file module name: UserAndJobState</p>
@@ -385,6 +386,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public Long hasState(String service, String key, Long auth, AuthToken authPart) throws Exception {
         Long returnVal = null;
         //BEGIN has_state
+		returnVal = boolToLong(us.hasState(authPart.getUserName(), service,
+				auth != 0, key));
         //END has_state
         return returnVal;
     }
@@ -406,6 +409,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Long return1 = null;
         UObject return2 = null;
         //BEGIN get_has_state
+		final KeyState ks = us.getState(authPart.getUserName(), service,
+				auth != 0, key, false);
+		return1 = boolToLong(ks.exists());
+		return2 = new UObject(ks.getValue());
         //END get_has_state
         Tuple2<Long, UObject> returnVal = new Tuple2<Long, UObject>();
         returnVal.setE1(return1);
