@@ -131,6 +131,13 @@ public class UserState {
 	public Object getState(final String user, final String service, 
 			final boolean auth, final String key)
 			throws CommunicationException, NoSuchKeyException {
+		return getState(user, service, auth, key, true).getValue();
+	}
+	
+	//TODO test
+	public KeyState getState(final String user, final String service, 
+			final boolean auth, final String key, final boolean exceptOnNoKey)
+			throws CommunicationException, NoSuchKeyException {
 		final DBObject query = generateQuery(user, service, auth, key);
 		final DBObject projection = new BasicDBObject();
 		projection.put(VALUE, 1);
@@ -142,13 +149,52 @@ public class UserState {
 					"There was a problem communicating with the database", me);
 		}
 		if (mret == null) {
-			throw new NoSuchKeyException(String.format(
-					"There is no key %s for the %sauthorized service %s", key,
-					auth ? "" : "un", service));
+			if (exceptOnNoKey) {
+				throw new NoSuchKeyException(String.format(
+						"There is no key %s for the %sauthorized service %s",
+						key, auth ? "" : "un", service));
+			} else {
+				return new KeyState(false, null);
+			}
 		}
 		//might make sense to run through this and switch all DBObjects to 
 		//Maps, but doesn't really matter for the application, so pass
-		return mret.get(VALUE);
+		return new KeyState(true, mret.get(VALUE));
+		//TODO test always true here
+	}
+	
+	public static class KeyState {
+		private final Object value;
+		private final boolean exists;
+		
+		public KeyState(final boolean exists, final Object value) {
+			super();
+			this.exists = exists;
+			this.value = value;
+		}
+
+		public Object getValue() {
+			return value;
+		}
+
+		public boolean exists() {
+			return exists;
+		}
+	}
+	
+	//TODO test
+	public boolean hasState(final String user, final String service, 
+			final boolean auth, final String key)
+			throws CommunicationException, NoSuchKeyException {
+		final DBObject query = generateQuery(user, service, auth, key);
+		final long count;
+		try {
+			count = uscol.count(query);
+		} catch (MongoException me) {
+			throw new CommunicationException(
+					"There was a problem communicating with the database", me);
+		}
+		return count != 0;
 	}
 
 	public void removeState(final String user, final String service, 
