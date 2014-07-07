@@ -88,6 +88,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 
     //BEGIN_CLASS_HEADER
 	
+    //TODO update to mongo retry code & test
+    //TODO make kbase user configurable in deploy upstart
+    
 	private static final String VER = "0.0.4";
 	
 	//required deploy parameters:
@@ -126,6 +129,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		} catch (InvalidHostException ihe) {
 			fail(host + " is an invalid database host: "  +
 					ihe.getLocalizedMessage());
+		} catch (InterruptedException ie) {
+			fail("Connection to MongoDB was interrupted. This should never " +
+					"happen and indicates a programming problem. Error: " +
+					ie.getLocalizedMessage());
 		}
 		return null;
 	}
@@ -149,6 +156,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		} catch (InvalidHostException ihe) {
 			fail(host + " is an invalid database host: "  +
 					ihe.getLocalizedMessage());
+		} catch (InterruptedException ie) {
+			fail("Connection to MongoDB was interrupted. This should never " +
+					"happen and indicates a programming problem. Error: " +
+					ie.getLocalizedMessage());
 		}
 		return null;
 	}

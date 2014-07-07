@@ -48,7 +48,8 @@ public class UserState {
 	
 	public UserState(final String host, final String database,
 			final String collection)
-			throws UnknownHostException, IOException, InvalidHostException {
+			throws UnknownHostException, IOException, InvalidHostException,
+			InterruptedException {
 		final DB m = GetMongoDB.getDB(host, database);
 		uscol = m.getCollection(collection);
 		ensureIndexes();
@@ -57,7 +58,7 @@ public class UserState {
 	public UserState(final String host, final String database,
 			final String collection, final String user, final String password)
 			throws UnknownHostException, IOException, InvalidHostException,
-			MongoAuthException {
+			MongoAuthException, InterruptedException {
 		final DB m = GetMongoDB.getDB(host, database, user, password);
 		uscol = m.getCollection(collection);
 		ensureIndexes();

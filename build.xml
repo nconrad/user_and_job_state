@@ -38,7 +38,7 @@
     <include name="jackson/jackson-annotations-2.2.3.jar"/>
     <include name="jackson/jackson-core-2.2.3.jar"/>
     <include name="jackson/jackson-databind-2.2.3.jar"/>
-    <include name="kbase/kbase-common-0.0.2.jar"/>
+    <include name="kbase/common/kbase-common-0.0.3.jar"/>
   </fileset>
 
   <fileset dir="${jardir}" id="applicationlib">
@@ -46,6 +46,7 @@
     <include name="jongo/jongo-0.5-early-20130912-1506.jar"/>
     <include name="mongo/mongo-java-driver-2.11.2.jar"/>
     <include name="apache_commons/commons-lang3-3.1.jar"/>
+    <include name="slf4j/slf4j-api-1.7.7.jar"/>
   </fileset>
 
   <union id="serverside">

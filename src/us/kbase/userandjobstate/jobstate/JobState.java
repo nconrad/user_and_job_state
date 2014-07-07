@@ -69,7 +69,8 @@ public class JobState {
 	
 	public JobState(final String host, final String database,
 			final String collection)
-			throws UnknownHostException, IOException, InvalidHostException {
+			throws UnknownHostException, IOException, InvalidHostException,
+			InterruptedException {
 		final DB m = GetMongoDB.getDB(host, database);
 		jobcol = m.getCollection(collection);
 		jobjong = new Jongo(m).getCollection(collection);
@@ -79,7 +80,7 @@ public class JobState {
 	public JobState(final String host, final String database,
 			final String collection, final String user, final String password)
 			throws UnknownHostException, IOException, InvalidHostException,
-			MongoAuthException {
+			MongoAuthException, InterruptedException {
 		final DB m = GetMongoDB.getDB(host, database, user, password);
 		jobcol = m.getCollection(collection);
 		jobjong = new Jongo(m).getCollection(collection);
