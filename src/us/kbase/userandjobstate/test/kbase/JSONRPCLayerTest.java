@@ -117,8 +117,8 @@ public class JSONRPCLayerTest {
 		System.out.println("Starting tests");
 		CLIENT1 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER1, p1);
 		CLIENT2 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER2, p2);
-		CLIENT1.setAuthAllowedForHttp(true);
-		CLIENT2.setAuthAllowedForHttp(true);
+		CLIENT1.setIsInsecureHttpConnectionAllowed(true);
+		CLIENT2.setIsInsecureHttpConnectionAllowed(true);
 		try {
 			TOKEN1 = AuthService.login(USER1, p1).getTokenString();
 		} catch (AuthException ae) {

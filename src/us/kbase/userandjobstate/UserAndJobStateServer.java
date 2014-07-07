@@ -89,10 +89,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
     //BEGIN_CLASS_HEADER
 	
     //TODO update to mongo retry code & test
-    //TODO make kbase user configurable in deploy upstart
-    
+    //TODO don't use the date parser as an instance variable, not thread safe
+
 	private static final String VER = "0.0.4";
-	
+
 	//required deploy parameters:
 	private static final String HOST = "mongodb-host";
 	private static final String DB = "mongodb-database";
