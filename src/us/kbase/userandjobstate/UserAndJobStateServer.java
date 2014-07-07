@@ -15,7 +15,6 @@ import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
 
 import java.io.IOException;
 import java.net.UnknownHostException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -23,13 +22,17 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.DateTimeFormatterBuilder;
+
 import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.auth.TokenExpiredException;
 import us.kbase.auth.TokenFormatException;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
 import us.kbase.common.mongo.exceptions.MongoAuthException;
-import us.kbase.common.utils.UTCDateFormat;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
@@ -89,7 +92,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
     //BEGIN_CLASS_HEADER
 	
     //TODO update to mongo retry code & test
-    //TODO don't use the date parser as an instance variable, not thread safe
 
 	private static final String VER = "0.0.4";
 
@@ -108,7 +110,15 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	private final UserState us;
 	private final JobState js;
 	
-	private final UTCDateFormat dateFormat = new UTCDateFormat();
+	private final static DateTimeFormatter DATE_PARSER =
+			new DateTimeFormatterBuilder()
+				.append(DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ss"))
+				.appendOptional(DateTimeFormat.forPattern(".SSS").getParser())
+				.append(DateTimeFormat.forPattern("Z"))
+				.toFormatter();
+	
+	private final static DateTimeFormatter DATE_FORMATTER =
+			DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ").withZoneUTC();
 	
 	private UserState getUserState(final String host, final String dbs,
 			final String user, final String pwd) {
@@ -192,15 +202,15 @@ public class UserAndJobStateServer extends JsonServerServlet {
 				.withE1(j.getID())
 				.withE2(j.getService())
 				.withE3(j.getStage())
-				.withE4(dateFormat.formatDate(j.getStarted()))
+				.withE4(formatDate(j.getStarted()))
 				.withE5(j.getStatus())
-				.withE6(dateFormat.formatDate(j.getLastUpdated()))
+				.withE6(formatDate(j.getLastUpdated()))
 				.withE7(j.getProgress() == null ? null :
 					new Long(j.getProgress()))
 				.withE8(j.getMaxProgress() == null ? null :
 					new Long(j.getMaxProgress()))
 				.withE9(j.getProgType())
-				.withE10(dateFormat.formatDate(j.getEstimatedCompletion()))
+				.withE10(formatDate(j.getEstimatedCompletion()))
 				.withE11(boolToLong(j.isComplete()))
 				.withE12(boolToLong(j.hasError()))
 				.withE13(j.getDescription())
@@ -239,8 +249,20 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return ret;
 	}
 		
-	private Date parseDate(final String date) throws ParseException {
-		return date == null ? null : dateFormat.parseDate(date);
+	private Date parseDate(final String date) {
+		if (date == null) {
+			return null;
+		}
+		try {
+			return DATE_PARSER.parseDateTime(date).toDate();
+		} catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException("Unparseable date: " +
+					iae.getMessage());
+		}
+	}
+	
+	private String formatDate(final Date date) {
+		return date == null ? null : DATE_FORMATTER.print(new DateTime(date));
 	}
 	
 	private void checkUsers(final List<String> users, AuthToken token)
@@ -684,7 +706,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return3 = j.getMaxProgress() == null ? null :
 			new Long(j.getMaxProgress());
 		return4 = j.getDescription();
-		return5 = dateFormat.formatDate(j.getStarted());
+		return5 = formatDate(j.getStarted());
         //END get_job_description
         Tuple5<String, String, Long, String, String> returnVal = new Tuple5<String, String, Long, String, String>();
         returnVal.setE1(return1);
@@ -714,11 +736,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
         Long return7 = null;
         //BEGIN get_job_status
 		final Job j = js.getJob(authPart.getUserName(), job);
-		return1 = dateFormat.formatDate(j.getLastUpdated());
+		return1 = formatDate(j.getLastUpdated());
 		return2 = j.getStage();
 		return3 = j.getStatus();
 		return4 = j.getProgress() == null ? null :new Long(j.getProgress());
-		return5 = dateFormat.formatDate(j.getEstimatedCompletion());
+		return5 = formatDate(j.getEstimatedCompletion());
 		return6 = boolToLong(j.isComplete());
 		return7 = boolToLong(j.hasError());
         //END get_job_status

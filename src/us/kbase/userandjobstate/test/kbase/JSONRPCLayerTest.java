@@ -23,6 +23,10 @@ import org.ini4j.Profile.Section;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
 
 import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
@@ -58,6 +62,12 @@ public class JSONRPCLayerTest {
 	private static String TOKEN1;
 	private static String TOKEN2;
 
+	static {
+		//stfu Jetty
+		((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
+				.setLevel(Level.OFF);
+	}
+	
 	private static class ServerThread extends Thread {
 		
 		public void run() {
@@ -296,7 +306,8 @@ public class JSONRPCLayerTest {
 	}
 	
 	private String[] getNearbyTimes() {
-		SimpleDateFormat dateform = getDateFormat();
+		SimpleDateFormat dateform =
+				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
 		SimpleDateFormat dateformutc =
 				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
 		dateformutc.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -355,10 +366,12 @@ public class JSONRPCLayerTest {
 				nearfuture[2], "The estimated completion date must be in the future", true);
 		startJobBadArgs(jobid, TOKEN2, "s", "d",
 				new InitProgress().withPtype("none"),
-				"2200-12-30T23:30:54-8000", "Unparseable date: \"2200-12-30T23:30:54-8000\"", true);
+				"2200-12-30T23:30:54-8000",
+				"Unparseable date: Invalid format: \"2200-12-30T23:30:54-8000\" is malformed at \"8000\"", true);
 		startJobBadArgs(jobid, TOKEN2, "s", "d",
 				new InitProgress().withPtype("none"),
-				"2200-12-30T123:30:54-0800", "Unparseable date: \"2200-12-30T123:30:54-0800\"", true);
+				"2200-12-30T123:30:54-0800",
+				"Unparseable date: Invalid format: \"2200-12-30T123:30:54-0800\" is malformed at \"3:30:54-0800\"", true);
 		
 		startJobBadArgs(jobid, TOKEN2, "s", "d", null,
 				null, "InitProgress cannot be null");
@@ -610,12 +623,27 @@ public class JSONRPCLayerTest {
 		updateJobBadArgs("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", null,
 				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
 		
+		//test a few bad times
 		updateJobBadArgs(jobid, TOKEN2, "s", nearfuture[2],
 				"The estimated completion date must be in the future");
-		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T23:30:54-8000",
-				"Unparseable date: \"2200-12-30T23:30:54-8000\"");
 		updateJobBadArgs(jobid, TOKEN2, "s", "2200-12-30T123:30:54-0800",
-				"Unparseable date: \"2200-12-30T123:30:54-0800\"");
+				"Unparseable date: Invalid format: \"2200-12-30T123:30:54-0800\" is malformed at \"3:30:54-0800\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-04-26T25:52:06-0800",
+				"Unparseable date: Cannot parse \"2013-04-26T25:52:06-0800\": Value 25 for hourOfDay must be in the range [0,23]");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-04-26T23:52:06-8000",
+				"Unparseable date: Invalid format: \"2013-04-26T23:52:06-8000\" is malformed at \"8000\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-04-35T23:52:06-0800",
+				"Unparseable date: Cannot parse \"2013-04-35T23:52:06-0800\": Value 35 for dayOfMonth must be in the range [1,30]");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-13-26T23:52:06-0800",
+				"Unparseable date: Cannot parse \"2013-13-26T23:52:06-0800\": Value 13 for monthOfYear must be in the range [1,12]");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-13-26T23:52:06.1111-0800",
+				"Unparseable date: Invalid format: \"2013-13-26T23:52:06.1111-0800\" is malformed at \"1-0800\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-13-26T23:52:06.-0800",
+				"Unparseable date: Invalid format: \"2013-13-26T23:52:06.-0800\" is malformed at \".-0800\"");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-12-26T23:52:06.55",
+				"Unparseable date: Invalid format: \"2013-12-26T23:52:06.55\" is too short");
+		updateJobBadArgs(jobid, TOKEN2, "s", "2013-12-26T23:52-0800",
+				"Unparseable date: Invalid format: \"2013-12-26T23:52-0800\" is malformed at \"-0800\"");
 		
 		updateJobBadArgs(jobid, null, "s", null,
 				"Service token cannot be null or the empty string");
