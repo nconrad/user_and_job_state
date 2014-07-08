@@ -39,9 +39,9 @@ public class JobStateTests {
 		String db = UserJobStateTestCommon.getDB();
 		
 		if (mUser != null) {
-			js = new JobState(host, db, "jobstate", mUser, mPwd);
+			js = new JobState(host, db, "jobstate", mUser, mPwd, 0);
 		} else {
-			js = new JobState(host, db, "jobstate");
+			js = new JobState(host, db, "jobstate", 0);
 		}
 	}
 	

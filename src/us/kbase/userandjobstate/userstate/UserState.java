@@ -47,19 +47,21 @@ public class UserState {
 			Pattern.compile("[^\\w]");
 	
 	public UserState(final String host, final String database,
-			final String collection)
+			final String collection, final int mongoReconnectRetry)
 			throws UnknownHostException, IOException, InvalidHostException,
 			InterruptedException {
-		final DB m = GetMongoDB.getDB(host, database);
+		final DB m = GetMongoDB.getDB(host, database, mongoReconnectRetry, 10);
 		uscol = m.getCollection(collection);
 		ensureIndexes();
 	}
 
 	public UserState(final String host, final String database,
-			final String collection, final String user, final String password)
+			final String collection, final String user, final String password,
+			final int mongoReconnectRetry)
 			throws UnknownHostException, IOException, InvalidHostException,
 			MongoAuthException, InterruptedException {
-		final DB m = GetMongoDB.getDB(host, database, user, password);
+		final DB m = GetMongoDB.getDB(host, database, user, password,
+				mongoReconnectRetry, 10);
 		uscol = m.getCollection(collection);
 		ensureIndexes();
 	}

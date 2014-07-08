@@ -37,9 +37,9 @@ public class UserStateTests {
 		String db = UserJobStateTestCommon.getDB();
 		
 		if (mUser != null) {
-			us = new UserState(host, db, "userstate", mUser, mPwd);
+			us = new UserState(host, db, "userstate", mUser, mPwd, 0);
 		} else {
-			us = new UserState(host, db, "userstate");
+			us = new UserState(host, db, "userstate", 0);
 		}
 	}
 	

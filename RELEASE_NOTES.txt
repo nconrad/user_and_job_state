@@ -17,6 +17,8 @@ UPDATED FEATURES / MAJOR BUG FIXES:
   invalid when they're correctly formatted
 - service user is now configurable in the deploy-upstart target
 - date strings now may contain 'Z' for the timezone
+- there is now an option in deploy.cfg to specify the number of times to
+  attempt to contact MongoDB on startup
 
 ANTICIPATED FUTURE DEVELOPMENTS:
 - AWE integration

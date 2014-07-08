@@ -26,6 +26,12 @@ import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
+import org.slf4j.LoggerFactory;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.AppenderBase;
 
 import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
@@ -91,8 +97,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
 
     //BEGIN_CLASS_HEADER
 	
-    //TODO update to mongo retry code & test
-
 	private static final String VER = "0.0.4";
 
 	//required deploy parameters:
@@ -101,6 +105,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	//auth params:
 	private static final String USER = "mongodb-user";
 	private static final String PWD = "mongodb-pwd";
+	//mongo connection attempt limit
+	private static final String MONGO_RECONNECT = "mongodb-retry";
 	
 	private static Map<String, String> ujConfig = null;
 	
@@ -121,12 +127,15 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			DateTimeFormat.forPattern("yyyy-MM-dd'T'HH:mm:ssZ").withZoneUTC();
 	
 	private UserState getUserState(final String host, final String dbs,
-			final String user, final String pwd) {
+			final String user, final String pwd,
+			final int mongoReconnectRetry) {
 		try {
 			if (user != null) {
-				return new UserState(host, dbs, USER_COLLECTION, user, pwd);
+				return new UserState(host, dbs, USER_COLLECTION, user, pwd,
+						mongoReconnectRetry);
 			} else {
-				return new UserState(host, dbs, USER_COLLECTION);
+				return new UserState(host, dbs, USER_COLLECTION,
+						mongoReconnectRetry);
 			}
 		} catch (UnknownHostException uhe) {
 			fail("Couldn't find mongo host " + host + ": " +
@@ -148,12 +157,15 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	}
 	
 	private JobState getJobState(final String host, final String dbs,
-			final String user, final String pwd) {
+			final String user, final String pwd,
+			final int mongoReconnectRetry) {
 		try {
 			if (user != null) {
-				return new JobState(host, dbs, JOB_COLLECTION, user, pwd);
+				return new JobState(host, dbs, JOB_COLLECTION, user, pwd,
+						mongoReconnectRetry);
 			} else {
-				return new JobState(host, dbs, JOB_COLLECTION);
+				return new JobState(host, dbs, JOB_COLLECTION,
+						mongoReconnectRetry);
 			}
 		} catch (UnknownHostException uhe) {
 			fail("Couldn't find mongo host " + host + ": " +
@@ -282,6 +294,57 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			}
 		}
 	}
+	
+	public void setUpLogger() {
+		((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
+				.setLevel(Level.OFF);
+		final Logger kbaseRootLogger = (Logger) LoggerFactory.getLogger(
+				"us.kbase");
+		//would be better to also set the level here on calls to the server
+		//setLogLevel, but meh for now
+		kbaseRootLogger.setLevel(Level.ALL);
+		final AppenderBase<ILoggingEvent> kbaseAppender =
+				new AppenderBase<ILoggingEvent>() {
+
+			@Override
+			protected void append(final ILoggingEvent event) {
+				//for now only INFO is tested; test others as they're needed
+				final Level l = event.getLevel();
+				if (l.equals(Level.TRACE)) {
+					logDebug(event.getFormattedMessage(), 3);
+				} else if (l.equals(Level.DEBUG)) {
+					logDebug(event.getFormattedMessage());
+				} else if (l.equals(Level.INFO) || l.equals(Level.WARN)) {
+					logInfo(event.getFormattedMessage());
+				} else if (l.equals(Level.ERROR)) {
+					logErr(event.getFormattedMessage());
+				}
+			}
+		};
+		kbaseAppender.start();
+		kbaseRootLogger.addAppender(kbaseAppender);
+	}
+	
+	private int getReconnectCount() {
+		final String rec = ujConfig.get(MONGO_RECONNECT);
+		Integer recint = null;
+		try {
+			recint = Integer.parseInt(rec); 
+		} catch (NumberFormatException nfe) {
+			//do nothing
+		}
+		if (recint == null) {
+			logInfo("Couldn't parse MongoDB reconnect value to an integer: " +
+					rec + ", using 0");
+			recint = 0;
+		} else if (recint < 0) {
+			logInfo("MongoDB reconnect value is < 0 (" + recint + "), using 0");
+			recint = 0;
+		} else {
+			logInfo("MongoDB reconnect value is " + recint);
+		}
+		return recint;
+	}
     //END_CLASS_HEADER
 
     public UserAndJobStateServer() throws Exception {
@@ -327,10 +390,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			if (pwd != null) {
 				params += PWD + "=[redacted for your safety and comfort]\n";
 			}
-			System.out.println("Using connection parameters:\n" + params);
-			logInfo("Using connection parameters:\n" + params);
-			us = getUserState(host, dbs, user, pwd);
-			js = getJobState(host, dbs, user, pwd);
+			System.out.println("Starting server using connection parameters:\n"
+					+ params);
+			logInfo("Starting server using connection parameters:\n" + params);
+			setUpLogger();
+			final int mongoConnectRetry = getReconnectCount();
+			us = getUserState(host, dbs, user, pwd, mongoConnectRetry);
+			js = getJobState(host, dbs, user, pwd, mongoConnectRetry);
 		}
         //END_CONSTRUCTOR
     }
