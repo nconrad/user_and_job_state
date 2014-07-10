@@ -45,6 +45,19 @@ abstract class AweResponse {
 		return status;
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("AweResponse [error=");
+		builder.append(error);
+		builder.append(", data=");
+		builder.append(data);
+		builder.append(", status=");
+		builder.append(status);
+		builder.append("]");
+		return builder.toString();
+	}
+
 //	@Override
 //	public String toString() {
 //		return getClass().getName() + " [error=" + error.get(0) +

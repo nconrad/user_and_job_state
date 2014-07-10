@@ -20,6 +20,8 @@ public class AweJobTask {
 	private String completeddate;
 	private Integer computetime;
 	
+	private AweJobTask() {};
+	
 	public AweTaskCommand getCmd() {
 		return cmd;
 	}
@@ -78,5 +80,42 @@ public class AweJobTask {
 	
 	public Integer getComputetime() {
 		return computetime;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("AweJobTask [cmd=");
+		builder.append(cmd);
+		builder.append(", dependsOn=");
+		builder.append(dependsOn);
+		builder.append(", taskid=");
+		builder.append(taskid);
+		builder.append(", skip=");
+		builder.append(skip);
+		builder.append(", totalwork=");
+		builder.append(totalwork);
+		builder.append(", inputs=");
+		builder.append(inputs);
+		builder.append(", outputs=");
+		builder.append(outputs);
+		builder.append(", predata=");
+		builder.append(predata);
+		builder.append(", maxworksize=");
+		builder.append(maxworksize);
+		builder.append(", remainwork=");
+		builder.append(remainwork);
+		builder.append(", state=");
+		builder.append(state);
+		builder.append(", createddate=");
+		builder.append(createddate);
+		builder.append(", starteddate=");
+		builder.append(starteddate);
+		builder.append(", completeddate=");
+		builder.append(completeddate);
+		builder.append(", computetime=");
+		builder.append(computetime);
+		builder.append("]");
+		return builder.toString();
 	}
 }

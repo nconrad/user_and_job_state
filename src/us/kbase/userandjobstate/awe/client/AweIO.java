@@ -17,6 +17,8 @@ public class AweIO {
 	private boolean delete;
 	private String type;
 	private boolean formoptions;
+	
+	private AweIO() {}
 
 	public String getName() {
 		return name;
@@ -72,5 +74,40 @@ public class AweIO {
 	
 	public boolean isFormoptions() {
 		return formoptions;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("AweIO [name=");
+		builder.append(name);
+		builder.append(", host=");
+		builder.append(host);
+		builder.append(", node=");
+		builder.append(node);
+		builder.append(", url=");
+		builder.append(url);
+		builder.append(", size=");
+		builder.append(size);
+		builder.append(", origin=");
+		builder.append(origin);
+		builder.append(", nonzero=");
+		builder.append(nonzero);
+		builder.append(", shockfilename=");
+		builder.append(shockfilename);
+		builder.append(", shockindex=");
+		builder.append(shockindex);
+		builder.append(", attrfile=");
+		builder.append(attrfile);
+		builder.append(", nofile=");
+		builder.append(nofile);
+		builder.append(", delete=");
+		builder.append(delete);
+		builder.append(", type=");
+		builder.append(type);
+		builder.append(", formoptions=");
+		builder.append(formoptions);
+		builder.append("]");
+		return builder.toString();
 	}
 }

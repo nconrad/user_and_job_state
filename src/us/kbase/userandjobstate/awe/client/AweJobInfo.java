@@ -15,6 +15,8 @@ public class AweJobInfo {
 	
 	//TODO service, description
 	
+	private AweJobInfo() {};
+	
 	public String getPipeline() {
 		return pipeline;
 	}
@@ -57,5 +59,34 @@ public class AweJobInfo {
 	
 	public Boolean getNoretry() {
 		return noretry;
+	}
+
+	@Override
+	public String toString() {
+		StringBuilder builder = new StringBuilder();
+		builder.append("AweJobInfo [pipeline=");
+		builder.append(pipeline);
+		builder.append(", name=");
+		builder.append(name);
+		builder.append(", project=");
+		builder.append(project);
+		builder.append(", user=");
+		builder.append(user);
+		builder.append(", clientgroups=");
+		builder.append(clientgroups);
+		builder.append(", xref=");
+		builder.append(xref);
+		builder.append(", submittime=");
+		builder.append(submittime);
+		builder.append(", startedtime=");
+		builder.append(startedtime);
+		builder.append(", completedtime=");
+		builder.append(completedtime);
+		builder.append(", auth=");
+		builder.append(auth);
+		builder.append(", noretry=");
+		builder.append(noretry);
+		builder.append("]");
+		return builder.toString();
 	}
 }	

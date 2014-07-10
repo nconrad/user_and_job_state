@@ -7,15 +7,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-class ShockNodeResponse extends AweResponse {
+class AweJobResponse extends AweResponse {
 	
-	private ShockNodeResponse(){}
+	private AweJobResponse(){}
 	
 	@JsonProperty("data")
-	private ShockNode data;
+	private AweJob data;
 	
 	@JsonIgnore
-	ShockNode getAweData() throws AweHttpException {
+	AweJob getAweData() throws AweHttpException {
 		checkErrors();
 		return data;
 	}
