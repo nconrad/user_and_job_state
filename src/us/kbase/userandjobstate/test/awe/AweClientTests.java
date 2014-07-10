@@ -1,5 +1,8 @@
 package us.kbase.userandjobstate.test.awe;
 
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.IOException;
 import java.net.URL;
 import java.util.List;
@@ -14,6 +17,7 @@ import us.kbase.common.test.TestException;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
+import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 
 public class AweClientTests {
 
@@ -70,7 +74,12 @@ public class AweClientTests {
 		System.out.println(aj);
 		
 		jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d";
-		aj = bac1.getJob(new AweJobId(jobid));
+		try {
+			aj = bac1.getJob(new AweJobId(jobid));
+		} catch (AweNoJobException anje) {
+			assertThat("correct exception", anje.getMessage(), is(
+					"job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
+		}
 		System.out.println(aj);
 	}
 	
