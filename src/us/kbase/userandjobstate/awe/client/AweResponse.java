@@ -14,7 +14,6 @@ abstract class AweResponse {
 	// per Jared, the error field will either be null or a list with one error
 	// string.
 	private List<String> error;
-	private AweData data;
 	private int status;
 
 	public String getError() {
@@ -24,15 +23,13 @@ abstract class AweResponse {
 	public boolean hasError() {
 		return error != null;
 	}
-
-	abstract AweData getAweData() throws AweHttpException;
-
+	
 	protected void checkErrors() throws AweHttpException {
 		if (hasError()) {
 			if (status == 401) {
 				throw new AweAuthorizationException(getStatus(), getError());
 			} else if (status == 400
-					&& getError().equals("Job does not exist")) {
+					&& getError().contains("job not found")) {
 				throw new AweNoJobException(getStatus(), getError());
 			} else {
 				throw new AweHttpException(getStatus(), getError());
@@ -49,8 +46,6 @@ abstract class AweResponse {
 		StringBuilder builder = new StringBuilder();
 		builder.append("AweResponse [error=");
 		builder.append(error);
-		builder.append(", data=");
-		builder.append(data);
 		builder.append(", status=");
 		builder.append(status);
 		builder.append("]");

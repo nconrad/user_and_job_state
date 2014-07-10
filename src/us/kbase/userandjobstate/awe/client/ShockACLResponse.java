@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-class ShockACLResponse extends AweResponse {
+class ShockACLResponse extends AweObjectResponse {
 	
 	private ShockACLResponse(){}
 	

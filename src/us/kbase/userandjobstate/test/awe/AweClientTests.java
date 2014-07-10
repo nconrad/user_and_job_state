@@ -2,6 +2,7 @@ package us.kbase.userandjobstate.test.awe;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.List;
 
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -67,6 +68,16 @@ public class AweClientTests {
 		String jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268f";
 		AweJob aj = bac1.getJob(new AweJobId(jobid));
 		System.out.println(aj);
+		
+		jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d";
+		aj = bac1.getJob(new AweJobId(jobid));
+		System.out.println(aj);
+	}
+	
+	@Test
+	public void listJobs() throws Exception {
+		List<AweJob> lj = bac1.getJobs();
+		System.out.println(lj);
 	}
 
 }

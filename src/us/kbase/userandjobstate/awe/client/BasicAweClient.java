@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpResponse;
@@ -186,7 +187,7 @@ public class BasicAweClient {
 		return uriToUrl(baseurl);
 	}
 	
-	private <T extends AweResponse> AweData
+	private <T extends AweObjectResponse> AweData
 			processRequest(final HttpRequestBase httpreq, final Class<T> clazz)
 			throws IOException, AweHttpException, TokenExpiredException {
 		authorize(httpreq);
@@ -198,8 +199,37 @@ public class BasicAweClient {
 		}
 	}
 	
-	private <T extends AweResponse> AweData
+	private <T extends AweObjectResponse> AweData
 			getAweData(final HttpResponse response, final Class<T> clazz) 
+			throws IOException, AweHttpException {
+		final String resp = EntityUtils.toString(response.getEntity());
+		try {
+			return mapper.readValue(resp, clazz).getAweData();
+		} catch (JsonParseException jpe) {
+			throw new AweHttpException(
+					response.getStatusLine().getStatusCode(),
+					"Couldn't parse Awe server response to JSON: " +
+					jpe.getLocalizedMessage(), jpe);
+		}
+	}
+	
+	//TODO rethink this later, should be a way of unifying list and object methods
+	private <T extends AweJobListResponse> List<AweJob> processListRequest(
+			final HttpRequestBase httpreq,
+			final Class<T> clazz)
+			throws IOException, AweHttpException, TokenExpiredException {
+		authorize(httpreq);
+		final CloseableHttpResponse response = client.execute(httpreq);
+		try {
+			return getAweListData(response, clazz);
+		} finally {
+			response.close();
+		}
+	}
+
+	private <T extends AweJobListResponse> List<AweJob> getAweListData(
+			final HttpResponse response,
+			final Class<T> clazz) 
 			throws IOException, AweHttpException {
 		final String resp = EntityUtils.toString(response.getEntity());
 		try {
@@ -242,7 +272,15 @@ public class BasicAweClient {
 		final HttpGet htg = new HttpGet(targeturl);
 		return (AweJob)processRequest(htg, AweJobResponse.class);
 	}
-	
+
+	//TODO filters
+	public List<AweJob> getJobs() throws IOException,
+	AweHttpException, TokenExpiredException {
+		final URI targeturl = joburl;
+		final HttpGet htg = new HttpGet(targeturl);
+		return (List<AweJob>) processListRequest(htg, AweJobListResponse.class);
+	}
+
 	/**
 	 * Deletes a node on the shock server.
 	 * @param id the node to delete.
