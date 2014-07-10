@@ -9,10 +9,9 @@ public class AweJobTask {
 	private String taskid;
 	private int skip;
 	private int totalwork;
-	//TODO IO class
-	private Map<String, Map<String, Object>> inputs;
-	private Map<String, Map<String, Object>> outputs;
-	private Map<String, Map<String, Object>> predata;
+	private Map<String, AweIO> inputs;
+	private Map<String, AweIO> outputs;
+	private Map<String, AweIO> predata;
 	private Integer maxworksize;
 	private Integer remainwork;
 	private String state;
@@ -41,15 +40,15 @@ public class AweJobTask {
 		return totalwork;
 	}
 	
-	public Map<String, Map<String, Object>> getInputs() {
+	public Map<String, AweIO> getInputs() {
 		return inputs;
 	}
 	
-	public Map<String, Map<String, Object>> getOutputs() {
+	public Map<String, AweIO> getOutputs() {
 		return outputs;
 	}
 	
-	public Map<String, Map<String, Object>> getPredata() {
+	public Map<String, AweIO> getPredata() {
 		return predata;
 	}
 	
