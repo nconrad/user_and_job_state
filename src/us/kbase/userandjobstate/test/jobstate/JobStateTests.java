@@ -20,6 +20,8 @@ import org.junit.Test;
 
 import us.kbase.common.test.RegexMatcher;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.UJSJob;
+import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
 import us.kbase.userandjobstate.test.FakeJob;
@@ -39,9 +41,9 @@ public class JobStateTests {
 		String db = UserJobStateTestCommon.getDB();
 		
 		if (mUser != null) {
-			js = new JobState(host, db, "jobstate", mUser, mPwd, 0);
+			js = new UJSJobState(host, db, "jobstate", mUser, mPwd, 0);
 		} else {
-			js = new JobState(host, db, "jobstate", 0);
+			js = new UJSJobState(host, db, "jobstate", 0);
 		}
 	}
 	
@@ -781,7 +783,7 @@ public class JobStateTests {
 		
 	}
 	
-	private void checkListJobs(List<FakeJob> expected, List<Job> result)
+	private void checkListJobs(List<FakeJob> expected, List<UJSJob> result)
 		throws Exception {
 		HashSet<FakeJob> res = new HashSet<FakeJob>();
 		for (Job j: result) {

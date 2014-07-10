@@ -1,14 +1,10 @@
 package us.kbase.userandjobstate.awe.client;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.math.BigDecimal;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -16,17 +12,14 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.entity.ContentType;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.util.EntityUtils;
 
 import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -64,20 +57,11 @@ public class BasicAweClient {
 	
 	private static final String AUTH = "Authorization";
 	private static final String OAUTH = "OAuth ";
-	private static final String ATTRIBFILE = "attribs";
 	private static final ShockACLType ACL_READ = new ShockACLType("read");
-	
-	private static int CHUNK_SIZE = 50000000; //~100 Mb
 	
 	/** Get the size of the upload / download chunk size.
 	 * @return the size of the file chunks sent/received from the Shock server.
 	 */
-	public static int getChunkSize() {
-		return CHUNK_SIZE;
-	}
-	private static String getDownloadURLPrefix() {
-		return "/?download&index=size&chunk_size=" + CHUNK_SIZE + "&part=";
-	}
 	
 	/**
 	 * Create a new shock client authorized to act as a shock user.

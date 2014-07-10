@@ -32,9 +32,9 @@ public class AweClientTests {
 		URL url = new URL(System.getProperty("test.awe.url"));
 		System.out.println("Testing awe clients pointed at: " + url);
 		String u1 = System.getProperty("test.user1");
-		String u2 = System.getProperty("test.user2");
+//		String u2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
-		String p2 = System.getProperty("test.pwd2");
+//		String p2 = System.getProperty("test.pwd2");
 
 		System.out.println("Logging in users");
 		AuthUser user1;
@@ -66,7 +66,7 @@ public class AweClientTests {
 		System.out.println("Set up shock clients");
 	}
 	
-	//TODO real tests
+	//TODO real tests against a local server, need to load with jobs
 	@Test
 	public void printJob() throws Exception {
 		String jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268f";

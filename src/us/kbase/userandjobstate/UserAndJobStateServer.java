@@ -40,6 +40,7 @@ import us.kbase.auth.TokenFormatException;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
 import us.kbase.common.mongo.exceptions.MongoAuthException;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
 import us.kbase.userandjobstate.userstate.UserState.KeyState;
@@ -161,10 +162,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			final int mongoReconnectRetry) {
 		try {
 			if (user != null) {
-				return new JobState(host, dbs, JOB_COLLECTION, user, pwd,
+				return new UJSJobState(host, dbs, JOB_COLLECTION, user, pwd,
 						mongoReconnectRetry);
 			} else {
-				return new JobState(host, dbs, JOB_COLLECTION,
+				return new UJSJobState(host, dbs, JOB_COLLECTION,
 						mongoReconnectRetry);
 			}
 		} catch (UnknownHostException uhe) {
