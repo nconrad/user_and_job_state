@@ -2,6 +2,9 @@ package us.kbase.userandjobstate.awe.client;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AweJob extends AweData {
 
 	//TODO lastfailed

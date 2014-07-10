@@ -1,5 +1,8 @@
 package us.kbase.userandjobstate.awe.client;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AweIO {
 	
 	//TODO temporary

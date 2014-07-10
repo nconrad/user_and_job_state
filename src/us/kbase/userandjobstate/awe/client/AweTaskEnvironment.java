@@ -2,6 +2,9 @@ package us.kbase.userandjobstate.awe.client;
 
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AweTaskEnvironment {
 	private Map<String, String> public_;
 	

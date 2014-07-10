@@ -14,7 +14,6 @@ abstract class AweResponse {
 	// per Jared, the error field will either be null or a list with one error
 	// string.
 	private List<String> error;
-	@SuppressWarnings("unused")
 	private AweData data;
 	private int status;
 

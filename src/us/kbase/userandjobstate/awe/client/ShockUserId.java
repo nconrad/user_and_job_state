@@ -5,7 +5,7 @@ package us.kbase.userandjobstate.awe.client;
  * @author gaprice@lbl.gov
  *
  */
-public class ShockUserId extends AweJobId{
+public class ShockUserId extends AweJobId {
 
 	/**
 	 * Construct a user ID.
