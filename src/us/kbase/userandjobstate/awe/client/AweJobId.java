@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
  * @author gaprice@lbl.gov
  *
  */
-public class ShockId {
+public class AweJobId {
 	
 	//8-4-4-4-12
 	private static final Pattern UUID =
@@ -20,7 +20,7 @@ public class ShockId {
 	 * @param id the shock ID.
 	 * @throws IllegalArgumentException if the ID is not a valid shock ID.
 	 */
-	public ShockId(String id) throws IllegalArgumentException {
+	public AweJobId(String id) throws IllegalArgumentException {
 		if (!UUID.matcher(id).matches()) {
 			throw new IllegalArgumentException("id must be a UUID hex string");
 		}
@@ -48,7 +48,7 @@ public class ShockId {
 	 */
 	public boolean equals(Object obj) {
 		if (this == obj) {return true;}
-		if (!(obj instanceof ShockId)) {return false;}
-		return id.equals(((ShockId)obj).id); 
+		if (!(obj instanceof AweJobId)) {return false;}
+		return id.equals(((AweJobId)obj).id); 
 	}
 }
