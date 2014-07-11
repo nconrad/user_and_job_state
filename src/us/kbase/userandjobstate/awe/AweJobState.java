@@ -82,8 +82,7 @@ public class AweJobState implements JobState {
 					"Could not retrieve job from the Awe server: " +
 					e.getMessage(), e);
 		}
-		// TODO Auto-generated method stub
-		return null;
+		return new UJSAweJob(aj);
 	}
 
 	@Override
