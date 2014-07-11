@@ -21,7 +21,6 @@ import us.kbase.common.test.RegexMatcher;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
-import us.kbase.userandjobstate.jobstate.UJSJob;
 import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
@@ -805,7 +804,7 @@ public class JobStateTests {
 		
 	}
 	
-	private void checkListJobs(List<FakeJob> expected, List<UJSJob> result)
+	private void checkListJobs(List<FakeJob> expected, List<Job> result)
 		throws Exception {
 		HashSet<FakeJob> res = new HashSet<FakeJob>();
 		for (Job j: result) {

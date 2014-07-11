@@ -516,7 +516,7 @@ public class UJSJobState implements JobState {
 	 * @see us.kbase.userandjobstate.jobstate.JobStateInter#listJobs(java.lang.String, java.util.List, boolean, boolean, boolean, boolean)
 	 */
 	@Override
-	public List<UJSJob> listJobs(final String user, final List<String> services,
+	public List<Job> listJobs(final String user, final List<String> services,
 			final boolean running, final boolean complete,
 			final boolean error, final boolean shared)
 			throws CommunicationException {
@@ -553,7 +553,7 @@ public class UJSJobState implements JobState {
 		} else {
 			query += "}";
 		}
-		final List<UJSJob> jobs = new LinkedList<UJSJob>();
+		final List<Job> jobs = new LinkedList<Job>();
 		try {
 			final Iterable<UJSJob> j  = jobjong.find(query).as(UJSJob.class);
 			for (final UJSJob job: j) {

@@ -66,7 +66,7 @@ public interface JobState {
 	public Set<String> listServices(final String user)
 			throws CommunicationException;
 
-	public List<UJSJob> listJobs(final String user, final List<String> services,
+	public List<Job> listJobs(final String user, final List<String> services,
 			final boolean running, final boolean complete, final boolean error,
 			final boolean shared) throws CommunicationException;
 

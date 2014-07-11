@@ -272,7 +272,7 @@ public class BasicAweClient {
 
 	//TODO 1 list job filters
 	public List<AweJob> getJobs(
-//			final List<String> services,
+			final List<String> services
 //			final boolean running,
 //			final boolean complete,
 //			final boolean error,

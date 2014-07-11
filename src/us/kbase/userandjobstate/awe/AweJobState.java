@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -21,7 +22,6 @@ import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.JobState;
-import us.kbase.userandjobstate.jobstate.UJSJob;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
 
 public class AweJobState implements JobState {
@@ -192,18 +192,37 @@ public class AweJobState implements JobState {
 
 	//user is ignored, uses the auth token
 	@Override
-	public List<UJSJob> listJobs(final String user,
+	public List<Job> listJobs(final String user,
 			final List<String> services,
 			final boolean running,
 			final boolean complete,
 			final boolean error,
-			final boolean shared)
+			final boolean shared) //TODO WAIT deal with filtering on shared 
 			throws CommunicationException {
-		// TODO 1 list awe jobs
-		
-//		final List<AweJob> jobs = cli.getJobs(services, running, complete,
-//				error, shared);
-		return null;
+		final List<AweJob> jobs;
+		try {
+			jobs = cli.getJobs(services); //TODO 1 deal with filters
+		} catch (TokenExpiredException e) {
+			throw new CommunicationException("Authorization token for user " +
+					getUserName() + "is expired", e);
+		} catch (AweAuthorizationException e) {
+			throw new CommunicationException(String.format(
+					"The Awe server could not authorize user %s",
+					getUserName(), e));
+		} catch (AweHttpException e) {
+			throw new CommunicationException(
+					"Could not retrieve jobs from the Awe server: " +
+					e.getMessage(), e);
+		} catch (IOException e) {
+			throw new CommunicationException(
+					"Could not retrieve jobs from the Awe server: " +
+					e.getMessage(), e);
+		}
+		final List<Job> js = new LinkedList<Job>();
+		for (final AweJob j: jobs) {
+			js.add(new UJSAweJob(j));
+		}
+		return js;
 	}
 
 	@Override
