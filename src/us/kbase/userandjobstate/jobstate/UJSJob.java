@@ -31,12 +31,7 @@ public class UJSJob implements Job {
 	private List<String> shared;
 	
 	@JsonIgnore
-	private String source = "UJS";
-	
-	private static final String CREATED = "created";
-	private static final String STARTED = "started"; 
-	private static final String COMPLETE = "complete";
-	private static final String ERROR = "error";
+	private static final String SOURCE = "UJS";
 	
 	private UJSJob() {}
 
@@ -199,7 +194,7 @@ public class UJSJob implements Job {
 
 	@Override
 	public String getSource() {
-		return source;
+		return SOURCE;
 	}
 	
 	/* (non-Javadoc)

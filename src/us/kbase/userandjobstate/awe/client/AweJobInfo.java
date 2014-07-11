@@ -15,8 +15,8 @@ public class AweJobInfo {
 	private String completedtime;
 	private Boolean auth;
 	private Boolean noretry;
-	
-	//TODO service, description
+	private String service;
+	private String description;
 	
 	private AweJobInfo() {};
 	
@@ -62,6 +62,14 @@ public class AweJobInfo {
 	
 	public Boolean getNoretry() {
 		return noretry;
+	}
+	
+	public String getService() {
+		return service;
+	}
+
+	public String getDescription() {
+		return description;
 	}
 
 	@Override

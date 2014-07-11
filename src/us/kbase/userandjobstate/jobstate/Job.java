@@ -6,6 +6,12 @@ import java.util.Map;
 
 public interface Job {
 
+	public static final String CREATED = "created";
+	public static final String STARTED = "started";
+	public static final String COMPLETE = "complete";
+	public static final String ERROR = "error";
+	public static final String DELETED = "deleted";
+	
 	public String getID();
 
 	public String getStage();

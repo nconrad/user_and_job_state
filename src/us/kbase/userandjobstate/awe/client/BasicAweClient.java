@@ -110,7 +110,7 @@ public class BasicAweClient {
 			final String resp = EntityUtils.toString(response.getEntity());
 			shockresp = mapper.readValue(resp, Map.class);
 		} catch (JsonParseException jpe) {
-			throw new InvalidAweUrlException(turl.toString());
+			throw new InvalidAweUrlException(turl.toString(), jpe);
 		} finally {
 			response.close();
 		}
@@ -161,6 +161,10 @@ public class BasicAweClient {
 			return true;
 		}
 		return false;
+	}
+	
+	public AuthToken getToken() {
+		return token;
 	}
 	
 	/** 
