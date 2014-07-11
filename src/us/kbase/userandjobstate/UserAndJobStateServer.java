@@ -989,7 +989,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		returnVal = new LinkedList<Tuple14<String, String, String, String,
 				String, String, Long, Long, String, String, Long,
 				Long, String, Results>>();
-		//TODO include awe jobs
+		//TODO 1 include awe jobs in list jobs
 		for (final Job j: js.listJobs(authPart.getUserName(), services,
 				running, complete, error, shared)) {
 			returnVal.add(jobToJobInfo(j));
@@ -1029,7 +1029,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void shareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN share_job
 		checkUsers(users, authPart);
-		//TODO share awe jobs
+		//TODO 1 share awe jobs
 		js.shareJob(authPart.getUserName(), job, users);
         //END share_job
     }
@@ -1047,7 +1047,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void unshareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN unshare_job
 		checkUsers(users, authPart);
-		//TODO unshare awe jobs
+		//TODO 1 unshare awe jobs
 		js.unshareJob(authPart.getUserName(), job, users);
         //END unshare_job
     }

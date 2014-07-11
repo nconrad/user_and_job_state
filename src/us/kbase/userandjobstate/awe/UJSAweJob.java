@@ -8,6 +8,7 @@ import java.util.Map;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import us.kbase.common.exceptions.UnimplementedException;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobState;
@@ -74,7 +75,9 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public String getUser() {
-		return job.getInfo().getUser();
+		//TODO implement when awe has human readable ACLs
+		throw new UnimplementedException(
+				"It is not currently possible to get the owner of an Awe job.");
 	}
 
 	@Override
@@ -134,19 +137,23 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public String getErrorMsg() {
+		if (job.getNotes() == null || job.getNotes().isEmpty()) {
+			return "Job was manually suspended.";
+		}
 		return job.getNotes();
 	}
 
 	@Override
 	public Map<String, Object> getResults() {
-		// TODO Auto-generated method stub
+		// TODO 1 get awe results
 		return null;
 	}
 
 	@Override
 	public List<String> getShared() {
-		// TODO Auto-generated method stub
-		return null;
+		//TODO implement when awe has human readable ACLs
+		throw new UnimplementedException(
+				"It is not currently possible to get the list of users that can view an Awe job.");
 	}
 
 	@Override

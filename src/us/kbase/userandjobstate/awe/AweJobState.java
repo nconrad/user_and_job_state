@@ -3,6 +3,7 @@ package us.kbase.userandjobstate.awe;
 import java.io.IOException;
 import java.net.URL;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -168,6 +169,7 @@ public class AweJobState implements JobState {
 	public void deleteJob(final String user, final String jobID)
 			throws NoSuchJobException,
 			CommunicationException {
+		//TODO delete AWE jobs
 		throw new UnimplementedException(
 				"Deleting Awe jobs via the UJS is not yet implemented.");
 
@@ -177,14 +179,15 @@ public class AweJobState implements JobState {
 	public void deleteJob(final String user, final String jobID,
 			final String service)
 			throws NoSuchJobException, CommunicationException {
+		//TODO delete AWE jobs
 		throw new UnimplementedException(
 				"Deleting Awe jobs via the UJS is not yet implemented.");
 	}
 
 	@Override
 	public Set<String> listServices(final String user) throws CommunicationException {
-		// TODO Auto-generated method stub
-		return null;
+		// TODO List services when AWE supports distinct query
+		return new HashSet<String>();
 	}
 
 	@Override
@@ -195,7 +198,7 @@ public class AweJobState implements JobState {
 			final boolean error,
 			final boolean shared)
 			throws CommunicationException {
-		// TODO Auto-generated method stub
+		// TODO 1 list awe jobs
 		return null;
 	}
 
@@ -203,7 +206,7 @@ public class AweJobState implements JobState {
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO Auto-generated method stub
+		// TODO 1 share awe job
 
 	}
 
@@ -211,7 +214,7 @@ public class AweJobState implements JobState {
 	public void unshareJob(final String user, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO Auto-generated method stub
+		// TODO 1 unshare awe job
 
 	}
 	

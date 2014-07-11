@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AweIO {
 	
-	//TODO temporary
+	//TODO 1 temporary
 	private String name;
 	private String host;
 	private String node;
