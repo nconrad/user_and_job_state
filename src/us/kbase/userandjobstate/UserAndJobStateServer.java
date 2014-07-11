@@ -955,6 +955,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
         //BEGIN get_job_info
 		returnVal = jobToJobInfo(getJobState(job, authPart).getJob(
 				authPart.getUserName(), job));
+		//TODO add job source to info and description? maybe not, backwards incompatible
         //END get_job_info
         return returnVal;
     }

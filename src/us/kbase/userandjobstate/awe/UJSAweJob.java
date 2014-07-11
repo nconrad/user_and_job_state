@@ -82,11 +82,13 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public String getService() {
+		//TODO 1 test getservice
 		return job.getInfo().getService();
 	}
 
 	@Override
 	public String getDescription() {
+		//TODO 1 test getdescriptoin
 		return job.getInfo().getDescription();
 	}
 
@@ -127,18 +129,22 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public Boolean isComplete() {
-		return job.getState() == AWE_COMPLETED;
+		return AWE_COMPLETED.equals(job.getState());
 	}
 
 	@Override
 	public Boolean hasError() {
-		return job.getState() == AWE_SUSPENDED;
+		return AWE_SUSPENDED.equals(job.getState());
 	}
 
 	@Override
 	public String getErrorMsg() {
+		if (!hasError()) {
+			return null;
+		}
 		if (job.getNotes() == null || job.getNotes().isEmpty()) {
 			return "Job was manually suspended.";
+			//TODO 1 test this path
 		}
 		return job.getNotes();
 	}
