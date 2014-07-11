@@ -10,6 +10,7 @@ import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import us.kbase.common.exceptions.UnimplementedException;
+import us.kbase.userandjobstate.awe.client.AweJobIO;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobTask;
 import us.kbase.userandjobstate.jobstate.Job;
@@ -155,10 +156,14 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public JobResults getResults() {
+		//TODO 1 get results
 		final List<JobResult> res = new LinkedList<JobResult>();
 		for (final AweJobTask t: job.getTasks()) {
-			//TODO 1 get results
-			
+			if (t.getOutputs() != null) {
+				for (final AweJobIO output: t.getOutputs().values()) {
+					
+				}
+			}
 		}
 		
 		return new JobResults(res, null, null, null, null);

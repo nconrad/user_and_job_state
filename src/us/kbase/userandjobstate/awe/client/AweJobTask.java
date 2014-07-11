@@ -12,9 +12,9 @@ public class AweJobTask {
 	private String taskid;
 	private int skip;
 	private int totalwork;
-	private Map<String, AweIO> inputs;
-	private Map<String, AweIO> outputs;
-	private Map<String, AweIO> predata;
+	private Map<String, AweJobIO> inputs;
+	private Map<String, AweJobIO> outputs;
+	private Map<String, AweJobIO> predata;
 	private Integer maxworksize;
 	private Integer remainwork;
 	private String state;
@@ -45,15 +45,15 @@ public class AweJobTask {
 		return totalwork;
 	}
 	
-	public Map<String, AweIO> getInputs() {
+	public Map<String, AweJobIO> getInputs() {
 		return inputs;
 	}
 	
-	public Map<String, AweIO> getOutputs() {
+	public Map<String, AweJobIO> getOutputs() {
 		return outputs;
 	}
 	
-	public Map<String, AweIO> getPredata() {
+	public Map<String, AweJobIO> getPredata() {
 		return predata;
 	}
 	

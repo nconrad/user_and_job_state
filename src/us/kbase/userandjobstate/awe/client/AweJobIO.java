@@ -3,7 +3,7 @@ package us.kbase.userandjobstate.awe.client;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AweIO {
+public class AweJobIO {
 	
 	private String name;
 	private String host;
@@ -21,7 +21,7 @@ public class AweIO {
 	private boolean formoptions;
 	private Boolean temporary; //TODO 1 test temporary w/ results object
 	
-	private AweIO() {}
+	private AweJobIO() {}
 
 	public String getName() {
 		return name;
