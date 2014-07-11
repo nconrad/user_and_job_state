@@ -190,6 +190,7 @@ public class AweJobState implements JobState {
 		return new HashSet<String>();
 	}
 
+	//user is ignored, uses the auth token
 	@Override
 	public List<UJSJob> listJobs(final String user,
 			final List<String> services,
@@ -199,6 +200,9 @@ public class AweJobState implements JobState {
 			final boolean shared)
 			throws CommunicationException {
 		// TODO 1 list awe jobs
+		
+		final List<AweJob> jobs = cli.getJobs(services, running, complete,
+				error, shared);
 		return null;
 	}
 

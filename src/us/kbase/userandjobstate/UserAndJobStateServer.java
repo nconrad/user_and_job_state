@@ -249,6 +249,22 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		}
 	}
 	
+	private JobState getAweJobState(final AuthToken token)
+			throws IOException, TokenExpiredException {
+		try {
+			return new AweJobState(aweUrl, token);
+		} catch (IOException io) {
+			throw new IOException("Couldn't connect to awe server at " +
+					aweUrl, io);
+		} catch (InvalidAweUrlException e) {
+			throw new IOException("Couldn't connect to awe server at " +
+					aweUrl, e);
+		} catch (AweHttpException e) {
+			throw new IOException("Couldn't connect to awe server at " +
+					aweUrl, e);
+		}
+	}
+	
 	private void fail(final String error) {
 		logErr(error);
 		System.err.println(error);
@@ -1023,10 +1039,16 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		returnVal = new LinkedList<Tuple14<String, String, String, String,
 				String, String, Long, Long, String, String, Long,
 				Long, String, Results>>();
-		//TODO 1 include awe jobs in list jobs
-		for (final Job j: js.listJobs(authPart.getUserName(), services,
-				running, complete, error, shared)) {
-			returnVal.add(jobToJobInfo(j));
+		List<JobState> jobstatus = new LinkedList<JobState>();
+		jobstatus.add(js);
+		if (aweUrl != null) {
+			jobstatus.add(getAweJobState(authPart));
+		}
+		for (final JobState jobst: jobstatus) {
+			for (final Job j: jobst.listJobs(authPart.getUserName(), services,
+					running, complete, error, shared)) {
+				returnVal.add(jobToJobInfo(j));
+			}
 		}
         //END list_jobs
         return returnVal;

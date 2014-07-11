@@ -270,8 +270,13 @@ public class BasicAweClient {
 		return (AweJob)processRequest(htg, AweJobResponse.class);
 	}
 
-	//TODO 1 job filters
-	public List<AweJob> getJobs() throws IOException,
+	//TODO 1 list job filters
+	public List<AweJob> getJobs(
+			final List<String> services,
+			final boolean running,
+			final boolean complete,
+			final boolean error,
+			final boolean shared) throws IOException,
 	AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl;
 		final HttpGet htg = new HttpGet(targeturl);
