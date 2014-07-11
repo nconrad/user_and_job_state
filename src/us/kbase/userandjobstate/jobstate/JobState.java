@@ -2,7 +2,6 @@ package us.kbase.userandjobstate.jobstate;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import us.kbase.userandjobstate.exceptions.CommunicationException;
@@ -54,7 +53,7 @@ public interface JobState {
 
 	public void completeJob(final String user, final String jobID,
 			final String service, final String status, final String error,
-			final Map<String, Object> results) throws CommunicationException,
+			final JobResults results) throws CommunicationException,
 			NoSuchJobException;
 
 	public void deleteJob(final String user, final String jobID)

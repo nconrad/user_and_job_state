@@ -8,10 +8,8 @@ import static org.junit.Assert.fail;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
@@ -20,6 +18,7 @@ import org.junit.Test;
 
 import us.kbase.common.test.RegexMatcher;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.UJSJob;
 import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
@@ -290,7 +289,7 @@ public class JobStateTests {
 	private void checkJob(Job j, String id, String stage, Date estComplete, 
 			String user, String status, String service, String desc,
 			String progtype, Integer prog, Integer maxproj, Boolean complete,
-			Boolean error, String errmsg, Map<String, Object> results) {
+			Boolean error, String errmsg, JobResults results) {
 		checkJob(j, id, stage, estComplete, user, status, service, desc,
 				progtype, prog, maxproj, complete, error, errmsg, results,
 				null);
@@ -299,7 +298,7 @@ public class JobStateTests {
 	private void checkJob(String id, String stage, Date estComplete, 
 			String user, String status, String service, String desc,
 			String progtype, Integer prog, Integer maxproj, Boolean complete,
-			Boolean error, String errmsg, Map<String, Object> results,
+			Boolean error, String errmsg, JobResults results,
 			List<String> shared) throws Exception {
 		checkJob(js.getJob(user, id), id, stage, estComplete, user, status,
 				service, desc, progtype, prog, maxproj, complete, error, errmsg,
@@ -309,7 +308,7 @@ public class JobStateTests {
 	private void checkJob(Job j, String id, String stage, Date estComplete, 
 			String user, String status, String service, String desc,
 			String progtype, Integer prog, Integer maxproj, Boolean complete,
-			Boolean error, String errmsg, Map<String, Object> results,
+			Boolean error, String errmsg, JobResults results,
 			List<String> shared) {
 		assertThat("job id ok", j.getID(), is(id));
 		assertThat("job stage ok", j.getStage(), is(stage));
@@ -473,8 +472,8 @@ public class JobStateTests {
 				"cdesc1", 5, null);
 		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 2, null);
 		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 6, null);
-		Map<String, Object> res = new HashMap<String, Object>();
-		res.put("shocknodes", Arrays.asList("node1", "node2"));
+		JobResults res = new JobResults(null, null, null, null,
+				Arrays.asList("node1", "node2"));
 		js.completeJob("comp", jobid, "cserv1", "cstat1-3", "thing", res);
 		Job j = js.getJob("comp", jobid);
 		checkJob(j, jobid, "error", null, "comp", "cstat1-3", "cserv1", "cdesc1",

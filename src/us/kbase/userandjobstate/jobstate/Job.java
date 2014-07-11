@@ -2,7 +2,6 @@ package us.kbase.userandjobstate.jobstate;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public interface Job {
 
@@ -42,7 +41,7 @@ public interface Job {
 
 	public String getErrorMsg();
 
-	public Map<String, Object> getResults();
+	public JobResults getResults();
 
 	public List<String> getShared();
 

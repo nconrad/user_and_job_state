@@ -6,12 +6,11 @@ import static org.junit.Assert.assertThat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import us.kbase.common.service.Tuple14;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResults;
 
 public class FakeJob {
 	
@@ -28,7 +27,7 @@ public class FakeJob {
 	private final Boolean complete;
 	private final Boolean error;
 	private final String errormsg;
-	private final Map<String, Object> results;
+	private final JobResults results;
 	
 	public FakeJob(final Job j) {
 		id = j.getID();
@@ -52,7 +51,7 @@ public class FakeJob {
 			final String stage, final Date estComplete, final String desc,
 			final String progtype, final Integer prog, final Integer maxprog,
 			final String status, final Boolean complete, final Boolean error,
-			final String errormsg, final Map<String, Object> results) {
+			final String errormsg, final JobResults results) {
 		this.id = id;
 		this.user = user;
 		this.service = service;
@@ -93,12 +92,11 @@ public class FakeJob {
 			this.results = null;
 		} else {
 			Results r = ji.getE14();
-			Map<String, Object> res = new HashMap<String, Object>();
-			res.put("shocknodes", r.getShocknodes());
-			res.put("shockurl", r.getShockurl());
-			res.put("workspaceids", r.getWorkspaceids());
-			res.put("workspaceurl", r.getWorkspaceurl());
-			this.results = res;
+			this.results = new JobResults(null, 
+					r.getWorkspaceurl(),
+					r.getWorkspaceids(),
+					r.getShockurl(),
+					r.getShocknodes());
 		}
 	}
 	

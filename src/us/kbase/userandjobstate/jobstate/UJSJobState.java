@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
@@ -383,7 +382,7 @@ public class UJSJobState implements JobState {
 	@Override
 	public void completeJob(final String user, final String jobID,
 			final String service, final String status, final String error,
-			final Map<String, Object> results)
+			final JobResults results)
 			throws CommunicationException, NoSuchJobException {
 		checkMaxLen(status, "status", MAX_LEN_STATUS);
 		checkMaxLen(error, "error", MAX_LEN_ERR);
@@ -395,7 +394,7 @@ public class UJSJobState implements JobState {
 		set.put(STATUS, status);
 		//if anyone is stupid enough to store 16mb of results will need to
 		//check size first, or at least catch error and report.
-		set.put(RESULT, results);
+		set.put(RESULT, resultsToDBObject(results));
 		
 		final WriteResult wr;
 		try {
@@ -409,6 +408,33 @@ public class UJSJobState implements JobState {
 					"There is no uncompleted job %s for user %s started by service %s",
 					jobID, user, service));
 		}
+	}
+	
+	/* DO NOT change this to use Jongo. This enforces the continuing use of
+	 *  the same field names, which is needed for backwards compatibility.
+	 */
+	private static DBObject resultsToDBObject(final JobResults res) {
+		if (res == null) {
+			return null;
+		}
+		final DBObject ret = new BasicDBObject();
+		ret.put("shocknodes", res.getShocknodes());
+		ret.put("shockurl", res.getShockurl());
+		ret.put("workspaceids", res.getWorkspaceids());
+		ret.put("workspaceurl", res.getWorkspaceurl());
+		if (res.getResults() != null) {
+			final List<DBObject> results = new LinkedList<DBObject>();
+			ret.put("results", results);
+			for (final JobResult jr: res.getResults()) {
+				final DBObject oneres = new BasicDBObject();
+				results.add(oneres);
+				oneres.put("servtype", jr.getServtype());
+				oneres.put("url", jr.getUrl());
+				oneres.put("id", jr.getId());
+				oneres.put("desc", jr.getDesc());
+			}
+		}
+		return ret;
 	}
 
 	private DBObject buildStartedJobQuery(final String user, final String jobID,

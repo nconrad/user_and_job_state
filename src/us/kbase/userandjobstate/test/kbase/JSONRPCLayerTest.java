@@ -11,7 +11,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,6 +40,7 @@ import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
+import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
@@ -979,11 +979,8 @@ public class JSONRPCLayerTest {
 				new Results().withShocknodes(Arrays.asList("node1", "node2")));
 		setstarted.remove(started2);
 		started2 = null;
-		Map<String, Object> res = new HashMap<String, Object>();
-		res.put("shocknodes", Arrays.asList("node1", "node2"));
-		res.put("shockurl", null);
-		res.put("workspaceids", null);
-		res.put("workspaceurl", null);
+		JobResults res = new JobResults(null, null, null, null,
+				Arrays.asList("node1", "node2"));
 		FakeJob complete = new FakeJob(jobid, null, USER1, "complete", null,
 				"lj2 desc", "percent", 100, 100, "lj2 stat3", true, false,
 				null, res);
@@ -1037,11 +1034,8 @@ public class JSONRPCLayerTest {
 		setstarted.remove(started2);
 		setstartcomp.remove(started2);
 		started2 = null;
-		Map<String, Object> res2 = new HashMap<String, Object>();
-		res2.put("shocknodes", null);
-		res2.put("shockurl", null);
-		res2.put("workspaceids", Arrays.asList("wss1", "wss2"));
-		res2.put("workspaceurl", null);
+		JobResults res2 = new JobResults(null, null,
+				Arrays.asList("wss1", "wss2"), null, null);
 		FakeJob error = new FakeJob(jobid, null, USER1, "error", null,
 				"lj3 desc", "task", 55, 55, "lj3 stat3", true, true, null,
 				res2);

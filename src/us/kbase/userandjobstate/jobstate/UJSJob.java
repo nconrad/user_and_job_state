@@ -5,7 +5,6 @@ import static us.kbase.userandjobstate.jobstate.JobState.PROG_NONE;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 import org.bson.types.ObjectId;
 
@@ -27,7 +26,7 @@ public class UJSJob implements Job {
 	private Boolean complete;
 	private Boolean error;
 	private String errormsg;
-	private Map<String, Object> results;
+	private JobResults results;
 	private List<String> shared;
 	
 	@JsonIgnore
@@ -177,7 +176,7 @@ public class UJSJob implements Job {
 	 * @see us.kbase.userandjobstate.jobstate.Job#getResults()
 	 */
 	@Override
-	public Map<String, Object> getResults() {
+	public JobResults getResults() {
 		return results;
 	}
 	

@@ -21,6 +21,10 @@ public class AweJobId {
 	 * @throws IllegalArgumentException if the ID is not a valid shock ID.
 	 */
 	public AweJobId(String id) throws IllegalArgumentException {
+		if (id == null || id.isEmpty()) {
+			throw new IllegalArgumentException(
+					"id cannot be null or the empty string");
+		}
 		if (!UUID.matcher(id).matches()) {
 			throw new IllegalArgumentException("id must be a UUID hex string");
 		}

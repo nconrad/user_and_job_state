@@ -11,6 +11,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import us.kbase.common.exceptions.UnimplementedException;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.JobState;
 
 public class UJSAweJob implements Job {
@@ -150,7 +151,7 @@ public class UJSAweJob implements Job {
 	}
 
 	@Override
-	public Map<String, Object> getResults() {
+	public JobResults getResults() {
 		// TODO 1 get awe results
 		return null;
 	}

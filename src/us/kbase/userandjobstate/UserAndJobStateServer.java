@@ -46,6 +46,7 @@ import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
 import us.kbase.userandjobstate.awe.client.exceptions.InvalidAweUrlException;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.userstate.UserState;
@@ -294,29 +295,27 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return b ? 1L : 0L;
 	}
 	
-	@SuppressWarnings("unchecked")
-	private static Results makeResults(Map<String, Object> res) {
+	private static Results makeResults(final JobResults res) {
 		if (res == null) {
 			return null;
 		}
 		return new Results()
-				.withShocknodes((List<String>) res.get("shocknodes"))
-				.withShockurl((String)res.get("shockurl"))
-				.withWorkspaceids((List<String>) res.get("workspaceids"))
-				.withWorkspaceurl((String) res.get("workspaceurl"));
+				.withShocknodes((List<String>) res.getShocknodes())
+				.withShockurl((String)res.getShockurl())
+				.withWorkspaceids((List<String>) res.getWorkspaceids())
+				.withWorkspaceurl((String) res.getWorkspaceurl());
 	}
 	
-	private static Map<String, Object> unmakeResults(Results res) {
+	private static JobResults unmakeResults(Results res) {
 		if (res == null) {
 			return null;
 		}
 		checkAddlArgs(res.getAdditionalProperties(), Results.class);
-		final Map<String, Object> ret = new HashMap<String, Object>();
-		ret.put("shocknodes", res.getShocknodes());
-		ret.put("shockurl", res.getShockurl());
-		ret.put("workspaceids", res.getWorkspaceids());
-		ret.put("workspaceurl", res.getWorkspaceurl());
-		return ret;
+		return new JobResults(null,
+				res.getWorkspaceurl(),
+				res.getWorkspaceids(),
+				res.getShockurl(),
+				res.getShocknodes());
 	}
 		
 	private Date parseDate(final String date) {
@@ -1035,7 +1034,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void shareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN share_job
 		checkUsers(users, authPart);
-		//TODO 1 share awe jobs
+		//TODO 1 WAIT share awe jobs
 		js.shareJob(authPart.getUserName(), job, users);
         //END share_job
     }
@@ -1053,7 +1052,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void unshareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN unshare_job
 		checkUsers(users, authPart);
-		//TODO 1 unshare awe jobs
+		//TODO 1 WAIT unshare awe jobs
 		js.unshareJob(authPart.getUserName(), job, users);
         //END unshare_job
     }

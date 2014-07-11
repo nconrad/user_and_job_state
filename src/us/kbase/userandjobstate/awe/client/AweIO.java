@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AweIO {
 	
-	//TODO 1 temporary
 	private String name;
 	private String host;
 	private String node;
@@ -20,6 +19,7 @@ public class AweIO {
 	private boolean delete;
 	private String type;
 	private boolean formoptions;
+	private Boolean temporary; //TODO 1 test temporary w/ results object
 	
 	private AweIO() {}
 
@@ -77,6 +77,10 @@ public class AweIO {
 	
 	public boolean isFormoptions() {
 		return formoptions;
+	}
+	
+	public Boolean isTemporary() {
+		return temporary;
 	}
 
 	@Override

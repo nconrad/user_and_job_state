@@ -5,7 +5,6 @@ import java.net.URL;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import us.kbase.auth.AuthToken;
@@ -20,6 +19,7 @@ import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 import us.kbase.userandjobstate.awe.client.exceptions.InvalidAweUrlException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.JobState;
 import us.kbase.userandjobstate.jobstate.UJSJob;
 import us.kbase.userandjobstate.jobstate.exceptions.NoSuchJobException;
@@ -158,7 +158,7 @@ public class AweJobState implements JobState {
 	@Override
 	public void completeJob(final String user, final String jobID,
 			final String service, final String status, final String error,
-			final Map<String, Object> results)
+			final JobResults results)
 			throws CommunicationException, NoSuchJobException {
 		throw new IllegalAweOperationException(
 				"Awe jobs cannot be manually completed.");
@@ -206,7 +206,7 @@ public class AweJobState implements JobState {
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO 1 share awe job
+		// TODO 1 WAIT share awe job
 
 	}
 
@@ -214,7 +214,7 @@ public class AweJobState implements JobState {
 	public void unshareJob(final String user, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO 1 unshare awe job
+		// TODO 1 WAIT unshare awe job
 
 	}
 	
