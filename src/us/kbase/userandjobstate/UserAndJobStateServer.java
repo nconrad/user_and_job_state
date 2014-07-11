@@ -197,12 +197,17 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	}
 	
 	private URL checkAweUrl(final String host) {
-		if (host == null) {
+		if (host == null || host.isEmpty()) {
+			System.out.println("No Awe URL found in config, running without Awe server");
+			logInfo("No Awe URL found in config, running without Awe server");
 			return null;
 		}
 		try {
 			final URL url = new URL(host);
 			AweJobState.testURL(url);
+			System.out.println("Connected to Awe server at " +
+					url.toExternalForm());
+			logInfo("Connected to Awe server at " + url.toExternalForm());
 			return url;
 		} catch (MalformedURLException mue) {
 			fail("Invalid Awe url: " + mue.getLocalizedMessage());
@@ -410,6 +415,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			ujConfig = new HashMap<String, String>();
 			ujConfig.putAll(super.config);
 		}
+		setUpLogger();
 		boolean failed = false;
 		if (!ujConfig.containsKey(HOST)) {
 			fail("Must provide param " + HOST + " in config file");
@@ -447,7 +453,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			System.out.println("Starting server using connection parameters:\n"
 					+ params);
 			logInfo("Starting server using connection parameters:\n" + params);
-			setUpLogger();
 			final int mongoConnectRetry = getReconnectCount();
 			us = getUserState(host, dbs, user, pwd, mongoConnectRetry);
 			js = getJobState(host, dbs, user, pwd, mongoConnectRetry);

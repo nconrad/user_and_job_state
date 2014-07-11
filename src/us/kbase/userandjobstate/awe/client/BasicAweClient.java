@@ -103,8 +103,17 @@ public class BasicAweClient {
 			throw new InvalidAweUrlException(turl.toString());
 			
 		}
-		final CloseableHttpResponse response = client.execute(
-				new HttpGet(turl));
+		final CloseableHttpResponse response;
+			try {
+				response = client.execute(new HttpGet(turl));
+			} catch (IllegalArgumentException iae) {
+				if (iae.getMessage().contains("port out of range")) {
+					throw new InvalidAweUrlException(
+							"Awe port is out of range: " +
+									url.toExternalForm(), iae);
+				}
+				throw iae;
+			}
 		final Map<String, Object> shockresp;
 		try {
 			final String resp = EntityUtils.toString(response.getEntity());
