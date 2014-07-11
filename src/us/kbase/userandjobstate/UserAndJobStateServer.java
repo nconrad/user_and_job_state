@@ -46,6 +46,7 @@ import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
 import us.kbase.userandjobstate.awe.client.exceptions.InvalidAweUrlException;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.UJSJobState;
 import us.kbase.userandjobstate.jobstate.JobState;
@@ -302,11 +303,25 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		if (res == null) {
 			return null;
 		}
+		final List<Result> r;
+		if (res.getResults() != null) {
+			r = new LinkedList<Result>();
+			for (final JobResult jr: res.getResults()) {
+				r.add(new Result()
+				.withServerType(jr.getServtype())
+				.withUrl(jr.getUrl())
+				.withId(jr.getId())
+				.withDescription(jr.getDesc()));
+			}
+		} else {
+			r = null;
+		}
 		return new Results()
 				.withShocknodes((List<String>) res.getShocknodes())
 				.withShockurl((String)res.getShockurl())
 				.withWorkspaceids((List<String>) res.getWorkspaceids())
-				.withWorkspaceurl((String) res.getWorkspaceurl());
+				.withWorkspaceurl((String) res.getWorkspaceurl())
+				.withResults(r);
 	}
 	
 	private static JobResults unmakeResults(Results res) {
@@ -314,7 +329,18 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			return null;
 		}
 		checkAddlArgs(res.getAdditionalProperties(), Results.class);
-		return new JobResults(null,
+		final List<JobResult> jrs;
+		if (res.getResults() != null) {
+			jrs = new LinkedList<JobResult>();
+			for (final Result r: res.getResults()) {
+				checkAddlArgs(r.getAdditionalProperties(), Result.class);
+				jrs.add(new JobResult(r.getServerType(), r.getUrl(), r.getId(),
+						r.getDescription()));
+			}
+		} else {
+			jrs = null;
+		}
+		return new JobResults(jrs,
 				res.getWorkspaceurl(),
 				res.getWorkspaceids(),
 				res.getShockurl(),

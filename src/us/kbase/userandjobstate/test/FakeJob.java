@@ -6,10 +6,14 @@ import static org.junit.Assert.assertThat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 import us.kbase.common.service.Tuple14;
+import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
 
 public class FakeJob {
@@ -92,7 +96,15 @@ public class FakeJob {
 			this.results = null;
 		} else {
 			Results r = ji.getE14();
-			this.results = new JobResults(null, 
+			List<JobResult> jrs = null;
+			if (r.getResults() != null) {
+				jrs = new LinkedList<JobResult>();
+				for (Result res: r.getResults()) {
+					jrs.add(new JobResult(res.getServerType(), res.getUrl(),
+							res.getId(), res.getDescription()));
+				}
+			}
+			this.results = new JobResults(jrs, 
 					r.getWorkspaceurl(),
 					r.getWorkspaceids(),
 					r.getShockurl(),

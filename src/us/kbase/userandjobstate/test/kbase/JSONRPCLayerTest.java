@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -37,6 +39,7 @@ import us.kbase.common.service.Tuple7;
 import us.kbase.common.service.UObject;
 import us.kbase.common.test.TestException;
 import us.kbase.userandjobstate.InitProgress;
+import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
@@ -509,6 +512,24 @@ public class JSONRPCLayerTest {
 		assertThat("shock url same", got.getShockurl(), is(expected.getShockurl()));
 		assertThat("ws ids same", got.getWorkspaceids(), is(expected.getWorkspaceids()));
 		assertThat("ws url same", got.getWorkspaceurl(), is(expected.getWorkspaceurl()));
+		if (got.getResults() == null ^ expected.getResults() == null) {
+			fail("got null for results.getResults() when expected real results or vice versa: " 
+					+ got + " " + expected);
+		}
+		if (got.getResults() == null) {return;}
+		if (got.getResults().size() != expected.getResults().size()) {
+			fail("results lists not same size");
+		}
+		Iterator<Result> gr = got.getResults().iterator();
+		Iterator<Result> er = expected.getResults().iterator();
+		while (gr.hasNext()) {
+			Result gres = gr.next();
+			Result eres = er.next();
+			assertThat("server type same", gres.getServerType(), is(eres.getServerType()));
+			assertThat("url same", gres.getUrl(), is(eres.getUrl()));
+			assertThat("id same", gres.getId(), is(eres.getId()));
+			assertThat("description same", gres.getDescription(), is(eres.getDescription()));
+		}
 	}
 	
 	@Test
@@ -702,11 +723,15 @@ public class JSONRPCLayerTest {
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "c3 stat", "c3 desc",
 				new InitProgress().withPtype("task").withMax(37L), null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "c3 stat2", 15L, nearfuture[0]);
+		List<Result> r = new LinkedList<Result>();
+		r.add(new Result().withUrl("some url").withServerType("server")
+				.withId("an id").withDescription("desc"));
 		Results res = new Results()
 						.withShocknodes(Arrays.asList("node1", "node3"))
 						.withShockurl("surl")
 						.withWorkspaceids(Arrays.asList("ws1", "ws3"))
-						.withWorkspaceurl("wurl");
+						.withWorkspaceurl("wurl")
+						.withResults(r);
 		CLIENT1.completeJob(jobid, TOKEN2, "c3 stat3", null, res);
 		checkJob(jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
 				37L, 37L, nearfuture[1], 1L, 0L, null, res);
