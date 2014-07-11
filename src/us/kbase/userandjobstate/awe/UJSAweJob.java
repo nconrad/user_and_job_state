@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -156,12 +157,20 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public JobResults getResults() {
-		//TODO 1 get results
 		final List<JobResult> res = new LinkedList<JobResult>();
 		for (final AweJobTask t: job.getTasks()) {
 			if (t.getOutputs() != null) {
-				for (final AweJobIO output: t.getOutputs().values()) {
-					
+				for (final Entry<String, AweJobIO> output:
+						t.getOutputs().entrySet()) {
+					final AweJobIO io = output.getValue();
+					//TODO 1 test temporary
+					if (io.isTemporary() == null || !io.isTemporary()) {
+						res.add(new JobResult(
+								"Shock",
+								output.getValue().getHost(),
+								output.getValue().getNode(),
+								output.getKey()));
+					}
 				}
 			}
 		}

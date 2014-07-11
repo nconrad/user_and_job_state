@@ -19,7 +19,7 @@ public class AweJobIO {
 	private boolean delete;
 	private String type;
 	private boolean formoptions;
-	private Boolean temporary; //TODO 1 test temporary w/ results object
+	private Boolean temporary;
 	
 	private AweJobIO() {}
 
