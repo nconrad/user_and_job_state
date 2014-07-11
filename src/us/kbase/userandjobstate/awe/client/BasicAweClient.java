@@ -272,11 +272,12 @@ public class BasicAweClient {
 
 	//TODO 1 list job filters
 	public List<AweJob> getJobs(
-			final List<String> services,
-			final boolean running,
-			final boolean complete,
-			final boolean error,
-			final boolean shared) throws IOException,
+//			final List<String> services,
+//			final boolean running,
+//			final boolean complete,
+//			final boolean error,
+//			final boolean shared
+			) throws IOException,
 	AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl;
 		final HttpGet htg = new HttpGet(targeturl);

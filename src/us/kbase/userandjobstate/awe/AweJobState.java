@@ -201,8 +201,8 @@ public class AweJobState implements JobState {
 			throws CommunicationException {
 		// TODO 1 list awe jobs
 		
-		final List<AweJob> jobs = cli.getJobs(services, running, complete,
-				error, shared);
+//		final List<AweJob> jobs = cli.getJobs(services, running, complete,
+//				error, shared);
 		return null;
 	}
 
