@@ -5,10 +5,10 @@ import java.util.Map;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AweTaskEnvironment {
+public class AweJobTaskEnvironment {
 	private Map<String, String> public_;
 	
-	private AweTaskEnvironment() {};
+	private AweJobTaskEnvironment() {};
 	
 	public Map<String, String> getPublic() {
 		return public_;

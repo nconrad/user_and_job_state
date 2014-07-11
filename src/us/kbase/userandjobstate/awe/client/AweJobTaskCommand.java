@@ -3,14 +3,14 @@ package us.kbase.userandjobstate.awe.client;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class AweTaskCommand {
+public class AweJobTaskCommand {
 
 	private String args;
 	private String description;
 	private String name;
-	private AweTaskEnvironment environ;
+	private AweJobTaskEnvironment environ;
 	
-	private AweTaskCommand() {};
+	private AweJobTaskCommand() {};
 	
 	public String getArgs() {
 		return args;
@@ -24,7 +24,7 @@ public class AweTaskCommand {
 		return name;
 	}
 	
-	public AweTaskEnvironment getEnviron() {
+	public AweJobTaskEnvironment getEnviron() {
 		return environ;
 	}
 

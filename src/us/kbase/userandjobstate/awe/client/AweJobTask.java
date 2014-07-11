@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AweJobTask {
-	private AweTaskCommand cmd;
+	private AweJobTaskCommand cmd;
 	private List<String> dependsOn;
 	private String taskid;
 	private int skip;
@@ -25,7 +25,7 @@ public class AweJobTask {
 	
 	private AweJobTask() {};
 	
-	public AweTaskCommand getCmd() {
+	public AweJobTaskCommand getCmd() {
 		return cmd;
 	}
 	

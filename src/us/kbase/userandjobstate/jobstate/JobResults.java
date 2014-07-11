@@ -6,7 +6,6 @@ import java.util.List;
 
 public class JobResults {
 	
-	//TODO 1 test new results section here
 	private List<JobResult> results = null;
 	private String workspaceurl = null;
 	private List<String> workspaceids = null;

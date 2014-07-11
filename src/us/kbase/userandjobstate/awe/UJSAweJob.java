@@ -2,6 +2,7 @@ package us.kbase.userandjobstate.awe;
 
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -10,7 +11,9 @@ import org.joda.time.format.ISODateTimeFormat;
 
 import us.kbase.common.exceptions.UnimplementedException;
 import us.kbase.userandjobstate.awe.client.AweJob;
+import us.kbase.userandjobstate.awe.client.AweJobTask;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.JobState;
 
@@ -152,8 +155,13 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public JobResults getResults() {
-		// TODO 1 get awe results
-		return null;
+		final List<JobResult> res = new LinkedList<JobResult>();
+		for (final AweJobTask t: job.getTasks()) {
+			//TODO 1 get results
+			
+		}
+		
+		return new JobResults(res, null, null, null, null);
 	}
 
 	@Override
