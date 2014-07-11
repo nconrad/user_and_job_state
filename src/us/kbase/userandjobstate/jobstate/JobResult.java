@@ -13,6 +13,10 @@ public class JobResult {
 	public JobResult(final String servtype, final String url,
 			final String id, final String desc) {
 		super();
+		if (servtype == null || url == null || id == null) {
+			throw new NullPointerException(
+					"The servtype, url, and id fields are required for a job result");
+		}
 		this.servtype = servtype;
 		this.url = url;
 		this.id = id;

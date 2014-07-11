@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -18,6 +19,7 @@ import org.junit.Test;
 
 import us.kbase.common.test.RegexMatcher;
 import us.kbase.userandjobstate.jobstate.Job;
+import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
 import us.kbase.userandjobstate.jobstate.UJSJob;
 import us.kbase.userandjobstate.jobstate.UJSJobState;
@@ -472,14 +474,14 @@ public class JobStateTests {
 				"cdesc1", 5, null);
 		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 2, null);
 		js.updateJob("comp", jobid, "cserv1", "cstat1-2", 6, null);
-		JobResults res = new JobResults(null, null, null, null,
+		JobResults res1 = new JobResults(null, null, null, null,
 				Arrays.asList("node1", "node2"));
-		js.completeJob("comp", jobid, "cserv1", "cstat1-3", "thing", res);
+		js.completeJob("comp", jobid, "cserv1", "cstat1-3", "thing", res1);
 		Job j = js.getJob("comp", jobid);
 		checkJob(j, jobid, "error", null, "comp", "cstat1-3", "cserv1", "cdesc1",
-				"task", 5, 5, true, true, "thing", res);
+				"task", 5, 5, true, true, "thing", res1);
 		try {
-			js.completeJob("comp", jobid, "cserv1", "cstat1-4", null, res);
+			js.completeJob("comp", jobid, "cserv1", "cstat1-4", null, res1);
 			fail("completed a completed job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
@@ -488,18 +490,39 @@ public class JobStateTests {
 					jobid)));
 		}
 		
+		List<JobResult> ljr = new LinkedList<JobResult>();
+		ljr.add(new JobResult("s1", "a url", "an Id", "some desc"));
+		ljr.add(new JobResult("s2", "a url2", "an Id2", "some desc2"));
+		
+		JobResults res2 = new JobResults(ljr, "ws url",
+				Arrays.asList("ws id 1", "ws id 2"),
+				"shock url", Arrays.asList("shock id 1", "shock id 2"));
+		
 		jobid = js.createAndStartJobWithPercentProg("comp", "cserv2", "cstat2",
 				"cdesc2", null);
 		js.updateJob("comp", jobid, "cserv2", "cstat2-2", 25, null);
 		js.updateJob("comp", jobid, "cserv2", "cstat2-3", 50, null);
-		js.completeJob("comp", jobid, "cserv2", "cstat2-3", null, res);
+		js.completeJob("comp", jobid, "cserv2", "cstat2-3", null, res2);
 		j = js.getJob("comp", jobid);
 		checkJob(j, jobid, "complete", null, "comp", "cstat2-3", "cserv2", "cdesc2",
-				"percent", 100, 100, true, false, null, res);
+				"percent", 100, 100, true, false, null, res2);
+		
+		ljr = new LinkedList<JobResult>();
+		
+		JobResults res3 = new JobResults(ljr, "ws url 2",
+				Arrays.asList("ws id 3", "ws id 4"),
+				"shock url 2", Arrays.asList("shock id 3", "shock id 4"));
+		
+		jobid = js.createAndStartJobWithPercentProg("comp", "cserv3", "cstat3",
+				"cdesc3", null);
+		js.completeJob("comp", jobid, "cserv3", "cstat3-3", null, res3);
+		j = js.getJob("comp", jobid);
+		checkJob(j, jobid, "complete", null, "comp", "cstat3-3", "cserv3", "cdesc3",
+				"percent", 100, 100, true, false, null, res3);
 		
 		jobid = js.createJob("comp");
 		try {
-			js.completeJob("comp", jobid, "cserv2", "badstat", null, res);
+			js.completeJob("comp", jobid, "cserv2", "badstat", null, res2);
 			fail("completed an unstarted job");
 		} catch (NoSuchJobException nsje) {
 			assertThat("correct exception msg", nsje.getLocalizedMessage(),
