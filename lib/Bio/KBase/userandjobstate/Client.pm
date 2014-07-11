@@ -1708,6 +1708,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 </pre>
 
@@ -1729,6 +1735,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 
 =end text
@@ -1813,6 +1825,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 </pre>
 
@@ -1828,6 +1846,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 
 =end text
@@ -2015,6 +2039,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 </pre>
 
@@ -2054,6 +2084,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 
 =end text
@@ -2158,6 +2194,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 </pre>
 
@@ -2199,6 +2241,12 @@ Results is a reference to a hash where the following keys are defined:
 	shockurl has a value which is a string
 	workspaceids has a value which is a reference to a list where each element is a string
 	workspaceurl has a value which is a string
+	results has a value which is a reference to a list where each element is a UserAndJobState.Result
+Result is a reference to a hash where the following keys are defined:
+	server_type has a value which is a string
+	url has a value which is a string
+	id has a value which is a string
+	description has a value which is a string
 
 
 =end text
@@ -3420,6 +3468,55 @@ max has a value which is a UserAndJobState.max_progress
 
 
 
+=head2 Result
+
+=over 4
+
+
+
+=item Description
+
+A place where the results of a job may be found.
+All fields except description are required.
+
+string server_type - the type of server storing the results. Typically
+        either "Shock" or "Workspace".
+string url - the url of the server.
+string id - the id of the result in the server. Typically either a
+        workspace id or a shock node.
+string description - a free text description of the result.
+
+
+=item Definition
+
+=begin html
+
+<pre>
+a reference to a hash where the following keys are defined:
+server_type has a value which is a string
+url has a value which is a string
+id has a value which is a string
+description has a value which is a string
+
+</pre>
+
+=end html
+
+=begin text
+
+a reference to a hash where the following keys are defined:
+server_type has a value which is a string
+url has a value which is a string
+id has a value which is a string
+description has a value which is a string
+
+
+=end text
+
+=back
+
+
+
 =head2 Results
 
 =over 4
@@ -3438,6 +3535,9 @@ list<string> workspaceids - the workspace ids where the results can be
         found.
 string workspaceurl - the url of the workspace service where the data
         was saved.
+list<Result> - a set of job results. This format allows for specifying
+        results at multiple server locations and providing a free text
+        description of the result.
 
 
 =item Definition
@@ -3450,6 +3550,7 @@ shocknodes has a value which is a reference to a list where each element is a st
 shockurl has a value which is a string
 workspaceids has a value which is a reference to a list where each element is a string
 workspaceurl has a value which is a string
+results has a value which is a reference to a list where each element is a UserAndJobState.Result
 
 </pre>
 
@@ -3462,6 +3563,7 @@ shocknodes has a value which is a reference to a list where each element is a st
 shockurl has a value which is a string
 workspaceids has a value which is a reference to a list where each element is a string
 workspaceurl has a value which is a string
+results has a value which is a reference to a list where each element is a UserAndJobState.Result
 
 
 =end text

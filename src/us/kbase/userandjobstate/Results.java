@@ -25,6 +25,9 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  *         found.
  * string workspaceurl - the url of the workspace service where the data
  *         was saved.
+ * list<Result> - a set of job results. This format allows for specifying
+ *         results at multiple server locations and providing a free text
+ *         description of the result.
  * </pre>
  * 
  */
@@ -34,7 +37,8 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
     "shocknodes",
     "shockurl",
     "workspaceids",
-    "workspaceurl"
+    "workspaceurl",
+    "results"
 })
 public class Results {
 
@@ -46,6 +50,8 @@ public class Results {
     private List<String> workspaceids;
     @JsonProperty("workspaceurl")
     private java.lang.String workspaceurl;
+    @JsonProperty("results")
+    private List<Result> results;
     private Map<java.lang.String, Object> additionalProperties = new HashMap<java.lang.String, Object>();
 
     @JsonProperty("shocknodes")
@@ -108,6 +114,21 @@ public class Results {
         return this;
     }
 
+    @JsonProperty("results")
+    public List<Result> getResults() {
+        return results;
+    }
+
+    @JsonProperty("results")
+    public void setResults(List<Result> results) {
+        this.results = results;
+    }
+
+    public Results withResults(List<Result> results) {
+        this.results = results;
+        return this;
+    }
+
     @JsonAnyGetter
     public Map<java.lang.String, Object> getAdditionalProperties() {
         return this.additionalProperties;
@@ -120,7 +141,7 @@ public class Results {
 
     @Override
     public java.lang.String toString() {
-        return ((((((((((("Results"+" [shocknodes=")+ shocknodes)+", shockurl=")+ shockurl)+", workspaceids=")+ workspaceids)+", workspaceurl=")+ workspaceurl)+", additionalProperties=")+ additionalProperties)+"]");
+        return ((((((((((((("Results"+" [shocknodes=")+ shocknodes)+", shockurl=")+ shockurl)+", workspaceids=")+ workspaceids)+", workspaceurl=")+ workspaceurl)+", results=")+ results)+", additionalProperties=")+ additionalProperties)+"]");
     }
 
 }

@@ -105,6 +105,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 
     //BEGIN_CLASS_HEADER
 	
+    //TODO needs to look through the AWE code and look for cruft, this was written in haste
+    //TODO a full suite of tests for AWE integration
+
 	private static final String VER = "0.0.5";
 
 	//required deploy parameters:

@@ -174,6 +174,22 @@ module UserAndJobState {
 		max_progress max;
 	} InitProgress;
 	
+	/* A place where the results of a job may be found.
+		All fields except description are required.
+		
+		string server_type - the type of server storing the results. Typically
+			either "Shock" or "Workspace".
+		string url - the url of the server.
+		string id - the id of the result in the server. Typically either a
+			workspace id or a shock node.
+		string description - a free text description of the result.
+	*/
+	typedef structure {
+		string server_type;
+		string url;
+		string id;
+		string description;
+	} Result;
 	
 	/* A pointer to job results. All arguments are optional. Applications
 		should use the default shock and workspace urls if omitted.
@@ -185,12 +201,16 @@ module UserAndJobState {
 			found.
 		string workspaceurl - the url of the workspace service where the data
 			was saved.
+		list<Result> - a set of job results. This format allows for specifying
+			results at multiple server locations and providing a free text
+			description of the result.
 	*/
 	typedef structure {
 		list<string> shocknodes;
 		string shockurl;
 		list<string> workspaceids;
 		string workspaceurl;
+		list<Result> results;
 	} Results;
 		
 	/* Create a new job status report. */
