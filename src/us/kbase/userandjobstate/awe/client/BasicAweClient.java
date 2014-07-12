@@ -5,6 +5,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +42,13 @@ import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
 public class BasicAweClient {
 	
 	//TODO this needs massive refactoring and redocumentation
+	
+	public final static String STATE_INIT = "init";
+	public final static String STATE_QUEUED = "queued";
+	public final static String STATE_INPROG = "in-progress";
+	public final static String STATE_COMPL = "completed";
+	public final static String STATE_SUSP = "suspend";
+	public final static String STATE_DEL = "deleted";
 	
 	private final URI baseurl;
 	private final URI joburl;
@@ -271,19 +279,34 @@ public class BasicAweClient {
 		return (AweJob)processRequest(htg, AweJobResponse.class);
 	}
 
-	//TODO 1 exclude deleted jobs
-	//TODO 1 list job filters
 	public List<AweJob> getJobs(
-			final List<String> services
-//			final boolean running,
-//			final boolean complete,
-//			final boolean error,
-//			final boolean shared
-			) throws IOException,
-	AweHttpException, TokenExpiredException {
+			final List<String> services,
+			final boolean init,
+			final boolean queued,
+			final boolean in_progress,
+			final boolean complete,
+			final boolean suspended,
+			final boolean deleted)
+			throws IOException, AweHttpException, TokenExpiredException {
 		String url = joburl.toString() + "?limit=1000"; //TODO need to think about this limit
-		if (services != null && !services.isEmpty()) {
-			url += "&query&info.service=" + StringUtils.join(services, ",");
+		final boolean hasServices = services != null && !services.isEmpty();
+		final boolean nofilters = init && queued && in_progress && complete &&
+				suspended && deleted;
+		if (hasServices || !nofilters) {
+			url += "&query";
+		}
+		if (hasServices) {
+			url += "&info.service=" + StringUtils.join(services, ",");
+		}
+		if (!nofilters) {
+			final List<String> states = new LinkedList<String>();
+			if (init) {states.add(STATE_INIT);}
+			if (queued) {states.add(STATE_QUEUED);}
+			if (in_progress) {states.add(STATE_INPROG);}
+			if (complete) {states.add(STATE_COMPL);}
+			if (suspended) {states.add(STATE_SUSP);}
+			if (deleted) {states.add(STATE_DEL);}
+			url += "&state=" + StringUtils.join(states, ",");
 		}
 		final URI targeturl;
 		try {

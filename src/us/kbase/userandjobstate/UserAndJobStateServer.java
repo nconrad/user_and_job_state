@@ -13,6 +13,7 @@ import us.kbase.common.service.UObject;
 //BEGIN_HEADER
 import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
 import static us.kbase.common.utils.StringUtils.checkMaxLen;
+import static us.kbase.common.utils.StringUtils.checkString;
 import static us.kbase.userandjobstate.jobstate.JobResults.MAX_LEN_ID;
 import static us.kbase.userandjobstate.jobstate.JobResults.MAX_LEN_URL;
 
@@ -357,9 +358,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			for (final Result r: res.getResults()) {
 				checkAddlArgs(r.getAdditionalProperties(), Result.class);
 				//TODO tests for max lenghts, nulls, empty strings for Result contents
-				checkMaxLen(r.getServerType(), "servtype", MAX_LEN_SERVTYPE);
-				checkMaxLen(r.getUrl(), "url", MAX_LEN_URL);
-				checkMaxLen(r.getId(), "id", MAX_LEN_ID);
+				checkString(r.getServerType(), "servtype", MAX_LEN_SERVTYPE);
+				checkString(r.getUrl(), "url", MAX_LEN_URL);
+				checkString(r.getId(), "id", MAX_LEN_ID);
 				checkMaxLen(r.getDescription(), "description", MAX_LEN_DESC);
 				jrs.add(new JobResult(r.getServerType(), r.getUrl(), r.getId(),
 						r.getDescription()));
@@ -1029,11 +1030,16 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public List<Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results>> listJobs(List<String> services, String filter, AuthToken authPart) throws Exception {
         List<Tuple14<String, String, String, String, String, String, Long, Long, String, String, Long, Long, String, Results>> returnVal = null;
         //BEGIN list_jobs
+		boolean queued = false;
 		boolean running = false;
 		boolean complete = false;
 		boolean error = false;
 		boolean shared = false;
 		if (filter != null) {
+			//TODO test with AWE
+			if (filter.indexOf("Q") > -1) {
+				queued = true;
+			}
 			if (filter.indexOf("R") > -1) {
 				running = true;
 			}
@@ -1057,7 +1063,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		}
 		for (final JobState jobst: jobstatus) {
 			for (final Job j: jobst.listJobs(authPart.getUserName(), services,
-					running, complete, error, shared)) {
+					queued, running, complete, error, shared)) {
 				returnVal.add(jobToJobInfo(j));
 			}
 		}

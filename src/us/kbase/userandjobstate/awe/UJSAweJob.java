@@ -1,5 +1,10 @@
 package us.kbase.userandjobstate.awe;
 
+import static us.kbase.userandjobstate.awe.client.BasicAweClient.STATE_COMPL;
+import static us.kbase.userandjobstate.awe.client.BasicAweClient.STATE_SUSP;
+import static us.kbase.userandjobstate.awe.client.BasicAweClient.STATE_DEL;
+import static us.kbase.userandjobstate.awe.client.BasicAweClient.STATE_INPROG;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -23,19 +28,14 @@ public class UJSAweJob implements Job {
 	
 	private static final String SOURCE = "Awe";
 	
-	private static final String AWE_SUSPENDED = "suspend";
-	private static final String AWE_COMPLETED = "completed";
-	private static final String AWE_DELETED = "deleted";
-	private static final String AWE_STARTED = "in-progress";
-	
 	
 	private final static Map<String, String> STATE_MAP =
 			new HashMap<String, String>(3);
 	static {
-		STATE_MAP.put(AWE_SUSPENDED, ERROR);
-		STATE_MAP.put(AWE_COMPLETED, COMPLETE);
-		STATE_MAP.put(AWE_DELETED, DELETED);
-		STATE_MAP.put(AWE_STARTED, STARTED);
+		STATE_MAP.put(STATE_SUSP, ERROR);
+		STATE_MAP.put(STATE_COMPL, COMPLETE);
+		STATE_MAP.put(STATE_DEL, DELETED);
+		STATE_MAP.put(STATE_INPROG, STARTED);
 	}
 	
 	private final AweJob job;
@@ -135,12 +135,12 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public Boolean isComplete() {
-		return AWE_COMPLETED.equals(job.getState());
+		return STATE_COMPL.equals(job.getState());
 	}
 
 	@Override
 	public Boolean hasError() {
-		return AWE_SUSPENDED.equals(job.getState());
+		return STATE_SUSP.equals(job.getState());
 	}
 
 	@Override

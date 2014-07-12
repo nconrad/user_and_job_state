@@ -193,15 +193,23 @@ public class AweJobState implements JobState {
 	@Override
 	public List<Job> listJobs(final String user,
 			final List<String> services,
-			final boolean running,
-			final boolean complete,
-			final boolean error,
-			final boolean shared) //TODO WAIT deal with filtering on shared 
+			boolean queued,
+			boolean running,
+			boolean complete,
+			boolean error,
+			final boolean shared) //TODO 1 WAIT deal with filtering on shared 
 			throws CommunicationException {
 		final List<AweJob> jobs;
+		if (! (queued || running || complete || error)) {
+			//all false, so return all jobs
+			queued = true;
+			running = true;
+			complete = true;
+			error = true;
+		}
 		try {
-			//TODO 1 test services filter
-			jobs = cli.getJobs(services); //TODO 1 deal with filters
+			jobs = cli.getJobs(services, queued, queued, running, complete,
+					error, false);// never show deleted jobs
 		} catch (TokenExpiredException e) {
 			throw new CommunicationException("Authorization token for user " +
 					getUserName() + "is expired", e);

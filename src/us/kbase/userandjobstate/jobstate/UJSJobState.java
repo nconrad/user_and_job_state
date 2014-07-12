@@ -517,9 +517,10 @@ public class UJSJobState implements JobState {
 	 */
 	@Override
 	public List<Job> listJobs(final String user, final List<String> services,
-			final boolean running, final boolean complete,
-			final boolean error, final boolean shared)
+			final boolean queued, final boolean running,
+			final boolean complete, final boolean error, final boolean shared)
 			throws CommunicationException {
+		//queued is ignored
 		checkString(user, "user");
 		String query;
 		if (shared) {

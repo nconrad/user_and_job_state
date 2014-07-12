@@ -85,7 +85,7 @@ public class AweClientTests {
 	
 	@Test
 	public void listJobs() throws Exception {
-		List<AweJob> lj = bac1.getJobs(null);
+		List<AweJob> lj = bac1.getJobs(null, true, true, true, true, true, true);
 		System.out.println(lj);
 	}
 

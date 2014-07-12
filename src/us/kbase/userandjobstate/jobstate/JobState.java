@@ -67,8 +67,9 @@ public interface JobState {
 			throws CommunicationException;
 
 	public List<Job> listJobs(final String user, final List<String> services,
-			final boolean running, final boolean complete, final boolean error,
-			final boolean shared) throws CommunicationException;
+			final boolean queued, final boolean running,
+			final boolean complete, final boolean error, final boolean shared)
+			throws CommunicationException;
 
 	//note sharing with an already shared user or sharing with the owner has
 	//no effect

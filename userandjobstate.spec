@@ -275,14 +275,24 @@ module UserAndJobState {
 	/* A string-based filter for listing jobs.
 	
 		If the string contains:
+			'Q' - queued jobs are returned (but see below).
 			'R' - running jobs are returned.
 			'C' - completed jobs are returned.
 			'E' - jobs that errored out are returned.
 			'S' - shared jobs are returned.
 		The string can contain any combination of these codes in any order.
 		If the string contains none of the codes or is null, all self-owned 
-		jobs that have been started are returned. If only the S filter is
-		present, all jobs that have been started are returned.
+		jobs are returned. If only the S filter is
+		present, all jobs are returned.
+		
+		The Q filter has no meaning in the context of UJS based jobs (e.g. jobs
+		that are not pulled by the UJS from an external job runner) and is
+		ignored. A UJS job in the 'created' state is not yet 'owned', per se,
+		by a job runner, and so UJS jobs in the 'created' state are never
+		returned.
+		
+		In contrast, for a job runner like AWE, jobs may be in the submitted
+		or queued state, and the Q filter will cause these jobs to be returned.
 	*/
 	typedef string job_filter;
 	
