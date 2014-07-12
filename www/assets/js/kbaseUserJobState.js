@@ -597,9 +597,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 self.ujsClient.get_job_info(jobId, 
                     function(job) {
                         var $infoTable = $("<table>")
-                                         .addClass("table table-striped table-bordered")
-                                         .css({ "margin-left" : "auto", 
-                                                "margin-right" : "auto" })
+                                         .addClass("table table-striped table-bordered kbujs-jobs-table")
                                          .append(tableRow(["Job ID", job[0]]))
                                          .append(tableRow(["Service", job[1]]))
                                          .append(tableRow(["Description", job[12]]))
@@ -625,7 +623,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                               .append("<h2>Job Complete</h2>");
 
                             var $resultsTable = $("<table>")
-                                               .addClass("table table-striped table-bordered");
+                                               .addClass("table table-striped table-bordered kbujs-jobs-table");
 
                             if (job[13].shocknodes && job[13].shocknodes.length > 0) {
                                 var shockURL = self.options.shockURL;
