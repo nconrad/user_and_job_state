@@ -90,17 +90,27 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
              * it'll sort 'em.
              */
             jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
-                var ts1 = new Date($(x).attr('title'));
-                var ts2 = new Date($(y).attr('title'));
+                var m1 = $(x).attr('millis');
+                var m2 = $(y).attr('millis');
+                if (m1 && m2)
+                    return m1 - m2;
 
-                return ((ts1 < ts2) ? 1 : ((ts1 > ts2) ? -1 : 0));
+                if (m1)
+                    return m1;
+                else
+                    return m2;
             };
 
             jQuery.fn.dataTableExt.oSort['timestamp-desc'] = function(x, y) {
-                var ts1 = new Date($(x).attr('title'));
-                var ts2 = new Date($(y).attr('title'));
+                var m1 = $(x).attr('millis');
+                var m2 = $(y).attr('millis');
+                if (m1 && m2)
+                    return m2 - m1;
 
-                return ((ts1 < ts2) ? -1 : ((ts1 > ts2) ? 1 : 0));
+                if (m1)
+                    return m1;
+                else
+                    return m2;
             };
 
             this.render();
@@ -439,10 +449,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @private
          */
         makePrettyTimestamp: function(timestamp, suffix) {
-            var parsedTime = this.parseTimeStamp(timestamp);
-            var timediff = this.calcTimeDifference(timestamp);
+            var d = this.parseDate(timestamp);
 
-            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' class='kbujs-timestamp'>" + timediff + "</div>";
+            var parsedTime = this.parseTimestamp(null, d);
+            var timediff = this.calcTimeDifference(null, d);
+            var timeMillis = d ? d.getTime() : "";
+
+            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' millis='" + timeMillis + "' class='kbujs-timestamp'>" + timediff + "</div>";
             return timeHtml;
         },
 
@@ -584,23 +597,21 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                 self.ujsClient.get_job_info(jobId, 
                     function(job) {
                         var $infoTable = $("<table>")
-                                         .addClass("table table-striped table-bordered")
-                                         .css({ "margin-left" : "auto", 
-                                                "margin-right" : "auto" })
+                                         .addClass("table table-striped table-bordered kbujs-jobs-table")
                                          .append(tableRow(["Job ID", job[0]]))
                                          .append(tableRow(["Service", job[1]]))
                                          .append(tableRow(["Description", job[12]]))
                                          .append(tableRow(["Stage", parseStage(job[2])]))
                                          .append(tableRow(["Status", job[4]]))
-                                         .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + ")"]));
+                                         .append(tableRow(["Started", self.parseTimestamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + ")"]));
 
                         var progress = self.makeProgressBarElement(job, true);
                         if (progress)
                             $infoTable.append(tableRow(["Progress", progress]));
 
-                        $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
+                        $infoTable.append(tableRow(["Last Update", self.parseTimestamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
                         if (job[11] !== 1 && job[10] !== 1)
-                            $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
+                            $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimestamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
 
                         var $modalBody = $("<div>")
                                          .append($infoTable);
@@ -612,7 +623,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                               .append("<h2>Job Complete</h2>");
 
                             var $resultsTable = $("<table>")
-                                               .addClass("table table-striped table-bordered");
+                                               .addClass("table table-striped table-bordered kbujs-jobs-table");
 
                             if (job[13].shocknodes && job[13].shocknodes.length > 0) {
                                 var shockURL = self.options.shockURL;
@@ -765,7 +776,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
         },
 
         /**
-         * @method parseTimeStamp
+         * @method parseTimestamp
          * Parses the user_and_job_state timestamp and returns it as a user-
          * readable string in the UTC time.
          *
@@ -783,8 +794,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
          * @private
          */
-        parseTimeStamp: function(timestamp) {
-            var d = this.parseDate(timestamp);
+        parseTimestamp: function(timestamp, dateObj) {
+            var d = null;
+            if (timestamp)
+                d = this.parseDate(timestamp);
+            else if(dateObj)
+                d = dateObj;
+
             if (d === null)
                 return timestamp;
 
@@ -811,9 +827,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @param {String} time - the timestamp to calculate a difference from
          * @returns {String} - a string representing the time difference between the two parameter strings
          */
-        calcTimeDifference: function(time) {
+        calcTimeDifference: function(timestamp, dateObj) {
             var now = new Date();
-            time = this.parseDate(time);
+            var time = null;
+
+            if (timestamp)
+                time = this.parseDate(timestamp);
+            else if(dateObj)
+                time = dateObj;
 
             if (time === null)
                 return "Unknown time";
@@ -949,12 +970,17 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @returns {Object} - a Date object or null if the timestamp's invalid.
          */
         parseDate: function(time) {
-            var d = new Date(time);
+            var t = time.split(/[^0-9]/);
+            while (t.length < 7) {
+                t.append(0);
+            }
+            var d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
             if (Object.prototype.toString.call(d) === '[object Date]') {
                 if (isNaN(d.getTime())) {
                     return null;
                 }
                 else {
+                    d.setFullYear(t[0]);
                     return d;
                 }
             }
