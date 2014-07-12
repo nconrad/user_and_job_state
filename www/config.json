@@ -1,0 +1,13 @@
+{
+    "config": "dev",
+    "prod" : {
+        "userAndJobState" : "https://kbase.us/services/userandjobstate",
+        "shock" : "https://kbase.us/services/shock-api",
+        "workspaceBrowser" : "http://demo.kbase.us/functional-site/#/ws/objtable"
+    },
+    "dev" : {
+        "userAndJobState" : "https://140.221.67.151/services/userandjobstate",
+        "shock" : "https://kbase.us/services/shock-api",
+        "workspaceBrowser" : "http://narrative.kbase.us/functional-site/#/ws/objtable"
+    }
+}
