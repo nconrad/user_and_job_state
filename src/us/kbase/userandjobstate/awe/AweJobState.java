@@ -201,6 +201,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException {
 		final List<AweJob> jobs;
 		try {
+			//TODO 1 test services filter
 			jobs = cli.getJobs(services); //TODO 1 deal with filters
 		} catch (TokenExpiredException e) {
 			throw new CommunicationException("Authorization token for user " +
