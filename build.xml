@@ -49,6 +49,9 @@
     <include name="slf4j/slf4j-api-1.7.7.jar"/>
     <include name="logback/logback-classic-1.1.2.jar"/>
     <include name="logback/logback-core-1.1.2.jar"/>
+    <include name="apache_commons/commons-logging-1.1.1.jar"/>
+    <include name="apache_commons/http/httpclient-4.3.1.jar"/>
+    <include name="apache_commons/http/httpcore-4.3.jar"/>
   </fileset>
 
   <union id="serverside">
