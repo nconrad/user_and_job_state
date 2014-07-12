@@ -89,18 +89,22 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
              * contains a time/date that's parseable by the Javascript Date object,
              * it'll sort 'em.
              */
-            jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
-                var ts1 = new Date($(x).attr('title'));
-                var ts2 = new Date($(y).attr('title'));
+            var dateDiffMillis = function(ts1, ts2) {
+                var t1 = ts1.split(/[^0-9]/);
+                var t2 = ts2.split(/[^0-9]/);
 
-                return ((ts1 < ts2) ? 1 : ((ts1 > ts2) ? -1 : 0));
+                var d1 = new Date(t1[0], t1[1]-1, t1[2], t1[3], t1[4], t1[5]);
+                var d2 = new Date(t2[0], t2[1]-1, t2[2], t2[3], t2[4], t2[5]);
+
+                return d1.getTime() - d2.getTime();
+            };
+
+            jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
+                return dateDiffMillis($(x).attr('title'), $(y).attr('title'));
             };
 
             jQuery.fn.dataTableExt.oSort['timestamp-desc'] = function(x, y) {
-                var ts1 = new Date($(x).attr('title'));
-                var ts2 = new Date($(y).attr('title'));
-
-                return ((ts1 < ts2) ? -1 : ((ts1 > ts2) ? 1 : 0));
+                return dateDiffMillis($(y).attr('title'), $(x).attr('title'));
             };
 
             this.render();
@@ -439,10 +443,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @private
          */
         makePrettyTimestamp: function(timestamp, suffix) {
-            var parsedTime = this.parseTimestamp(timestamp);
-            var timediff = this.calcTimeDifference(timestamp);
+            var d = this.parseDate(timestamp);
 
-            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' class='kbujs-timestamp'>" + timediff + "</div>";
+            var parsedTime = this.parseTimestamp(null, d);
+            var timediff = this.calcTimeDifference(null, d);
+            var timeMillis = d ? d.getTime() : "";
+
+            var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' millis='" + timeMillis + "' class='kbujs-timestamp'>" + timediff + "</div>";
             return timeHtml;
         },
 
@@ -783,8 +790,13 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
          * @private
          */
-        parseTimestamp: function(timestamp) {
-            var d = this.parseDate(timestamp);
+        parseTimestamp: function(timestamp, dateObj) {
+            var d = null;
+            if (timestamp)
+                d = this.parseDate(timestamp);
+            else if(dateObj)
+                d = dateObj;
+
             if (d === null)
                 return timestamp;
 
@@ -811,9 +823,14 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @param {String} time - the timestamp to calculate a difference from
          * @returns {String} - a string representing the time difference between the two parameter strings
          */
-        calcTimeDifference: function(time) {
+        calcTimeDifference: function(timestamp, dateObj) {
             var now = new Date();
-            time = this.parseDate(time);
+            var time = null;
+
+            if (timestamp)
+                time = this.parseDate(time);
+            else if(dateObj)
+                time = dateObj;
 
             if (time === null)
                 return "Unknown time";
