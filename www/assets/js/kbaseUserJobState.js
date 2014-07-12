@@ -89,22 +89,28 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
              * contains a time/date that's parseable by the Javascript Date object,
              * it'll sort 'em.
              */
-            var dateDiffMillis = function(ts1, ts2) {
-                var t1 = ts1.split(/[^0-9]/);
-                var t2 = ts2.split(/[^0-9]/);
-
-                var d1 = new Date(t1[0], t1[1]-1, t1[2], t1[3], t1[4], t1[5]);
-                var d2 = new Date(t2[0], t2[1]-1, t2[2], t2[3], t2[4], t2[5]);
-
-                return d1.getTime() - d2.getTime();
-            };
-
             jQuery.fn.dataTableExt.oSort['timestamp-asc'] = function(x, y) {
-                return dateDiffMillis($(x).attr('title'), $(y).attr('title'));
+                var m1 = $(x).attr('millis');
+                var m2 = $(y).attr('millis');
+                if (m1 && m2)
+                    return m1 - m2;
+
+                if (m1)
+                    return m1;
+                else
+                    return m2;
             };
 
             jQuery.fn.dataTableExt.oSort['timestamp-desc'] = function(x, y) {
-                return dateDiffMillis($(y).attr('title'), $(x).attr('title'));
+                var m1 = $(x).attr('millis');
+                var m2 = $(y).attr('millis');
+                if (m1 && m2)
+                    return m2 - m1;
+
+                if (m1)
+                    return m1;
+                else
+                    return m2;
             };
 
             this.render();
