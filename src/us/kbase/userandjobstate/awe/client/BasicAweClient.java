@@ -271,7 +271,6 @@ public class BasicAweClient {
 		return (AweJob)processRequest(htg, AweJobResponse.class);
 	}
 
-	//TODO 1 make UJS job deletion time 6mo
 	//TODO 1 exclude deleted jobs
 	//TODO 1 list job filters
 	public List<AweJob> getJobs(

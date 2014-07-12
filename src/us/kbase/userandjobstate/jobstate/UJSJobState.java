@@ -32,7 +32,7 @@ import com.mongodb.WriteResult;
 
 public class UJSJobState implements JobState {
 
-	private final static int JOB_EXPIRES = 30 * 24 * 60 * 60; // 30 days
+	private final static int JOB_EXPIRES = 180 * 24 * 60 * 60; // 180 days
 	
 	private final static int MAX_LEN_USER = 100;
 	private final static int MAX_LEN_SERVICE = 100;
