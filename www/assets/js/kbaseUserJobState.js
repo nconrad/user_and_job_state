@@ -949,12 +949,17 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @returns {Object} - a Date object or null if the timestamp's invalid.
          */
         parseDate: function(time) {
-            var d = new Date(time);
+            var t = time.split(/[^0-9]/);
+            while (t.length < 7) {
+                t.append(0);
+            }
+            var d = new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5], t[6]);
             if (Object.prototype.toString.call(d) === '[object Date]') {
                 if (isNaN(d.getTime())) {
                     return null;
                 }
                 else {
+                    d.setFullYear(t[0]);
                     return d;
                 }
             }
