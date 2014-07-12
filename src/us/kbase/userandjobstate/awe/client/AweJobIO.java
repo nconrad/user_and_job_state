@@ -9,7 +9,7 @@ public class AweJobIO {
 	private String host;
 	private String node;
 	private String url;
-	private int size;
+	private long size;
 	private String origin;
 	private boolean nonzero;
 	private String shockfilename;
@@ -39,7 +39,7 @@ public class AweJobIO {
 		return url;
 	}
 	
-	public int getSize() {
+	public long getSize() {
 		return size;
 	}
 	

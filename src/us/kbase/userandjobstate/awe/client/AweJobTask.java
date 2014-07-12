@@ -10,7 +10,6 @@ public class AweJobTask {
 	private AweJobTaskCommand cmd;
 	private List<String> dependsOn;
 	private String taskid;
-	private int skip;
 	private int totalwork;
 	private Map<String, AweJobIO> inputs;
 	private Map<String, AweJobIO> outputs;
@@ -21,7 +20,7 @@ public class AweJobTask {
 	private String createddate;
 	private String starteddate;
 	private String completeddate;
-	private Integer computetime;
+	private Long computetime;
 	
 	private AweJobTask() {};
 	
@@ -35,10 +34,6 @@ public class AweJobTask {
 	
 	public String getTaskid() {
 		return taskid;
-	}
-	
-	public int getSkip() {
-		return skip;
 	}
 	
 	public int getTotalwork() {
@@ -81,7 +76,7 @@ public class AweJobTask {
 		return completeddate;
 	}
 	
-	public Integer getComputetime() {
+	public Long getComputetime() {
 		return computetime;
 	}
 
@@ -94,8 +89,6 @@ public class AweJobTask {
 		builder.append(dependsOn);
 		builder.append(", taskid=");
 		builder.append(taskid);
-		builder.append(", skip=");
-		builder.append(skip);
 		builder.append(", totalwork=");
 		builder.append(totalwork);
 		builder.append(", inputs=");
