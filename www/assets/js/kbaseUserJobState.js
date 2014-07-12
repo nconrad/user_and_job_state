@@ -439,7 +439,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @private
          */
         makePrettyTimestamp: function(timestamp, suffix) {
-            var parsedTime = this.parseTimeStamp(timestamp);
+            var parsedTime = this.parseTimestamp(timestamp);
             var timediff = this.calcTimeDifference(timestamp);
 
             var timeHtml = "<div href='#' data-toggle='tooltip' title='" + parsedTime + "' class='kbujs-timestamp'>" + timediff + "</div>";
@@ -592,15 +592,15 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                          .append(tableRow(["Description", job[12]]))
                                          .append(tableRow(["Stage", parseStage(job[2])]))
                                          .append(tableRow(["Status", job[4]]))
-                                         .append(tableRow(["Started", self.parseTimeStamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + ")"]));
+                                         .append(tableRow(["Started", self.parseTimestamp(job[3]) + " (" + self.calcTimeDifference(job[3]) + ")"]));
 
                         var progress = self.makeProgressBarElement(job, true);
                         if (progress)
                             $infoTable.append(tableRow(["Progress", progress]));
 
-                        $infoTable.append(tableRow(["Last Update", self.parseTimeStamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
+                        $infoTable.append(tableRow(["Last Update", self.parseTimestamp(job[5]) + " (" + self.calcTimeDifference(job[5]) + ")" ]));
                         if (job[11] !== 1 && job[10] !== 1)
-                            $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimeStamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
+                            $infoTable.append(tableRow(["Estimated Completion Time", self.parseTimestamp(job[9]) + " (" + self.calcTimeDifference(job[9]) + ")"]));
 
                         var $modalBody = $("<div>")
                                          .append($infoTable);
@@ -765,7 +765,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
         },
 
         /**
-         * @method parseTimeStamp
+         * @method parseTimestamp
          * Parses the user_and_job_state timestamp and returns it as a user-
          * readable string in the UTC time.
          *
@@ -783,7 +783,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
          * @returns {String} a parsed timestamp in the format "YYYY-MM-DD HH:MM:SS" in the browser's local time.
          * @private
          */
-        parseTimeStamp: function(timestamp) {
+        parseTimestamp: function(timestamp) {
             var d = this.parseDate(timestamp);
             if (d === null)
                 return timestamp;
