@@ -548,7 +548,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             var self = this;
 
             self.$jobDetailTitle.html("Job Details");
-            self.$jobDetailModal.openPrompt();
 
             var tableRow = function(elems) {
                 var row = $("<tr>");
@@ -566,11 +565,12 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                                        .addClass("glyphicon glyphicon-exclamation-sign"))
                                .append(" Error")
                                .click(function(event) {
-                                    self.$jobDetailModal.off('hidden.bs.modal');
-                                    self.$jobDetailModal.on('hidden.bs.modal', function(event) {
-                                        self.showErrorDetails(jobId);
+                                    self.$jobDetailModal.dialogModal().off('hidden.bs.modal');
+                                    self.$jobDetailModal.dialogModal().on('hidden.bs.modal', function(event) {
+                                       self.showErrorDetails(jobId);
+                                       self.$jobDetailModal.dialogModal().off('hidden.bs.modal');
                                     });
-                                    self.$jobDetailModal.modal("hide");
+                                    self.$jobDetailModal.dialogModal().modal("hide");
                                 });
 
                     return $("<div>")
@@ -585,6 +585,8 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
                     function(job) {
                         var $infoTable = $("<table>")
                                          .addClass("table table-striped table-bordered")
+                                         .css({ "margin-left" : "auto", 
+                                                "margin-right" : "auto" })
                                          .append(tableRow(["Job ID", job[0]]))
                                          .append(tableRow(["Service", job[1]]))
                                          .append(tableRow(["Description", job[12]]))
@@ -681,6 +683,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             };
 
             refresh();
+            self.$jobDetailModal.openPrompt();
             self.modalRefreshInterval = setInterval( function() { refresh(); }, this.options.detailRefreshTime );
         },
 
