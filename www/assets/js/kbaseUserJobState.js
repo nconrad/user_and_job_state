@@ -834,7 +834,7 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             var time = null;
 
             if (timestamp)
-                time = this.parseDate(time);
+                time = this.parseDate(timestamp);
             else if(dateObj)
                 time = dateObj;
 
