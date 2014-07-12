@@ -80,6 +80,10 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
         init: function(options) {
             this._super(options);
 
+            this.options.userJobStateURL = urlConfig.userAndJobState;
+            this.options.shockURL = urlConfig.shock;
+            this.options.workspaceBrowserURL = urlConfig.workspaceBrowserURL;
+
             /* Adds a timestamp sorting function.
              * Given that the elements given have an attribute called 'title' that
              * contains a time/date that's parseable by the Javascript Date object,
@@ -579,7 +583,6 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
             var refresh = function() {
                 self.ujsClient.get_job_info(jobId, 
                     function(job) {
-
                         var $infoTable = $("<table>")
                                          .addClass("table table-striped table-bordered")
                                          .append(tableRow(["Job ID", job[0]]))
@@ -636,6 +639,24 @@ define(['jquery', 'kbwidget', 'kbaseAuthenticatedWidget', 'kbaseAccordion', 'kba
 //                                    workspaceUrls.push("<a href='" + workspaceURL + job[13].workspaceids[i] + "' target='_blank'>" + job[13].workspaceids[i] + "</a>");
                                 }
                                 $resultsTable.append(tableRow(["Workspace", workspaceUrls.join("<br/>")]));
+                                resultsData = true;
+                            }
+
+                            if (job[13].results && job[13].results.length > 0) {
+                                /*
+                                 * This is a list of these:
+                                 * typedef structure {
+                                 *     string server_type;
+                                 *     string url;
+                                 *     string id;
+                                 *     string description;
+                                 * } Result;
+                                 */
+                                $resultsTable.append(tableRow(['<b>Description</b>', '<b>id</b>', '<b>Server</b>', '<b>URL</b>']));
+                                for (var i=0; i<job[13].results.length; i++) {
+                                    var r = job[13].results[i];
+                                    $resultsTable.append(tableRow([r.description, r.id, r.server_type, r.url]));
+                                }
                                 resultsData = true;
                             }
 
