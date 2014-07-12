@@ -13,7 +13,6 @@ import us.kbase.common.service.UObject;
 //BEGIN_HEADER
 import static us.kbase.common.utils.ServiceUtils.checkAddlArgs;
 import static us.kbase.common.utils.StringUtils.checkMaxLen;
-import static us.kbase.common.utils.StringUtils.checkString;
 import static us.kbase.userandjobstate.jobstate.JobResults.MAX_LEN_ID;
 import static us.kbase.userandjobstate.jobstate.JobResults.MAX_LEN_URL;
 
@@ -358,9 +357,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			for (final Result r: res.getResults()) {
 				checkAddlArgs(r.getAdditionalProperties(), Result.class);
 				//TODO tests for max lenghts, nulls, empty strings for Result contents
-				checkString(r.getServerType(), "servtype", MAX_LEN_SERVTYPE);
-				checkString(r.getUrl(), "url", MAX_LEN_URL);
-				checkString(r.getId(), "id", MAX_LEN_ID);
+				checkMaxLen(r.getServerType(), "servtype", MAX_LEN_SERVTYPE);
+				checkMaxLen(r.getUrl(), "url", MAX_LEN_URL);
+				checkMaxLen(r.getId(), "id", MAX_LEN_ID);
 				checkMaxLen(r.getDescription(), "description", MAX_LEN_DESC);
 				jrs.add(new JobResult(r.getServerType(), r.getUrl(), r.getId(),
 						r.getDescription()));

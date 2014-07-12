@@ -1,5 +1,7 @@
 package us.kbase.userandjobstate.jobstate;
 
+import static us.kbase.common.utils.StringUtils.checkString;
+
 public class JobResult {
 	
 	private String servtype = null;
@@ -17,6 +19,9 @@ public class JobResult {
 			throw new NullPointerException(
 					"The servtype, url, and id fields are required for a job result");
 		}
+		checkString(servtype, "servtype");
+		checkString(url, "url");
+		checkString(id, "id");
 		this.servtype = servtype;
 		this.url = url;
 		this.id = id;
