@@ -189,7 +189,6 @@ public class AweJobState implements JobState {
 		// TODO List services when AWE supports distinct query
 		return new HashSet<String>();
 	}
-	//TODO 1 maximum Result field lenghts
 	//user is ignored, uses the auth token
 	@Override
 	public List<Job> listJobs(final String user,

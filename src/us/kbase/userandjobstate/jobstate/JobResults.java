@@ -1,16 +1,23 @@
 package us.kbase.userandjobstate.jobstate;
 
+import static us.kbase.common.utils.StringUtils.checkMaxLen;
+
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
 public class JobResults {
 	
+	//TODO unit tests for this and JobResult
+	
 	private List<JobResult> results = null;
 	private String workspaceurl = null;
 	private List<String> workspaceids = null;
 	private String shockurl = null;
 	private List<String> shocknodes = null;
+	
+	public final static int MAX_LEN_URL = 1000;
+	public final static int MAX_LEN_ID = 1000;
 	
 	@SuppressWarnings("unused")
 	private JobResults() {} //for jongo
@@ -22,6 +29,18 @@ public class JobResults {
 			final String shockurl,
 			final List<String> shocknodes) {
 		super();
+		checkMaxLen(workspaceurl, "workspaceurl", MAX_LEN_URL);
+		checkMaxLen(shockurl, "shockurl", MAX_LEN_URL);
+		if (workspaceids != null) {
+			for (final String id: workspaceids) {
+				checkMaxLen(id, "workspaceid", MAX_LEN_ID);
+			}
+		}
+		if (shocknodes != null) {
+			for (final String id: shocknodes) {
+				checkMaxLen(id, "shocknode", MAX_LEN_ID);
+			}
+		}
 		this.results = makeImmutable(results);
 		this.workspaceurl = workspaceurl;
 		this.workspaceids = makeImmutable(workspaceids);

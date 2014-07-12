@@ -29,6 +29,10 @@ throw errors if a progress bar overflows.
 
 Jobs are automatically deleted after 30 days.
 
+Where string limits are noted, these apply only to *incoming* strings. Other
+services that the UJS wraps (currently AWE) may provide longer strings for
+these fields and the UJS passes them on unchanged.
+
 Potential job process flows:
 
 Asysnc:
@@ -178,11 +182,12 @@ module UserAndJobState {
 		All fields except description are required.
 		
 		string server_type - the type of server storing the results. Typically
-			either "Shock" or "Workspace".
-		string url - the url of the server.
+			either "Shock" or "Workspace". No more than 100 characters.
+		string url - the url of the server. No more than 1000 characters.
 		string id - the id of the result in the server. Typically either a
-			workspace id or a shock node.
+			workspace id or a shock node. No more than 1000 characters.
 		string description - a free text description of the result.
+			 No more than 1000 characters.
 	*/
 	typedef structure {
 		string server_type;
@@ -194,13 +199,13 @@ module UserAndJobState {
 	/* A pointer to job results. All arguments are optional. Applications
 		should use the default shock and workspace urls if omitted.
 		list<string> shocknodes - the shocknode(s) where the results can be
-			found.
+			found. No more than 1000 characters.
 		string shockurl - the url of the shock service where the data was
-			saved.
+			saved.  No more than 1000 characters.
 		list<string> workspaceids - the workspace ids where the results can be
-			found.
+			found. No more than 1000 characters.
 		string workspaceurl - the url of the workspace service where the data
-			was saved.
+			was saved.  No more than 1000 characters.
 		list<Result> - a set of job results. This format allows for specifying
 			results at multiple server locations and providing a free text
 			description of the result.
@@ -287,7 +292,7 @@ module UserAndJobState {
 	funcdef list_jobs(list<service_name> services, job_filter filter)
 		returns(list<job_info> jobs);
 	
-	/* List all job services. */
+	/* List all job services. Does not currently list AWE services. */
 	funcdef list_job_services() returns(list<service_name> services);
 	
 	/* Share a job. Sharing a job to the same user twice or with the job owner
