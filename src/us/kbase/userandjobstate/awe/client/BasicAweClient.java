@@ -8,6 +8,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
@@ -279,7 +280,15 @@ public class BasicAweClient {
 //			final boolean shared
 			) throws IOException,
 	AweHttpException, TokenExpiredException {
-		final URI targeturl = joburl;
+		URI targeturl = joburl;
+		if (services != null && !services.isEmpty()) {
+			try {
+				targeturl = new URI(joburl.toString() + "?query&info.service=" +
+						StringUtils.join(services, ","));
+			} catch (URISyntaxException e) {
+				throw new RuntimeException("Known good url is somehow bad", e);
+			}
+		}
 		final HttpGet htg = new HttpGet(targeturl);
 		return (List<AweJob>) processListRequest(htg, AweJobListResponse.class);
 	}
