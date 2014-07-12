@@ -271,6 +271,8 @@ public class BasicAweClient {
 		return (AweJob)processRequest(htg, AweJobResponse.class);
 	}
 
+	//TODO 1 make UJS job deletion time 6mo
+	//TODO 1 exclude deleted jobs
 	//TODO 1 list job filters
 	public List<AweJob> getJobs(
 			final List<String> services
@@ -280,14 +282,15 @@ public class BasicAweClient {
 //			final boolean shared
 			) throws IOException,
 	AweHttpException, TokenExpiredException {
-		URI targeturl = joburl;
+		String url = joburl.toString() + "?limit=1000"; //TODO need to think about this limit
 		if (services != null && !services.isEmpty()) {
-			try {
-				targeturl = new URI(joburl.toString() + "?query&info.service=" +
-						StringUtils.join(services, ","));
-			} catch (URISyntaxException e) {
-				throw new RuntimeException("Known good url is somehow bad", e);
-			}
+			url += "&query&info.service=" + StringUtils.join(services, ",");
+		}
+		final URI targeturl;
+		try {
+			targeturl = new URI(url);
+		} catch (URISyntaxException e) {
+			throw new RuntimeException("Known good url is somehow bad", e);
 		}
 		final HttpGet htg = new HttpGet(targeturl);
 		return (List<AweJob>) processListRequest(htg, AweJobListResponse.class);
