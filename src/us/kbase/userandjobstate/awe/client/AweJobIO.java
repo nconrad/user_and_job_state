@@ -18,7 +18,6 @@ public class AweJobIO {
 	private boolean nofile;
 	private boolean delete;
 	private String type;
-	private boolean formoptions;
 	private Boolean temporary;
 	
 	private AweJobIO() {}
@@ -75,10 +74,6 @@ public class AweJobIO {
 		return type;
 	}
 	
-	public boolean isFormoptions() {
-		return formoptions;
-	}
-	
 	public Boolean isTemporary() {
 		return temporary;
 	}
@@ -86,7 +81,7 @@ public class AweJobIO {
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("AweIO [name=");
+		builder.append("AweJobIO [name=");
 		builder.append(name);
 		builder.append(", host=");
 		builder.append(host);
@@ -112,8 +107,8 @@ public class AweJobIO {
 		builder.append(delete);
 		builder.append(", type=");
 		builder.append(type);
-		builder.append(", formoptions=");
-		builder.append(formoptions);
+		builder.append(", temporary=");
+		builder.append(temporary);
 		builder.append("]");
 		return builder.toString();
 	}

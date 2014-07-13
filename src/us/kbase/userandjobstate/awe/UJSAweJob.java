@@ -88,13 +88,11 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public String getService() {
-		//TODO 1 test getservice
 		return job.getInfo().getService();
 	}
 
 	@Override
 	public String getDescription() {
-		//TODO 1 test getdescriptoin
 		return job.getInfo().getDescription();
 	}
 
@@ -150,8 +148,8 @@ public class UJSAweJob implements Job {
 		}
 		if (job.getNotes() == null || job.getNotes().isEmpty()) {
 			return "Job was manually suspended.";
-			//TODO 1 test this path
 		}
+		//TODO get stdout/err from client
 		return job.getNotes();
 	}
 
@@ -163,7 +161,6 @@ public class UJSAweJob implements Job {
 				for (final Entry<String, AweJobIO> output:
 						t.getOutputs().entrySet()) {
 					final AweJobIO io = output.getValue();
-					//TODO 1 test temporary
 					if (io.isTemporary() == null || !io.isTemporary()) {
 						res.add(new JobResult(
 								"Shock",
