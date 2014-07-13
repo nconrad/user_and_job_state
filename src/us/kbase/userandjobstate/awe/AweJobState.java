@@ -169,7 +169,7 @@ public class AweJobState implements JobState {
 	public void deleteJob(final String user, final String jobID)
 			throws NoSuchJobException,
 			CommunicationException {
-		//TODO delete AWE jobs
+		//TODO delete AWE jobs, consult with the AWE guys first
 		throw new UnimplementedException(
 				"Deleting Awe jobs via the UJS is not yet implemented.");
 
@@ -179,9 +179,8 @@ public class AweJobState implements JobState {
 	public void deleteJob(final String user, final String jobID,
 			final String service)
 			throws NoSuchJobException, CommunicationException {
-		//TODO delete AWE jobs
-		throw new UnimplementedException(
-				"Deleting Awe jobs via the UJS is not yet implemented.");
+		throw new IllegalAweOperationException(
+				"AWE Jobs that are not completed or errored out may not be deleted via the UJS");
 	}
 
 	@Override

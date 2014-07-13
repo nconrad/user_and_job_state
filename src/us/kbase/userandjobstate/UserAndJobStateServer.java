@@ -743,11 +743,13 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			throw new IllegalArgumentException("Progress type cannot be null");
 		}
 		if (progress.getPtype().equals(JobState.PROG_NONE)) {
-			js.startJob(authPart.getUserName(), job, getServiceName(token),
-					status, desc, parseDate(estComplete));
+			getJobState(job, authPart).startJob(authPart.getUserName(), job,
+					getServiceName(token), status, desc,
+					parseDate(estComplete));
 		} else if (progress.getPtype().equals(JobState.PROG_PERC)) {
-			js.startJobWithPercentProg(authPart.getUserName(), job,
-					getServiceName(token), status, desc, parseDate(estComplete));
+			getJobState(job, authPart).startJobWithPercentProg(
+					authPart.getUserName(), job, getServiceName(token), status,
+					desc, parseDate(estComplete));
 		} else if (progress.getPtype().equals(JobState.PROG_TASK)) {
 			if (progress.getMax() == null) {
 				throw new IllegalArgumentException(
@@ -758,8 +760,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 						"Max progress can be no greater than "
 						+ Integer.MAX_VALUE);
 			}
-			js.startJob(authPart.getUserName(), job, getServiceName(token),
-					status, desc, (int) progress.getMax().longValue(),
+			getJobState(job, authPart).startJob(authPart.getUserName(), job,
+					getServiceName(token), status, desc,
+					(int) progress.getMax().longValue(),
 					parseDate(estComplete));
 		} else {
 			throw new IllegalArgumentException("No such progress type: " +
@@ -844,8 +847,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			}
 			progval = (int) prog.longValue();
 		}
-		js.updateJob(authPart.getUserName(), job, getServiceName(token),
-				status, progval, parseDate(estComplete));
+		getJobState(job, authPart).updateJob(authPart.getUserName(), job,
+				getServiceName(token), status, progval,
+				parseDate(estComplete));
         //END update_job_progress
     }
 
@@ -862,8 +866,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.update_job")
     public void updateJob(String job, String token, String status, String estComplete, AuthToken authPart) throws Exception {
         //BEGIN update_job
-		js.updateJob(authPart.getUserName(), job, getServiceName(token),
-				status, null, parseDate(estComplete));
+		getJobState(job, authPart).updateJob(authPart.getUserName(), job,
+				getServiceName(token), status, null, parseDate(estComplete));
         //END update_job
     }
 
@@ -956,8 +960,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
     @JsonServerMethod(rpc = "UserAndJobState.complete_job")
     public void completeJob(String job, String token, String status, String error, Results res, AuthToken authPart) throws Exception {
         //BEGIN complete_job
-		js.completeJob(authPart.getUserName(), job, getServiceName(token),
-				status, error, unmakeResults(res));
+		getJobState(job, authPart).completeJob(authPart.getUserName(), job,
+				getServiceName(token), status, error, unmakeResults(res));
         //END complete_job
     }
 
@@ -1036,7 +1040,6 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		boolean error = false;
 		boolean shared = false;
 		if (filter != null) {
-			//TODO test with AWE
 			if (filter.indexOf("Q") > -1) {
 				queued = true;
 			}
