@@ -178,7 +178,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return null;
 	}
 	
-	private JobState getJobState(final String host, final String dbs,
+	private JobState getUJSJobState(final String host, final String dbs,
 			final String user, final String pwd,
 			final int mongoReconnectRetry) {
 		try {
@@ -223,11 +223,11 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			return url;
 		} catch (MalformedURLException mue) {
 			fail("Invalid Awe url: " + mue.getLocalizedMessage());
+		} catch (InvalidAweUrlException e) {
+			fail("Invalid Awe url: " + e.getLocalizedMessage());
 		} catch (IOException io) {
 			fail("Couldn't connect to awe server at " + host + ": " +
 					io.getLocalizedMessage());
-		} catch (InvalidAweUrlException e) {
-			fail("Invalid Awe url: " + e.getLocalizedMessage());
 		}
 		return null;
 	}
@@ -242,33 +242,22 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		} catch (IllegalArgumentException iae) {
 			return js;
 		}
-		try {
-			return new AweJobState(aweUrl, token);
-		} catch (IOException io) {
-			throw new IOException("Couldn't connect to awe server at " +
-					aweUrl, io);
-		} catch (InvalidAweUrlException e) {
-			throw new IOException("Couldn't connect to awe server at " +
-					aweUrl, e);
-		} catch (AweHttpException e) {
-			throw new IOException("Couldn't connect to awe server at " +
-					aweUrl, e);
-		}
+		return getAweJobState(token);
 	}
 	
 	private JobState getAweJobState(final AuthToken token)
 			throws IOException, TokenExpiredException {
 		try {
 			return new AweJobState(aweUrl, token);
-		} catch (IOException io) {
-			throw new IOException("Couldn't connect to awe server at " +
-					aweUrl, io);
 		} catch (InvalidAweUrlException e) {
 			throw new IOException("Couldn't connect to awe server at " +
 					aweUrl, e);
 		} catch (AweHttpException e) {
 			throw new IOException("Couldn't connect to awe server at " +
 					aweUrl, e);
+		} catch (IOException io) {
+			throw new IOException("Couldn't connect to awe server at " +
+					aweUrl, io);
 		}
 	}
 	
@@ -511,7 +500,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			logInfo("Starting server using connection parameters:\n" + params);
 			final int mongoConnectRetry = getReconnectCount();
 			us = getUserState(host, dbs, user, pwd, mongoConnectRetry);
-			js = getJobState(host, dbs, user, pwd, mongoConnectRetry);
+			js = getUJSJobState(host, dbs, user, pwd, mongoConnectRetry);
 			final String aweUrlString = ujConfig.get(AWE_URL);
 			aweUrl = checkAweUrl(aweUrlString);
 		}
