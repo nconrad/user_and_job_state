@@ -18,7 +18,7 @@ public class AweJob extends AweData {
 	private Integer remaintasks;
 	private String updatetime;
 	private String notes;
-	private Integer resumed;
+//	private Integer resumed;
 	
 	private AweJob() {};
 
@@ -59,9 +59,9 @@ public class AweJob extends AweData {
 		return notes;
 	}
 
-	public Integer getResumed() {
-		return resumed;
-	}
+//	public Integer getResumed() {
+//		return resumed;
+//	}
 
 	@Override
 	public String toString() {
@@ -84,8 +84,8 @@ public class AweJob extends AweData {
 		builder.append(updatetime);
 		builder.append(", notes=");
 		builder.append(notes);
-		builder.append(", resumed=");
-		builder.append(resumed);
+//		builder.append(", resumed=");
+//		builder.append(resumed);
 		builder.append("]");
 		return builder.toString();
 	}

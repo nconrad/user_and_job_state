@@ -9,7 +9,7 @@ public class AweJobInfo {
 	private String project;
 	private String user;
 	private String clientgroups;
-	private String xref;
+//	private String xref;
 	private String submittime;
 	private String startedtime;
 	private String completedtime;
@@ -40,9 +40,9 @@ public class AweJobInfo {
 		return clientgroups;
 	}
 	
-	public String getXref() {
-		return xref;
-	}
+//	public String getXref() {
+//		return xref;
+//	}
 
 	public String getSubmittime() {
 		return submittime;
@@ -85,8 +85,8 @@ public class AweJobInfo {
 		builder.append(user);
 		builder.append(", clientgroups=");
 		builder.append(clientgroups);
-		builder.append(", xref=");
-		builder.append(xref);
+//		builder.append(", xref=");
+//		builder.append(xref);
 		builder.append(", submittime=");
 		builder.append(submittime);
 		builder.append(", startedtime=");

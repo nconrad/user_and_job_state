@@ -11,13 +11,13 @@ public class AweJobIO {
 	private String url;
 	private long size;
 	private String origin;
-	private boolean nonzero;
+	private Boolean nonzero;
 	private String shockfilename;
 	private String shockindex;
 	private String attrfile;
-	private boolean nofile;
-	private boolean delete;
-	private String type;
+//	private Boolean nofile;
+//	private Boolean delete;
+//	private String type;
 	private Boolean temporary;
 	
 	private AweJobIO() {}
@@ -62,17 +62,17 @@ public class AweJobIO {
 		return attrfile;
 	}
 	
-	public boolean isNofile() {
-		return nofile;
-	}
-	
-	public boolean isDelete() {
-		return delete;
-	}
-	
-	public String getType() {
-		return type;
-	}
+//	public boolean isNofile() {
+//		return nofile;
+//	}
+//	
+//	public boolean isDelete() {
+//		return delete;
+//	}
+//	
+//	public String getType() {
+//		return type;
+//	}
 	
 	public Boolean isTemporary() {
 		return temporary;
@@ -101,12 +101,12 @@ public class AweJobIO {
 		builder.append(shockindex);
 		builder.append(", attrfile=");
 		builder.append(attrfile);
-		builder.append(", nofile=");
-		builder.append(nofile);
-		builder.append(", delete=");
-		builder.append(delete);
-		builder.append(", type=");
-		builder.append(type);
+//		builder.append(", nofile=");
+//		builder.append(nofile);
+//		builder.append(", delete=");
+//		builder.append(delete);
+//		builder.append(", type=");
+//		builder.append(type);
 		builder.append(", temporary=");
 		builder.append(temporary);
 		builder.append("]");
