@@ -293,6 +293,9 @@ module UserAndJobState {
 		
 		In contrast, for a job runner like AWE, jobs may be in the submitted
 		or queued state, and the Q filter will cause these jobs to be returned.
+		
+		Note that the S filter currently does not work with AWE. All AWE jobs
+		visible to the user are always returned.
 	*/
 	typedef string job_filter;
 	
@@ -315,15 +318,17 @@ module UserAndJobState {
 	*/
 	funcdef unshare_job(job_id job, list<username> users) returns();
 	
-	/* Get the owner of a job. */
+	/* Get the owner of a job. Does not currently work with AWE jobs. */
 	funcdef get_job_owner(job_id job) returns(username owner);
 	
 	/* Get the list of users with which a job is shared. Only the job owner
-		may access this method.
+		may access this method. Does not currently work with AWE jobs.
 	*/
 	funcdef get_job_shared(job_id job) returns(list<username> users);
 	
-	/* Delete a job. Will fail if the job is not complete. */
+	/* Delete a job. Will fail if the job is not complete.
+		Does not currently work with AWE jobs.
+	*/
 	funcdef delete_job(job_id job) returns();
 	
 	/* Force delete a job - will succeed unless the job has not been started.
