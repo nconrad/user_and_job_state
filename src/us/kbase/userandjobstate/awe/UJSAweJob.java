@@ -50,13 +50,6 @@ public class UJSAweJob implements Job {
 		this.job = job;
 	}
 	
-	private final static String translateState(final String state) {
-		if (!STATE_MAP.containsKey(state)) {
-			return CREATED;
-		}
-		return STATE_MAP.get(state);
-	}
-
 	private static Date parseDate(final String date) {
 		if (date == null) {
 			return null;
@@ -76,7 +69,11 @@ public class UJSAweJob implements Job {
 
 	@Override
 	public String getStage() {
-		return translateState(job.getState());
+		final String state = job.getState();
+		if (!STATE_MAP.containsKey(state)) {
+			return CREATED;
+		}
+		return STATE_MAP.get(state);
 	}
 
 	@Override
