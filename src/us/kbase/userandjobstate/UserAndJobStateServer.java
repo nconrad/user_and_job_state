@@ -111,7 +111,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     //BEGIN_CLASS_HEADER
 	
     //TODO needs to look through the AWE code and look for cruft, this was written in haste
-    //TODO a full suite of tests for AWE integration
+    //TODO 2 a full suite of tests for AWE integration
 
 	private static final String VER = "0.0.5";
 
@@ -1076,7 +1076,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
         //BEGIN list_job_services
 		returnVal = new ArrayList<String>(js.listServices(
 				authPart.getUserName()));
-		//TODO list awe services
+		//TODO list awe services when awe provides DISTINCT query
         //END list_job_services
         return returnVal;
     }

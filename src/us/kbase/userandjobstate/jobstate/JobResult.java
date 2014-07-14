@@ -17,6 +17,8 @@ public class JobResult {
 			throw new NullPointerException(
 					"The servtype, url, and id fields are required for a job result");
 		}
+		//this class may be used to represent external job runner results
+		// so no string checking here
 		this.servtype = servtype;
 		this.url = url;
 		this.id = id;

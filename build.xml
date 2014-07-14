@@ -38,7 +38,7 @@
     <include name="jackson/jackson-annotations-2.2.3.jar"/>
     <include name="jackson/jackson-core-2.2.3.jar"/>
     <include name="jackson/jackson-databind-2.2.3.jar"/>
-    <include name="kbase/common/kbase-common-0.0.3.jar"/>
+    <include name="kbase/common/kbase-common-1405368186-5c57dba.jar"/>
   </fileset>
 
   <fileset dir="${jardir}" id="applicationlib">
@@ -175,6 +175,7 @@
       <sysproperty key="test.user2" value="${test.user2}"/>
       <sysproperty key="test.pwd2" value="${test.pwd2}"/>
       <test name="us.kbase.userandjobstate.test.jobstate.JobStateTests"/>
+      <test name="us.kbase.userandjobstate.test.jobstate.JobResultsTest"/>
       <test name="us.kbase.userandjobstate.test.userstate.UserStateTests"/>
       <test name="us.kbase.userandjobstate.test.kbase.JSONRPCLayerTest"/>
     </junit>

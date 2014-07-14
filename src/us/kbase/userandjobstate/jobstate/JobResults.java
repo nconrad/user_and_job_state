@@ -1,6 +1,7 @@
 package us.kbase.userandjobstate.jobstate;
 
-import static us.kbase.common.utils.StringUtils.checkMaxLen;
+import static us.kbase.common.utils.StringUtils.checkString;
+import static us.kbase.common.utils.StringUtils.checkMaxLenAndNonEmpty;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -29,16 +30,16 @@ public class JobResults {
 			final String shockurl,
 			final List<String> shocknodes) {
 		super();
-		checkMaxLen(workspaceurl, "workspaceurl", MAX_LEN_URL);
-		checkMaxLen(shockurl, "shockurl", MAX_LEN_URL);
+		checkMaxLenAndNonEmpty(workspaceurl, "workspaceurl", MAX_LEN_URL);
+		checkMaxLenAndNonEmpty(shockurl, "shockurl", MAX_LEN_URL);
 		if (workspaceids != null) {
 			for (final String id: workspaceids) {
-				checkMaxLen(id, "workspaceid", MAX_LEN_ID);
+				checkString(id, "workspaceid", MAX_LEN_ID);
 			}
 		}
 		if (shocknodes != null) {
 			for (final String id: shocknodes) {
-				checkMaxLen(id, "shocknode", MAX_LEN_ID);
+				checkString(id, "shocknode", MAX_LEN_ID);
 			}
 		}
 		this.results = makeImmutable(results);
