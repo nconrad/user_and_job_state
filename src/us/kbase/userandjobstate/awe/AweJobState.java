@@ -53,10 +53,10 @@ public class AweJobState implements JobState {
 				"or started from the awe server.");
 	}
 
-	//user is ignored, uses the auth token
 	@Override
 	public Job getJob(final String user, final String jobID)
 			throws CommunicationException, NoSuchJobException {
+		//user is ignored, uses the auth token
 		final AweJob aj;
 		try {
 			aj = cli.getJob(new AweJobId(jobID));
@@ -66,11 +66,11 @@ public class AweJobState implements JobState {
 		} catch (AweAuthorizationException e) {
 			throw new NoSuchJobException(String.format(
 					"There is no job %s viewable by user %s", jobID,
-					getUserName(), e));
+					getUserName()), e);
 		} catch (AweNoJobException e) {
 			throw new NoSuchJobException(String.format(
 					"There is no job %s viewable by user %s", jobID,
-					getUserName(), e));
+					getUserName()), e);
 		} catch (AweHttpException e) {
 			throw new CommunicationException(
 					"Could not retrieve job from the Awe server: " +
@@ -188,7 +188,6 @@ public class AweJobState implements JobState {
 		// TODO List services when AWE supports distinct query
 		return new HashSet<String>();
 	}
-	//user is ignored, uses the auth token
 	@Override
 	public List<Job> listJobs(final String user,
 			final List<String> services,
@@ -198,6 +197,7 @@ public class AweJobState implements JobState {
 			boolean error,
 			final boolean shared) //TODO filter on shared when possible with AWE
 			throws CommunicationException {
+		//user is ignored, uses the auth token
 		final List<AweJob> jobs;
 		if (! (queued || running || complete || error)) {
 			//all false, so return all jobs
@@ -215,7 +215,7 @@ public class AweJobState implements JobState {
 		} catch (AweAuthorizationException e) {
 			throw new CommunicationException(String.format(
 					"The Awe server could not authorize user %s",
-					getUserName(), e));
+					getUserName()), e);
 		} catch (AweHttpException e) {
 			throw new CommunicationException(
 					"Could not retrieve jobs from the Awe server: " +
@@ -236,18 +236,72 @@ public class AweJobState implements JobState {
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO 1 WAIT share awe job
-
+		//ignore owner
+		try {
+			cli.setJobReadable(makeJobId(jobID), users);
+		} catch (TokenExpiredException e) {
+			throw new CommunicationException("Authorization token for user " +
+					getUserName() + "is expired", e);
+		} catch (AweAuthorizationException e) {
+			throw new CommunicationException(String.format(
+					"The Awe server could not authorize user %s to share job %s: %s",
+					getUserName(), jobID, e.getMessage()), e);
+		} catch (AweNoJobException e) {
+			throw new NoSuchJobException(String.format(
+					"There is no job %s viewable by user %s", jobID,
+					getUserName(), e));
+		} catch (AweHttpException e) {
+			throw new CommunicationException(
+					"Could not communicate with the Awe server: " +
+					e.getMessage(), e);
+		} catch (IOException e) {
+			throw new CommunicationException(
+					"Could not communicated with the Awe server: " +
+					e.getMessage(), e);
+		}
 	}
-
+	
+	private static AweJobId makeJobId(final String jobID) {
+		final AweJobId id;
+		try {
+			id = new AweJobId(jobID);
+		} catch (IllegalArgumentException iae) {
+			throw new IllegalArgumentException(String.format(
+					"Illegal Awe job ID %s: %s", jobID, iae.getMessage()),
+					iae);
+		}
+		return id;
+	}
+	
 	@Override
 	public void unshareJob(final String user, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		// TODO 1 WAIT unshare awe job
-
+		//ignore user
+		try {
+			cli.removeJobReadable(makeJobId(jobID), users);
+		} catch (TokenExpiredException e) {
+			throw new CommunicationException("Authorization token for user " +
+					getUserName() + "is expired", e);
+		} catch (AweAuthorizationException e) {
+			throw new CommunicationException(String.format(
+					"The Awe server could not authorize user %s to unshare job %s: %s",
+					getUserName(), jobID, e.getMessage()), e);
+		} catch (AweNoJobException e) {
+			throw new NoSuchJobException(String.format(
+					"There is no job %s viewable by user %s", jobID,
+					getUserName(), e));
+		} catch (AweHttpException e) {
+			throw new CommunicationException(
+					"Could not communicate with the Awe server: " +
+					e.getMessage(), e);
+		} catch (IOException e) {
+			throw new CommunicationException(
+					"Could not communicated with the Awe server: " +
+					e.getMessage(), e);
+		}
 	}
-	
+
 	@SuppressWarnings("serial")
 	class IllegalAweOperationException extends RuntimeException {
 

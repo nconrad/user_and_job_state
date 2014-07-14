@@ -326,7 +326,7 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public void deleteNode(final AweJobId id) throws IOException, 
+	public void deleteJob(final AweJobId id) throws IOException, 
 			AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl.resolve(id.getId());
 		final HttpDelete htd = new HttpDelete(targeturl);
@@ -343,7 +343,15 @@ public class BasicAweClient {
 	 * expired.
 	 */
 	public void setJobReadable(final AweJobId id, final List<String> users)
-			throws IOException, AweHttpException,TokenExpiredException {
+			throws IOException, AweHttpException, TokenExpiredException {
+		final URI targeturl = checkACLArgsAndGenURI(id, users);
+		final HttpPut htp = new HttpPut(targeturl);
+		//TODO check errors are ok when Shock changes to ACLs for editing ACLs
+		processRequest(htp, AweACLResponse.class); //triggers throwing errors
+	}
+	
+	private URI checkACLArgsAndGenURI(final AweJobId id,
+			final List<String> users) {
 		if (id == null) {
 			throw new IllegalArgumentException("id cannot be null");
 		}
@@ -359,9 +367,14 @@ public class BasicAweClient {
 		}
 		final URI targeturl = joburl.resolve(id.getId() + ACL_READ.acl + 
 				"?users=" + StringUtils.join(users, ","));
-		final HttpPut htp = new HttpPut(targeturl);
-		//TODO check errors are ok when Shock changes to ACLs for editing ACLs
-		processRequest(htp, AweACLResponse.class); //triggers throwing errors
+		return targeturl;
+	}
+	
+	public void removeJobReadable(final AweJobId id, final List<String> users)
+			throws IOException, AweHttpException, TokenExpiredException {
+		final URI targeturl = checkACLArgsAndGenURI(id, users);
+		final HttpDelete htd = new HttpDelete(targeturl);
+		processRequest(htd, AweACLResponse.class); //triggers throwing errors
 	}
 	
 	/**
