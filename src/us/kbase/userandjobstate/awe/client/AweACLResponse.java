@@ -7,15 +7,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 
-class ShockACLResponse extends AweObjectResponse {
+class AweACLResponse extends AweObjectResponse {
 	
-	private ShockACLResponse(){}
+	private AweACLResponse(){}
 	
 	@JsonProperty("data")
-	private ShockACL data;
+	private AweACL data;
 	
 	@JsonIgnore
-	ShockACL getAweData() throws AweHttpException {
+	AweACL getAweData() throws AweHttpException {
 		checkErrors();
 		return data;
 	}

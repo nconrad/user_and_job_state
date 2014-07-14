@@ -236,6 +236,7 @@ public class AweJobState implements JobState {
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
+		//TODO 1 WAIT awe auth exception
 		// TODO 1 WAIT share awe job
 
 	}

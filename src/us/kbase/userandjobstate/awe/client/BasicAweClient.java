@@ -66,7 +66,7 @@ public class BasicAweClient {
 	
 	private static final String AUTH = "Authorization";
 	private static final String OAUTH = "OAuth ";
-	private static final ShockACLType ACL_READ = new ShockACLType("read");
+	private static final AweACLType ACL_READ = new AweACLType("read");
 	
 	/** Get the size of the upload / download chunk size.
 	 * @return the size of the file chunks sent/received from the Shock server.
@@ -342,20 +342,26 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public void setNodeReadable(final ShockNodeId id, final String user)
+	public void setJobReadable(final AweJobId id, final List<String> users)
 			throws IOException, AweHttpException,TokenExpiredException {
 		if (id == null) {
 			throw new IllegalArgumentException("id cannot be null");
 		}
-		if (user == null || user.equals("")) {
+		if (users == null || users.isEmpty()) {
 			throw new IllegalArgumentException(
-					"user cannot be null or the empty string");
+					"user list cannot be null or empty");
+		}
+		for (final String user: users) {
+			if (user == null || user.equals("")) {
+				throw new IllegalArgumentException(
+						"user cannot be null or the empty string");
+			}
 		}
 		final URI targeturl = joburl.resolve(id.getId() + ACL_READ.acl + 
-				"?users=" + user);
+				"?users=" + StringUtils.join(users, ","));
 		final HttpPut htp = new HttpPut(targeturl);
 		//TODO check errors are ok when Shock changes to ACLs for editing ACLs
-		processRequest(htp, ShockACLResponse.class); //triggers throwing errors
+		processRequest(htp, AweACLResponse.class); //triggers throwing errors
 	}
 	
 	/**
@@ -370,9 +376,9 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public ShockACL getACLs(final ShockNodeId id) throws IOException,
+	public AweACL getACLs(final ShockNodeId id) throws IOException,
 			AweHttpException, TokenExpiredException {
-		return getACLs(id, new ShockACLType());
+		return getACLs(id, new AweACLType());
 	}
 	
 	/**
@@ -388,11 +394,11 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public ShockACL getACLs(final ShockNodeId id, final ShockACLType acl) 
+	public AweACL getACLs(final ShockNodeId id, final AweACLType acl) 
 			throws IOException, AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl.resolve(id.getId() + acl.acl);
 		final HttpGet htg = new HttpGet(targeturl);
-		return (ShockACL)processRequest(htg, ShockACLResponse.class);
+		return (AweACL)processRequest(htg, AweACLResponse.class);
 	}
 	
 	//for known good uris ONLY

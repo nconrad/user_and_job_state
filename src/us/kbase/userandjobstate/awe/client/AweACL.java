@@ -16,20 +16,20 @@ import java.util.List;
  * @author gaprice@lbl.gov
  *
  */
-public class ShockACL extends AweData {
+public class AweACL extends AweData {
 
-	private ShockUserId owner;
-	private List<ShockUserId> read;
-	private List<ShockUserId> write;
-	private List<ShockUserId> delete;
+	private AweUserId owner;
+	private List<AweUserId> read;
+	private List<AweUserId> write;
+	private List<AweUserId> delete;
 	
-	private ShockACL(){}
+	private AweACL(){}
 
 	/**
 	 * Get the user ID of the node's owner.
 	 * @return the owner ID.
 	 */
-	public ShockUserId getOwner() {
+	public AweUserId getOwner() {
 		return owner;
 	}
 
@@ -38,9 +38,9 @@ public class ShockACL extends AweData {
 	 * @return the list of IDs or <code>null</code> if the list was not 
 	 * included in the server response.
 	 */
-	public List<ShockUserId> getRead() {
+	public List<AweUserId> getRead() {
 		if (read == null) {return null;}
-		return new ArrayList<ShockUserId>(read);
+		return new ArrayList<AweUserId>(read);
 	}
 
 	/**
@@ -48,9 +48,9 @@ public class ShockACL extends AweData {
 	 * @return the list of IDs or <code>null</code> if the list was not 
 	 * included in the server response.
 	 */
-	public List<ShockUserId> getWrite() {
+	public List<AweUserId> getWrite() {
 		if (write == null) {return null;}
-		return new ArrayList<ShockUserId>(write);
+		return new ArrayList<AweUserId>(write);
 	}
 
 	/**
@@ -58,9 +58,9 @@ public class ShockACL extends AweData {
 	 * @return the list of IDs or <code>null</code> if the list was not 
 	 * included in the server response.
 	 */
-	public List<ShockUserId> getDelete() {
+	public List<AweUserId> getDelete() {
 		if (delete == null) {return null;}
-		return new ArrayList<ShockUserId>(delete);
+		return new ArrayList<AweUserId>(delete);
 	}
 	
 	/* (non-Javadoc)
@@ -70,8 +70,8 @@ public class ShockACL extends AweData {
 	public boolean equals(Object obj) {
 		//this is repulsive. Rethink this later.
 		if (this == obj) {return true;}
-		if (!(obj instanceof ShockACL)) {return false;}
-		ShockACL acl = (ShockACL)obj;
+		if (!(obj instanceof AweACL)) {return false;}
+		AweACL acl = (AweACL)obj;
 		if ((this.owner == null ^ acl.owner == null) ||
 			(this.read == null ^ acl.read == null) ||
 			(this.write == null ^ acl.write == null) ||

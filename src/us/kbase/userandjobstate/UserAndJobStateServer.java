@@ -1095,7 +1095,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
         //BEGIN share_job
 		checkUsers(users, authPart);
 		//TODO 1 WAIT share awe jobs
-		js.shareJob(authPart.getUserName(), job, users);
+		getJobState(job, authPart).shareJob(
+				authPart.getUserName(), job, users);
         //END share_job
     }
 
@@ -1113,7 +1114,8 @@ public class UserAndJobStateServer extends JsonServerServlet {
         //BEGIN unshare_job
 		checkUsers(users, authPart);
 		//TODO 1 WAIT unshare awe jobs
-		js.unshareJob(authPart.getUserName(), job, users);
+		getJobState(job, authPart).unshareJob(
+				authPart.getUserName(), job, users);
         //END unshare_job
     }
 

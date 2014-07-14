@@ -5,14 +5,14 @@ package us.kbase.userandjobstate.awe.client;
  * @author gaprice@lbl.gov
  *
  */
-public class ShockUserId extends AweJobId {
+public class AweUserId extends AweJobId {
 
 	/**
 	 * Construct a user ID.
 	 * @param id the ID to create.
 	 * @throws IllegalArgumentException if the id is not a valid shock user ID.
 	 */
-	public ShockUserId(String id) throws IllegalArgumentException {
+	public AweUserId(String id) throws IllegalArgumentException {
 		super(id);
 	}
 }

@@ -11,7 +11,7 @@ package us.kbase.userandjobstate.awe.client;
  * @author gaprice@lbl.gov
  *
  */
-public class ShockACLType {
+public class AweACLType {
 
 	final String acl;
 	private final String aclType;
@@ -29,7 +29,7 @@ public class ShockACLType {
 	/** 
 	 * Constructs a <code>ShockACLType</code> that represents all ACLs.
 	 */
-	public ShockACLType() {
+	public AweACLType() {
 		acl = "/acl/";
 		aclType = "all";
 	}
@@ -40,7 +40,7 @@ public class ShockACLType {
 	 * <code>"read"</code>, <code>"write"</code>, <code>"owner"</code>,
 	 * and <code>"delete"</code>.
 	 */
-	public ShockACLType(String type) {
+	public AweACLType(String type) {
 		if (type == "all") {
 			acl = "/acl/";
 		} else if (type == "read" || type == "write" || type == "delete" ||
