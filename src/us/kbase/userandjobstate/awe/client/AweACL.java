@@ -8,7 +8,7 @@ import java.util.List;
  * object <b>at the time the ACL(s) were retrieved from shock</b>. 
  * Later updates to the ACLs will not be reflected in the instance.
  * To update the local representation of the ACLs
- * {@link us.kbase.BasicAweClient.client.BasicShockClient#getACLs(ShockNodeId)
+ * {@link us.kbase.BasicAweClient.client.BasicShockClient#getACLs(AweJobId)
  * getACLs()} must be called again.</p>
  *
  * This class is never instantiated manually.
@@ -89,7 +89,7 @@ public class AweACL extends AweData {
 	 */
 	@Override
 	public String toString() {
-		return "ShockACL [owner=" + owner + ", read=" + read + ", write="
+		return "AweACL [owner=" + owner + ", read=" + read + ", write="
 				+ write + ", delete=" + delete + "]";
 	}
 }

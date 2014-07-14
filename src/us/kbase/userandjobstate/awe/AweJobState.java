@@ -196,7 +196,7 @@ public class AweJobState implements JobState {
 			boolean running,
 			boolean complete,
 			boolean error,
-			final boolean shared) //TODO 1 WAIT deal with filtering on shared 
+			final boolean shared) //TODO filter on shared when possible with AWE
 			throws CommunicationException {
 		final List<AweJob> jobs;
 		if (! (queued || running || complete || error)) {
@@ -236,7 +236,6 @@ public class AweJobState implements JobState {
 	public void shareJob(final String owner, final String jobID,
 			final List<String> users)
 			throws CommunicationException, NoSuchJobException {
-		//TODO 1 WAIT awe auth exception
 		// TODO 1 WAIT share awe job
 
 	}

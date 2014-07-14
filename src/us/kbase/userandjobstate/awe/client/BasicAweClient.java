@@ -326,7 +326,7 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public void deleteNode(final ShockNodeId id) throws IOException, 
+	public void deleteNode(final AweJobId id) throws IOException, 
 			AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl.resolve(id.getId());
 		final HttpDelete htd = new HttpDelete(targeturl);
@@ -376,7 +376,7 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public AweACL getACLs(final ShockNodeId id) throws IOException,
+	public AweACL getACLs(final AweJobId id) throws IOException,
 			AweHttpException, TokenExpiredException {
 		return getACLs(id, new AweACLType());
 	}
@@ -394,7 +394,7 @@ public class BasicAweClient {
 	 * @throws TokenExpiredException if the client authorization token has
 	 * expired.
 	 */
-	public AweACL getACLs(final ShockNodeId id, final AweACLType acl) 
+	public AweACL getACLs(final AweJobId id, final AweACLType acl) 
 			throws IOException, AweHttpException, TokenExpiredException {
 		final URI targeturl = joburl.resolve(id.getId() + acl.acl);
 		final HttpGet htg = new HttpGet(targeturl);

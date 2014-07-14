@@ -1094,7 +1094,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void shareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN share_job
 		checkUsers(users, authPart);
-		//TODO 1 WAIT share awe jobs
+		//TODO 1 WAIT test share awe jobs
 		getJobState(job, authPart).shareJob(
 				authPart.getUserName(), job, users);
         //END share_job
@@ -1113,7 +1113,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     public void unshareJob(String job, List<String> users, AuthToken authPart) throws Exception {
         //BEGIN unshare_job
 		checkUsers(users, authPart);
-		//TODO 1 WAIT unshare awe jobs
+		//TODO 1 WAIT test unshare awe jobs
 		getJobState(job, authPart).unshareJob(
 				authPart.getUserName(), job, users);
         //END unshare_job
