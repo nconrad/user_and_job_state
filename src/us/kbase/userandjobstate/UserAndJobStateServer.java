@@ -346,7 +346,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			jrs = new LinkedList<JobResult>();
 			for (final Result r: res.getResults()) {
 				checkAddlArgs(r.getAdditionalProperties(), Result.class);
-				//TODO tests for max lenghts, nulls, empty strings for Result contents
+				//TODO 1 tests for max lenghts, nulls, empty strings for Result contents
 				checkString(r.getServerType(), "servtype", MAX_LEN_SERVTYPE);
 				checkString(r.getUrl(), "url", MAX_LEN_URL);
 				checkString(r.getId(), "id", MAX_LEN_ID);

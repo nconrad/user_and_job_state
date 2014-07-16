@@ -9,8 +9,6 @@ import java.util.List;
 
 public class JobResults {
 	
-	//TODO unit tests for this and JobResult
-	
 	private List<JobResult> results = null;
 	private String workspaceurl = null;
 	private List<String> workspaceids = null;
