@@ -213,6 +213,7 @@ public class BasicAweClient {
 			return mapper.readValue(resp, clazz).getAweData();
 		} catch (JsonParseException jpe) {
 			throw new AweHttpException(
+					//TODO check http code & throw correct exception
 					response.getStatusLine().getStatusCode(),
 					"Couldn't parse Awe server response to JSON: " +
 					jpe.getLocalizedMessage(), jpe);
@@ -241,6 +242,7 @@ public class BasicAweClient {
 		try {
 			return mapper.readValue(resp, clazz).getAweData();
 		} catch (JsonParseException jpe) {
+			//TODO check http code & throw correct exception
 			throw new AweHttpException(
 					response.getStatusLine().getStatusCode(),
 					"Couldn't parse Awe server response to JSON: " +

@@ -22,6 +22,8 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
 
 public class AweClientTests {
+	
+	private final static boolean deleteTempFilesOnExit = false;
 
 	private static BasicAweClient bac1;
 //	private static BasicAweClient bac2;
@@ -38,7 +40,8 @@ public class AweClientTests {
 				UserJobStateTestCommon.getHost(),
 				UserJobStateTestCommon.getAweDB(),
 				UserJobStateTestCommon.getMongoUser(),
-				UserJobStateTestCommon.getMongoPwd());
+				UserJobStateTestCommon.getMongoPwd(),
+				deleteTempFilesOnExit);
 		URL url = new URL(System.getProperty("test.awe.url"));
 		System.out.println("Testing awe clients pointed at: " + url);
 		String u1 = System.getProperty("test.user1");
