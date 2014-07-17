@@ -20,6 +20,7 @@ public class UserJobStateTestCommon {
 	public static final String M_USER = "test.mongo.user";
 	public static final String M_PWD = "test.mongo.pwd";
 	public static final String AWE_DB = "test.awe.db";
+	public static final String SHOCK_URL = "test.shock.url";
 			
 	private static MongoClient mongoClient = null;
 	
@@ -48,6 +49,13 @@ public class UserJobStateTestCommon {
 	
 	public static String getDB() {
 		return getProp(DB);
+	}
+	
+	public static String getAweDB() {
+		return getProp(AWE_DB);
+	}
+	public static String getShockUrl() {
+		return getProp(SHOCK_URL);
 	}
 	
 	private static void buildMongo() throws UnknownHostException,

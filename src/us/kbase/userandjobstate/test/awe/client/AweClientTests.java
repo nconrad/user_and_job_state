@@ -18,17 +18,27 @@ import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
+import us.kbase.userandjobstate.test.UserJobStateTestCommon;
+import us.kbase.userandjobstate.test.awe.controller.AweController;
 
 public class AweClientTests {
 
 	private static BasicAweClient bac1;
 //	private static BasicAweClient bac2;
 //	private static AuthUser otherguy;
+	
+	private static AweController aweC;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		//TODO set up the runner to work with these
-		System.out.println("Java: " + System.getProperty("java.runtime.version"));
+		UserJobStateTestCommon.destroyAndSetupAweDB();
+		aweC = new AweController(
+				new URL(UserJobStateTestCommon.getShockUrl()),
+				UserJobStateTestCommon.getHost(),
+				UserJobStateTestCommon.getAweDB(),
+				UserJobStateTestCommon.getMongoUser(),
+				UserJobStateTestCommon.getMongoPwd());
 		URL url = new URL(System.getProperty("test.awe.url"));
 		System.out.println("Testing awe clients pointed at: " + url);
 		String u1 = System.getProperty("test.user1");
@@ -86,7 +96,7 @@ public class AweClientTests {
 	@Test
 	public void listJobs() throws Exception {
 		List<AweJob> lj = bac1.getJobs(null, true, true, true, true, true, true);
-		System.out.println(lj);
+//		System.out.println(lj);
 	}
 
 }
