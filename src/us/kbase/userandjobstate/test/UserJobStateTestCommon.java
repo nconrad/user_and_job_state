@@ -19,6 +19,7 @@ public class UserJobStateTestCommon {
 	public static final String HOST = "test.mongo.host";
 	public static final String M_USER = "test.mongo.user";
 	public static final String M_PWD = "test.mongo.pwd";
+	public static final String AWE_DB = "test.awe.db";
 			
 	private static MongoClient mongoClient = null;
 	
@@ -92,11 +93,16 @@ public class UserJobStateTestCommon {
 	//run this method first, lots of error checking
 	public static DB destroyAndSetupDB()
 			throws InvalidHostException, UnknownHostException, TestException {
-		buildMongo();
 		String db = System.getProperty(DB);
 		if (db == null) {
 			throw new TestException("The property " + DB + " is not set.");
 		}
+		return destroyAndSetupDB(db);
+	}
+
+	private static DB destroyAndSetupDB(String db) throws UnknownHostException,
+			InvalidHostException {
+		buildMongo();
 		String mUser = getMongoUser();
 		String mPwd = getMongoPwd();
 		System.out.print(String.format("Destroying mongo database %s at %s...",
@@ -124,5 +130,14 @@ public class UserJobStateTestCommon {
 		}
 		System.out.println(" buhbye.");
 		return mdb;
+	}
+	
+	public static DB destroyAndSetupAweDB()
+			throws InvalidHostException, UnknownHostException, TestException {
+		String db = System.getProperty(AWE_DB);
+		if (db == null) {
+			throw new TestException("The property " + AWE_DB + " is not set.");
+		}
+		return destroyAndSetupDB(db);
 	}
 }

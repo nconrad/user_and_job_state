@@ -1,4 +1,4 @@
-package us.kbase.userandjobstate.test.awe;
+package us.kbase.userandjobstate.test.awe.client;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
