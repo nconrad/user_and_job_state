@@ -71,6 +71,21 @@ public class JSONRPCLayerTest {
 				.setLevel(Level.OFF);
 	}
 	
+	private static String CHAR101 = "";
+	private static String CHAR1001 = "";
+	static {
+		String hundred = "";
+		for (int i = 0; i < 10; i++) {
+			hundred += "0123456789";
+		}
+		CHAR101 = hundred + "a";
+		String thousand = "";
+		for (int i = 0; i < 10; i++) {
+			thousand += hundred;
+		}
+		CHAR1001 = thousand + "a";
+	}
+	
 	private static class ServerThread extends Thread {
 		
 		public void run() {
@@ -580,6 +595,7 @@ public class JSONRPCLayerTest {
 		}
 		try {
 			CLIENT1.getDetailedError(jobid);
+			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
@@ -736,32 +752,94 @@ public class JSONRPCLayerTest {
 		checkJob(jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
 				37L, 37L, nearfuture[1], 1L, 0L, null, res);
 		
-		testCompleteJob(null, TOKEN2, "s", null, null,
+		failCompleteJob(null, TOKEN2, "s", null, null,
 				"id cannot be null or the empty string");
-		testCompleteJob("", TOKEN2, "s", null, null,
+		failCompleteJob("", TOKEN2, "s", null, null,
 				"id cannot be null or the empty string");
-		testCompleteJob("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", null, null,
+		failCompleteJob("aaaaaaaaaaaaaaaaaaaa", TOKEN2, "s", null, null,
 				"Job ID aaaaaaaaaaaaaaaaaaaa is not a legal ID");
 		
-		testCompleteJob(jobid, null, "s", null, null,
+		failCompleteJob(jobid, null, "s", null, null,
 				"Service token cannot be null or the empty string");
-		testCompleteJob(jobid, "foo", "s", null, null,
+		failCompleteJob(jobid, "foo", "s", null, null,
 				"Auth token is in the incorrect format, near 'foo'");
-		testCompleteJob(jobid, TOKEN2 + "w", "s", null, null,
+		failCompleteJob(jobid, TOKEN2 + "w", "s", null, null,
 				"Service token is invalid");
-		testCompleteJob(jobid, TOKEN1, "s", null, null, String.format(
+		failCompleteJob(jobid, TOKEN1, "s", null, null, String.format(
 				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
 				jobid, USER1, USER1));
 		Results badres = new Results();
 		badres.setAdditionalProperties("foo", "bar");
-		testCompleteJob(jobid, TOKEN1, "s", null, badres,
+		failCompleteJob(jobid, TOKEN1, "s", null, badres,
 				"Unexpected arguments in Results: foo");
+		
+		jobid = CLIENT1.createAndStartJob(TOKEN2, "bad res stat",
+				"bad res desc", new InitProgress().withPtype("none"), null);
+		Results res2 = new Results().withShockurl("");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res2, "shockurl cannot be the empty string");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res.withShockurl(null).withWorkspaceurl(""),
+				"workspaceurl cannot be the empty string");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res.withWorkspaceurl(null)
+				.withShocknodes(Arrays.asList("")),
+				"shocknode cannot be null or the empty string");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res.withShocknodes(null)
+				.withWorkspaceids(Arrays.asList("")),
+				"workspaceid cannot be null or the empty string");
+		
+		Result r2 = new Result();
+		r2.setAdditionalProperties("foo", "bar");
+		List<Result> rl = new LinkedList<Result>();
+		rl.add(r2);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res.withWorkspaceids(null)
+				.withResults(rl), "Unexpected arguments in Result: foo");
+		
+		r2 = new Result().withServerType(null).withId("id").withUrl("url");
+		rl.clear();
+		rl.add(r2);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"servertype cannot be null or the empty string");
+		r2.withServerType("");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"servertype cannot be null or the empty string");
+		r2.withServerType(CHAR101);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"servertype exceeds the maximum length of 100");
+		r2.withServerType("serv");
+		
+		r2.withId(null);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"id cannot be null or the empty string");
+		r2.withId("");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"id cannot be null or the empty string");
+		r2.withId(CHAR1001);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"id exceeds the maximum length of 1000");
+		r2.withId("id");
+		
+		r2.withUrl(null);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"url cannot be null or the empty string");
+		r2.withUrl("");
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"url cannot be null or the empty string");
+		r2.withUrl(CHAR1001);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"url exceeds the maximum length of 1000");
+		r2.withUrl("url");
+		
+		r2.withDescription(CHAR1001);
+		failCompleteJob(jobid, TOKEN2, "foo", "bar", res,
+				"description exceeds the maximum length of 1000");
+		
+				
 	}
 	
-	private void testCompleteJob(String jobid, String token, String status,
+	private void failCompleteJob(String jobid, String token, String status,
 			String error, Results res, String exception) throws Exception {
 		try {
 			CLIENT1.completeJob(jobid, token, status, error, res);
+			fail("Completed job with bad input");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
