@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.List;
 
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -37,13 +38,14 @@ public class AweClientTests {
 		UserJobStateTestCommon.destroyAndSetupAweDB();
 		aweC = new AweController(
 				new URL(UserJobStateTestCommon.getShockUrl()),
+				UserJobStateTestCommon.getAweExe(),
+				UserJobStateTestCommon.getAweClientExe(),
 				UserJobStateTestCommon.getHost(),
 				UserJobStateTestCommon.getAweDB(),
 				UserJobStateTestCommon.getMongoUser(),
 				UserJobStateTestCommon.getMongoPwd(),
 				deleteTempFilesOnExit);
-		URL url = new URL(System.getProperty("test.awe.url"));
-		System.out.println("Testing awe clients pointed at: " + url);
+//		URL url = new URL(System.getProperty("test.awe.url"));
 		String u1 = System.getProperty("test.user1");
 //		String u2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
@@ -68,15 +70,25 @@ public class AweClientTests {
 		if (user1.getUserId().equals(otherguy.getUserId())) {
 			throw new TestException("The user IDs of test.user1 and " + 
 					"test.user2 are the same. Please provide test users with different email addresses.");
-		}
-*/		try {
-			bac1 = new BasicAweClient(url, user1.getToken());
+		}*/
+		System.out.println("Testing awe clients pointed at: http://localhost:"
+				+ aweC.getServerPort());
+		try {
+			bac1 = new BasicAweClient(new URL("http://localhost:" +
+					aweC.getServerPort()), user1.getToken());
 //			bac2 = new BasicAweClient(url, otherguy.getToken());
 		} catch (IOException ioe) {
 			throw new TestException("Couldn't set up shock client: " +
 					ioe.getLocalizedMessage());
 		}
-		System.out.println("Set up shock clients");
+		System.out.println("Set up awe clients");
+	}
+	
+	@AfterClass
+	public static void tearDownClass() {
+		if (aweC != null) {
+			aweC.destroy();
+		}
 	}
 	
 	//TODO real tests against a local server, need to load with jobs
@@ -99,7 +111,7 @@ public class AweClientTests {
 	@Test
 	public void listJobs() throws Exception {
 		List<AweJob> lj = bac1.getJobs(null, true, true, true, true, true, true);
-//		System.out.println(lj);
+		System.out.println("list:" + lj);
 	}
 
 }

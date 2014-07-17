@@ -21,6 +21,8 @@ public class UserJobStateTestCommon {
 	public static final String M_PWD = "test.mongo.pwd";
 	public static final String AWE_DB = "test.awe.db";
 	public static final String SHOCK_URL = "test.shock.url";
+	public static final String AWE_EXE = "test.awe.server.exe";
+	public static final String AWEC_EXE = "test.awe.client.exe";
 			
 	private static MongoClient mongoClient = null;
 	
@@ -54,6 +56,15 @@ public class UserJobStateTestCommon {
 	public static String getAweDB() {
 		return getProp(AWE_DB);
 	}
+	
+	public static String getAweExe() {
+		return getProp(AWE_EXE);
+	}
+	
+	public static String getAweClientExe() {
+		return getProp(AWEC_EXE);
+	}
+	
 	public static String getShockUrl() {
 		return getProp(SHOCK_URL);
 	}

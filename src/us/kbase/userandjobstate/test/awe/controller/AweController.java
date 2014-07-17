@@ -15,6 +15,7 @@ import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Set;
 
 import org.apache.commons.io.IOUtils;
@@ -55,9 +56,15 @@ public class AweController {
 	private final Path tempDir;
 	
 	private final URL shockURL;
+	
+	private final Process awe;
+	private final Process awec;
+	private final int port;
 
 	public AweController(
 			final URL shockURL,
+			final String aweExe,
+			final String aweClientExe,
 			final String mongohost,
 			final String aweMongoDBname,
 			final String mongouser,
@@ -66,7 +73,10 @@ public class AweController {
 					throws Exception {
 		this.shockURL = shockURL;
 		tempDir = makeTempDirs(deleteTempDirOnExit);
-		final int port = findFreePort();
+		port = findFreePort();
+		
+		checkExe(aweExe, "awe server");
+		checkExe(aweExe, "awe client");
 		
 		Velocity.init();
 		VelocityContext context = new VelocityContext();
@@ -77,15 +87,50 @@ public class AweController {
 		context.put("mongouser", mongouser == null ? "" : mongouser);
 		context.put("mongopwd", mongopwd == null ? "" : mongopwd);
 		
-		generateConfig(AWE_CONFIG, context,
-				tempDir.resolve(AWE_CONFIG_FN).toFile());
-		generateConfig(AWEC_CONFIG, context,
-				tempDir.resolve(AWEC_CONFIG_FN).toFile());
+		File awecfg = tempDir.resolve(AWE_CONFIG_FN).toFile();
+		File aweclicfg = tempDir.resolve(AWEC_CONFIG_FN).toFile();
+		
+		generateConfig(AWE_CONFIG, context, awecfg);
+		generateConfig(AWEC_CONFIG, context, aweclicfg);
 
+		awe = new ProcessBuilder(aweExe, "--conf", awecfg.toString())
+				.redirectErrorStream(true)
+				.redirectOutput(tempDir.resolve("awe_server.log").toFile())
+				.start();
+		awec = new ProcessBuilder(aweClientExe, "--conf", aweclicfg.toString())
+				.redirectErrorStream(true)
+				.redirectOutput(tempDir.resolve("awe_client.log").toFile())
+				.start();
+	}
+	
+	public int getServerPort() {
+		return port;
+	}
+	
+	public void destroy() {
+		if (awe != null) {
+			awe.destroy();
+		}
+		if (awec != null) {
+			awec.destroy();
+		}
+	}
+
+	private void checkExe(String aweExe, String exeType) {
+		File e = new File(aweExe);
+		if (!e.exists()) {
+			throw new IllegalArgumentException("The provided " + exeType +
+					" executable does not exist:" + aweExe);
+		}
+		if (!e.isFile()) {
+			throw new IllegalArgumentException("The provided " + exeType +
+					" executable is not a file:" + aweExe);
+		}
+		if (!e.canExecute()) {
+			throw new IllegalArgumentException("The provided " + exeType +
+					" executable is not executable:" + aweExe);
+		}
 		
-		
-		//starta server
-		//start client
 	}
 
 
@@ -154,5 +199,20 @@ public class AweController {
 		}
 		throw new IllegalStateException(
 				"Could not find a free TCP/IP port");
+	}
+	
+	public static void main(String[] args) throws Exception {
+		AweController ac = new AweController(
+				new URL("http://localhost:7044"),
+				"/kb/deployment/bin/awe-server",
+				"/kb/deployment/bin/awe-client",
+				"localhost",
+				"delete_awe_db",
+				"foo", "foo", false);
+		Scanner reader = new Scanner(System.in);
+		System.out.println("any char to shut down");
+		//get user input for a
+		String a=reader.next();
+		ac.destroy();
 	}
 }
