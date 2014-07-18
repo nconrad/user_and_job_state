@@ -185,7 +185,9 @@ public class AweController {
 		}
 		@SuppressWarnings("unchecked")
 		Map<String, Object> j = new ObjectMapper().readValue(resp, Map.class);
-		return (String) j.get("id");
+		@SuppressWarnings("unchecked")
+		Map<String, Object> data = (Map<String, Object>)j.get("data");
+		return (String) data.get("id");
 	}
 
 	private byte[] makeJobDoc(TestAweJob job) {

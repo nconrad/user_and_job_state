@@ -110,7 +110,6 @@ public class AweClientTests {
 			assertThat("correct exception", anje.getMessage(), is(
 					"job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
 		}
-		System.out.println(aj);
 	}
 	
 	@Test
