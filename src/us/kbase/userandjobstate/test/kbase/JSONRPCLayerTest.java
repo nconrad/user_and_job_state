@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -24,15 +23,10 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import us.kbase.auth.AuthException;
-import us.kbase.auth.AuthService;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple14;
 import us.kbase.common.service.Tuple2;
-import us.kbase.common.service.Tuple5;
-import us.kbase.common.service.Tuple7;
 import us.kbase.common.service.UObject;
-import us.kbase.common.test.TestException;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
@@ -113,7 +107,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 	
 	@Test
 	public void ver() throws Exception {
-		assertThat("got correct version", CLIENT1.ver(), is("0.0.5"));
+		assertThat("got correct version", CLIENT1.ver(), is("0.0.6"));
 	}
 	
 	
@@ -284,24 +278,24 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		String[] nearfuture = getNearbyTimes();
 		
 		String jobid = CLIENT1.createJob();
-		checkJob(jobid, "created",null, null, null, null,
+		checkJob(CLIENT1, jobid, "created",null, null, null, null,
 				null, null, null, null, null, null, null);
 		CLIENT1.startJob(jobid, TOKEN2, "new stat", "ne desc",
 				new InitProgress().withPtype("none"), null);
-		checkJob(jobid, "started", "new stat", USER2,
+		checkJob(CLIENT1, jobid, "started", "new stat", USER2,
 				"ne desc", "none", null, null, null, 0L, 0L, null, null);
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, TOKEN2, "new stat2", "ne desc2",
 				new InitProgress().withPtype("percent"), nearfuture[0]);
-		checkJob(jobid, "started", "new stat2", USER2,
+		checkJob(CLIENT1, jobid, "started", "new stat2", USER2,
 				"ne desc2", "percent", 0L, 100L, nearfuture[1], 0L, 0L, null,
 				null);
 		
 		jobid = CLIENT1.createJob();
 		CLIENT1.startJob(jobid, TOKEN2, "new stat3", "ne desc3",
 				new InitProgress().withPtype("task").withMax(5L), null);
-		checkJob(jobid, "started", "new stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "new stat3", USER2,
 				"ne desc3", "task", 0L, 5L, null, 0L, 0L, null, null);
 		
 		startJobBadArgs(null, TOKEN2, "s", "d", new InitProgress().withPtype("none"),
@@ -355,18 +349,18 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat", "cs desc",
 				new InitProgress().withPtype("none"), nearfuture[0]);
-		checkJob(jobid, "started", "cs stat", USER2,
+		checkJob(CLIENT1, jobid, "started", "cs stat", USER2,
 				"cs desc", "none", null, null, nearfuture[1], 0L, 0L, null,
 				null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat2", "cs desc2",
 				new InitProgress().withPtype("percent"), null);
-		checkJob( jobid, "started", "cs stat2", USER2,
+		checkJob(CLIENT1, jobid, "started", "cs stat2", USER2,
 				"cs desc2", "percent", 0L, 100L, null, 0L, 0L, null, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "cs stat3", "cs desc3",
 				new InitProgress().withPtype("task").withMax(5L), null);
-		checkJob(jobid, "started", "cs stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "cs stat3", USER2,
 				"cs desc3", "task", 0L, 5L, null, 0L, 0L, null, null);
 	}
 	
@@ -394,97 +388,6 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
-		}
-	}
-	
-	private SimpleDateFormat getDateFormat() {
-		SimpleDateFormat dateform =
-				new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ");
-		dateform.setLenient(false);
-		return dateform;
-	}
-	
-	private void checkJob(String id, String stage, String status,
-			String service, String desc, String progtype, Long prog,
-			Long maxprog, String estCompl, Long complete, Long error,
-			String errormsg, Results results)
-			throws Exception {
-		SimpleDateFormat dateform = getDateFormat();
-		Tuple14<String, String, String, String, String, String,
-				Long, Long, String, String, Long, Long, String,
-				Results> ret = CLIENT1.getJobInfo(id);
-		assertThat("job id ok", ret.getE1(), is(id));
-		assertThat("job stage ok", ret.getE3(), is(stage));
-		if (ret.getE4() != null) {
-			dateform.parse(ret.getE4()); //should throw error if bad format
-		}
-		assertThat("job est compl ok", ret.getE10(), is(estCompl));
-		assertThat("job service ok", ret.getE2(), is(service));
-		assertThat("job desc ok", ret.getE13(), is(desc));
-		assertThat("job progtype ok", ret.getE9(), is(progtype));
-		assertThat("job prog ok", ret.getE7(), is(prog));
-		assertThat("job maxprog ok", ret.getE8(), is(maxprog));
-		assertThat("job status ok", ret.getE5(), is(status));
-		dateform.parse(ret.getE6()); //should throw error if bad format
-		assertThat("job complete ok", ret.getE11(), is(complete));
-		assertThat("job error ok", ret.getE12(), is(error));
-		checkResults(ret.getE14(), results);
-		
-		Tuple5<String, String, Long, String, String> jobdesc =
-				CLIENT1.getJobDescription(id);
-		assertThat("job service ok", jobdesc.getE1(), is(service));
-		assertThat("job progtype ok", jobdesc.getE2(), is(progtype));
-		assertThat("job maxprog ok", jobdesc.getE3(), is(maxprog));
-		assertThat("job desc ok", jobdesc.getE4(), is(desc));
-		if (jobdesc.getE5() != null) {
-			dateform.parse(jobdesc.getE5()); //should throw error if bad format
-		}
-		
-		Tuple7<String, String, String, Long, String, Long, Long> 
-				jobstat = CLIENT1.getJobStatus(id);
-		dateform.parse(jobstat.getE1()); //should throw error if bad format
-		assertThat("job stage ok", jobstat.getE2(), is(stage));
-		assertThat("job status ok", jobstat.getE3(), is(status));
-		assertThat("job progress ok", jobstat.getE4(), is(prog));
-		assertThat("job est compl ok", jobstat.getE5(), is(estCompl));
-		assertThat("job complete ok", jobstat.getE6(), is(complete));
-		assertThat("job error ok", jobstat.getE7(), is(error));
-		
-		checkResults(CLIENT1.getResults(id), results);
-		
-		assertThat("job error msg ok", CLIENT1.getDetailedError(id),
-				is(errormsg));
-	}
-	
-	private void checkResults(Results got, Results expected) throws Exception {
-		if (got == null & expected == null) {
-			return;
-		}
-		if (got == null ^ expected == null) {
-			fail("got null for results when expected real results or vice versa: " 
-					+ got + " " + expected);
-		}
-		assertThat("shock ids same", got.getShocknodes(), is(expected.getShocknodes()));
-		assertThat("shock url same", got.getShockurl(), is(expected.getShockurl()));
-		assertThat("ws ids same", got.getWorkspaceids(), is(expected.getWorkspaceids()));
-		assertThat("ws url same", got.getWorkspaceurl(), is(expected.getWorkspaceurl()));
-		if (got.getResults() == null ^ expected.getResults() == null) {
-			fail("got null for results.getResults() when expected real results or vice versa: " 
-					+ got + " " + expected);
-		}
-		if (got.getResults() == null) {return;}
-		if (got.getResults().size() != expected.getResults().size()) {
-			fail("results lists not same size");
-		}
-		Iterator<Result> gr = got.getResults().iterator();
-		Iterator<Result> er = expected.getResults().iterator();
-		while (gr.hasNext()) {
-			Result gres = gr.next();
-			Result eres = er.next();
-			assertThat("server type same", gres.getServerType(), is(eres.getServerType()));
-			assertThat("url same", gres.getUrl(), is(eres.getUrl()));
-			assertThat("id same", gres.getId(), is(eres.getId()));
-			assertThat("description same", gres.getDescription(), is(eres.getDescription()));
 		}
 	}
 	
@@ -549,41 +452,41 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "up stat", "up desc",
 				new InitProgress().withPtype("none"), null);
 		CLIENT1.updateJob(jobid, TOKEN2, "up stat2", null);
-		checkJob(jobid, "started", "up stat2", USER2,
+		checkJob(CLIENT1, jobid, "started", "up stat2", USER2,
 				"up desc", "none", null, null, null, 0L, 0L, null, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up stat3", 40L, null);
-		checkJob(jobid, "started", "up stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "up stat3", USER2,
 				"up desc", "none", null, null, null, 0L, 0L, null, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up stat3", null, nearfuture[0]);
-		checkJob(jobid, "started", "up stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "up stat3", USER2,
 				"up desc", "none", null, null, nearfuture[1], 0L, 0L, null,
 				null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up2 stat", "up2 desc",
 				new InitProgress().withPtype("percent"), null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up2 stat2", 40L, null);
-		checkJob(jobid, "started", "up2 stat2", USER2,
+		checkJob(CLIENT1, jobid, "started", "up2 stat2", USER2,
 				"up2 desc", "percent", 40L, 100L, null, 0L, 0L, null, null);
 		CLIENT1.updateJob(jobid, TOKEN2, "up2 stat3", nearfuture[0]);
-		checkJob(jobid, "started", "up2 stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "up2 stat3", USER2,
 				"up2 desc", "percent", 40L, 100L, nearfuture[1], 0L, 0L, null,
 				null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up2 stat4", 70L, null);
-		checkJob(jobid, "started", "up2 stat4", USER2,
+		checkJob(CLIENT1, jobid, "started", "up2 stat4", USER2,
 				"up2 desc", "percent", 100L, 100L, nearfuture[1], 0L, 0L, null,
 				null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "up3 stat", "up3 desc",
 				new InitProgress().withPtype("task").withMax(42L), null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up3 stat2", 30L, nearfuture[0]);
-		checkJob(jobid, "started", "up3 stat2", USER2,
+		checkJob(CLIENT1, jobid, "started", "up3 stat2", USER2,
 				"up3 desc", "task", 30L, 42L, nearfuture[1], 0L, 0L, null, null);
 		CLIENT1.updateJob(jobid, TOKEN2, "up3 stat3", null);
-		checkJob( jobid, "started", "up3 stat3", USER2,
+		checkJob(CLIENT1, jobid, "started", "up3 stat3", USER2,
 				"up3 desc", "task", 30L, 42L, nearfuture[1], 0L, 0L, null,
 				null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "up3 stat4", 15L, null);
-		checkJob(jobid, "started", "up3 stat4", USER2,
+		checkJob(CLIENT1, jobid, "started", "up3 stat4", USER2,
 				"up3 desc", "task", 42L, 42L, nearfuture[1], 0L, 0L, null,
 				null);
 		
@@ -666,7 +569,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "c stat", "c desc",
 				new InitProgress().withPtype("none"), null);
 		CLIENT1.completeJob(jobid, TOKEN2, "c stat2", null, null);
-		checkJob(jobid, "complete", "c stat2", USER2, "c desc", "none", null,
+		checkJob(CLIENT1, jobid, "complete", "c stat2", USER2, "c desc", "none", null,
 				null, null, 1L, 0L, null, null);
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "c2 stat", "c2 desc",
@@ -674,7 +577,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "c2 stat2", 40L, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "c2 stat3", "omg err",
 				new Results());
-		checkJob(jobid, "error", "c2 stat3", USER2, "c2 desc", "percent",
+		checkJob(CLIENT1, jobid, "error", "c2 stat3", USER2, "c2 desc", "percent",
 				100L, 100L, null, 1L, 1L, "omg err", new Results());
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "c3 stat", "c3 desc",
@@ -690,7 +593,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 						.withWorkspaceurl("wurl")
 						.withResults(r);
 		CLIENT1.completeJob(jobid, TOKEN2, "c3 stat3", null, res);
-		checkJob(jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
+		checkJob(CLIENT1, jobid, "complete", "c3 stat3", USER2, "c3 desc", "task",
 				37L, 37L, nearfuture[1], 1L, 0L, null, res);
 		
 		failCompleteJob(null, TOKEN2, "s", null, null,
@@ -1175,7 +1078,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		String jobid = CLIENT2.createAndStartJob(TOKEN1, "sh stat", "sh desc", noprog, null);
 		CLIENT2.shareJob(jobid, Arrays.asList(USER1));
 		//next line ensures that all job read functions are accessible to client 1
-		checkJob(jobid, "started", "sh stat", USER1, "sh desc", "none", null, null, null, 0L, 0L, null, null);
+		checkJob(CLIENT1, jobid, "started", "sh stat", USER1, "sh desc", "none", null, null, null, 0L, 0L, null, null);
 		failShareJob(jobid, Arrays.asList(USER2), String.format(
 				"There is no job %s owned by user %s", jobid, USER1));
 		assertThat("shared list ok", CLIENT2.getJobShared(jobid), is(Arrays.asList(USER1)));

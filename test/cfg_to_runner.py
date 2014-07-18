@@ -20,6 +20,10 @@ CONFIG_OPTS = ['test.mongo.host',
                'test.pwd1',
                'test.user2',
                'test.pwd2',
+               'test.shock.url',
+               'test.awe.db',
+               'test.awe.server.exe',
+               'test.awe.client.exe'
                ]
 
 if __name__ == '__main__':

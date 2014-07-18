@@ -2,6 +2,7 @@ package us.kbase.userandjobstate.test.kbase;
 
 import java.io.File;
 import java.net.URL;
+import java.util.LinkedList;
 import java.util.Map;
 
 import org.ini4j.Ini;
@@ -10,6 +11,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import us.kbase.userandjobstate.Result;
+import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
@@ -19,10 +22,8 @@ import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
 //TODO note about this only covering server ops, main tests cover all ops
 public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	
-	private static final boolean DELETE_TEMP_FILES_ON_EXIT = false;
+	private static final boolean DELETE_TEMP_FILES_ON_EXIT = true;
 
-	//TODO deal with duplicate code here & in reg jrpc test
-	
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
 	private static String USER1 = null;
@@ -68,7 +69,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		Map<String, String> env = getenv();
 		env.put("KB_DEPLOYMENT_CONFIG", iniFile.getAbsolutePath());
 		env.put("KB_SERVICE_NAME", "UserAndJobState");
-
+		
+		UserAndJobStateServer.clearConfigForTests();
 		SERVER = new UserAndJobStateServer();
 		new ServerThread(SERVER).start();
 		System.out.println("Main thread waiting for server to start up");
@@ -94,6 +96,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 			System.out.println("Done");
 		}
 		if (aweC != null) {
+			System.out.println("Deleting Awe temporary directory");
 			aweC.destroy();
 		}
 	}
@@ -103,7 +106,11 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		TestAweJob j = aweC.createJob("myserv", "some desc");
 		j.addTask();
 		String jobid = aweC.submitJob(j, CLIENT1.getToken());
-		System.out.println(CLIENT1.getJobInfo(jobid));
+		System.out.println("Waiting 10s for job to run");
+		Thread.sleep(10000);
+		Results mtres = new Results().withResults(new LinkedList<Result>());
+		checkJob(CLIENT1, jobid, "complete", "", "myserv", "some desc", "task",
+				1L, 1L, null, 1L, 0L, null, mtres);
 	}
 	
 }

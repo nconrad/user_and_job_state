@@ -113,7 +113,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     //TODO needs to look through the AWE code and look for cruft, this was written in haste
     //TODO 2 a full suite of tests for AWE integration
 
-	private static final String VER = "0.0.5";
+	private static final String VER = "0.0.6";
 
 	//required deploy parameters:
 	private static final String HOST = "mongodb-host";
@@ -237,6 +237,9 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		// this is a filthy hack, but it'll do for now. Adding other job
 		// runners will be problematic unless they all use globally unique
 		//job ids
+		if (aweUrl == null) {
+			return js;
+		}
 		try {
 			new AweJobId(jobid);
 		} catch (IllegalArgumentException iae) {
@@ -446,6 +449,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			logInfo("MongoDB reconnect value is " + recint);
 		}
 		return recint;
+	}
+	
+	public static void clearConfigForTests() {
+		ujConfig = null;
 	}
     //END_CLASS_HEADER
 

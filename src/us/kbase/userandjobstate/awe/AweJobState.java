@@ -31,8 +31,11 @@ public class AweJobState implements JobState {
 	public AweJobState(final URL url, final AuthToken token)
 			throws TokenExpiredException, InvalidAweUrlException,
 			AweHttpException, IOException {
-		if (token == null || url == null) {
-			throw new NullPointerException("Url and token cannot be null");
+		if (token == null) {
+			throw new NullPointerException("Awe token cannot be null");
+		}
+		if (url == null) {
+			throw new NullPointerException("Awe url cannot be null");
 		}
 		cli = new BasicAweClient(url, token);
 	}

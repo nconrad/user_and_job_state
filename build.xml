@@ -121,6 +121,15 @@
       debug="true" classpathref="compile.classpath">
       <src path="${src}"/>
     </javac>
+    <!-- Copy resource files-->
+      <copy todir="${classes}">
+        <fileset dir="${src}">
+          <patternset>
+            <include name="**/*.cfg"/>
+            <include name="**/*.py"/>
+          </patternset>
+        </fileset>
+      </copy>
     <!-- Make main jar file-->
     <jar destfile="${dist}/${jar.file}" basedir="${classes}"/>
     <!-- make the client jar-->
@@ -165,6 +174,10 @@
     <fail unless="test.pwd1" message="property test.pwd1 not set."/>
     <fail unless="test.user2" message="property test.user2 not set."/>
     <fail unless="test.pwd2" message="property test.pwd2 not set."/>
+    <fail unless='test.shock.url' message="property test.shock.url not set."/>
+    <fail unless='test.awe.db' message="property test.awe.db not set."/>
+    <fail unless='test.awe.server.exe' message="property test.awe.server.exe not set."/>
+    <fail unless='test.awe.client.exe' message="property test.awe.client.exe not set."/>
     <echo message="starting ${package} tests"/>
     <condition property="test.mongo.user" else="" >
       <isset property="test.mongo.user" />
@@ -183,10 +196,16 @@
       <sysproperty key="test.pwd1" value="${test.pwd1}"/>
       <sysproperty key="test.user2" value="${test.user2}"/>
       <sysproperty key="test.pwd2" value="${test.pwd2}"/>
+      <sysproperty key='test.shock.url' value="${test.shock.url}"/>
+      <sysproperty key='test.awe.db' value="${test.awe.db}"/>
+      <sysproperty key='test.awe.server.exe' value="${test.awe.server.exe}"/>
+      <sysproperty key='test.awe.client.exe' value="${test.awe.client.exe}"/>
       <test name="us.kbase.userandjobstate.test.jobstate.JobStateTests"/>
       <test name="us.kbase.userandjobstate.test.jobstate.JobResultsTest"/>
       <test name="us.kbase.userandjobstate.test.userstate.UserStateTests"/>
       <test name="us.kbase.userandjobstate.test.kbase.JSONRPCLayerTest"/>
+      <test name="us.kbase.userandjobstate.test.kbase.JSONRPCLayerAweTest"/>
+      <test name="us.kbase.userandjobstate.test.awe.client.AweClientTests"/>
     </junit>
     <fail message="Test failure detected, check test results." if="test.failed" />
   </target>

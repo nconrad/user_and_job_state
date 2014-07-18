@@ -31,10 +31,12 @@ public class UserJobStateTestCommon {
 	}
 	
 	private static String getProp(String prop) {
-		if (System.getProperty(prop) == null) {
-			throw new TestException("Property " + prop + " cannot be null.");
+		String p = System.getProperty(prop);
+		if (p == null || p.isEmpty()) {
+			throw new TestException("Property " + prop +
+					" cannot be null or the empty string.");
 		}
-		return System.getProperty(prop);
+		return p;
 	}
 	
 	public static String getHost() {
@@ -112,7 +114,7 @@ public class UserJobStateTestCommon {
 	//run this method first, lots of error checking
 	public static DB destroyAndSetupDB()
 			throws InvalidHostException, UnknownHostException, TestException {
-		String db = System.getProperty(DB);
+		String db = getDB();
 		if (db == null) {
 			throw new TestException("The property " + DB + " is not set.");
 		}
@@ -153,7 +155,7 @@ public class UserJobStateTestCommon {
 	
 	public static DB destroyAndSetupAweDB()
 			throws InvalidHostException, UnknownHostException, TestException {
-		String db = System.getProperty(AWE_DB);
+		String db = getAweDB();
 		if (db == null) {
 			throw new TestException("The property " + AWE_DB + " is not set.");
 		}

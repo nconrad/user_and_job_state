@@ -6,7 +6,6 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -92,6 +91,7 @@ public class AweClientTests {
 	@AfterClass
 	public static void tearDownClass() throws IOException {
 		if (aweC != null) {
+			System.out.println("Deleting Awe temporary directory");
 			aweC.destroy();
 		}
 	}
@@ -141,10 +141,10 @@ public class AweClientTests {
 		assertThat("notes correct", aj.getNotes(), is(notes));
 	}
 	
-	@Test
-	public void listJobs() throws Exception {
-		List<AweJob> lj = bac1.getJobs(null, true, true, true, true, true, true);
-		System.out.println("list:" + lj);
-	}
+//	@Test
+//	public void listJobs() throws Exception {
+//		List<AweJob> lj = bac1.getJobs(null, true, true, true, true, true, true);
+//		System.out.println("list:" + lj);
+//	}
 
 }
