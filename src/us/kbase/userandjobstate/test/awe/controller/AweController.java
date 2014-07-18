@@ -125,7 +125,7 @@ public class AweController {
 		
 		generateConfig(AWE_CONFIG, context, awecfg);
 		generateConfig(AWEC_CONFIG, context, aweclicfg);
-		copyScript(CLI_SCRIPT, tempDir.resolve(CLI_SCRIPT_FN).toFile());
+		copyScript(CLI_SCRIPT, tempDir.resolve(CLI_SCRIPT_FN));
 
 		awe = new ProcessBuilder(aweExe, "--conf", awecfg.toString())
 				.redirectErrorStream(true)
@@ -138,7 +138,12 @@ public class AweController {
 				.redirectErrorStream(true)
 				.redirectOutput(tempDir.resolve("awe_client.log").toFile());
 		Map<String, String> env = pb.environment();
-		env.put("PATH", tempDir.toString());
+		if (env.get("PATH") == null) {
+			throw new TestException("WTF no path in the environment?");
+		}
+		String path = env.get("PATH") + File.pathSeparator + tempDir.toString();
+		
+		env.put("PATH", path);
 				
 		awec = pb.start();
 	}
@@ -199,6 +204,7 @@ public class AweController {
 		if (job.description != null) {
 			info.put("description", job.description);
 		}
+		info.put("pipeline", "foo");
 		info.put("noretry", true);
 		info.put("clientgroups", "kbase-fake-group");
 		j.put("info", info);
@@ -270,14 +276,17 @@ public class AweController {
 	}
 	
 	
-	private void copyScript(String cliScript, File file) throws IOException {
+	private void copyScript(String cliScript, Path file) throws IOException {
 		String script = IOUtils.toString(new BufferedReader(
 				new InputStreamReader(
 						getClass().getClassLoader()
 						.getResourceAsStream(cliScript))));
-		PrintWriter pw = new PrintWriter(file);
+		PrintWriter pw = new PrintWriter(file.toFile());
 		pw.write(script);
 		pw.close();
+		Set<PosixFilePermission> perms =
+				PosixFilePermissions.fromString("rwx------");
+		Files.setPosixFilePermissions(file, perms);
 		
 	}
 

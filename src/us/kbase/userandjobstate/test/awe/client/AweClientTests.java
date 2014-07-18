@@ -100,6 +100,7 @@ public class AweClientTests {
 		TestAweJob j = aweC.createJob("myserv", "some desc");
 		aweC.addTask(j);
 		String jobid = aweC.submitJob(j, bac1.getToken());
+		Thread.sleep(10000);
 		AweJob aj = bac1.getJob(new AweJobId(jobid));
 		System.out.println(aj);
 		

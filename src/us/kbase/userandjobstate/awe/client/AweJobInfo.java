@@ -85,8 +85,6 @@ public class AweJobInfo {
 		builder.append(user);
 		builder.append(", clientgroups=");
 		builder.append(clientgroups);
-//		builder.append(", xref=");
-//		builder.append(xref);
 		builder.append(", submittime=");
 		builder.append(submittime);
 		builder.append(", startedtime=");
@@ -97,6 +95,10 @@ public class AweJobInfo {
 		builder.append(auth);
 		builder.append(", noretry=");
 		builder.append(noretry);
+		builder.append(", service=");
+		builder.append(service);
+		builder.append(", description=");
+		builder.append(description);
 		builder.append("]");
 		return builder.toString();
 	}
