@@ -11,6 +11,7 @@ import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
+import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple14;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple7;
@@ -162,6 +163,46 @@ public class JSONRPCLayerTestUtils {
 			assertThat("url same", gres.getUrl(), is(eres.getUrl()));
 			assertThat("id same", gres.getId(), is(eres.getId()));
 			assertThat("description same", gres.getDescription(), is(eres.getDescription()));
+		}
+	}
+
+	protected void failGetJob(UserAndJobStateClient cli, String jobid,
+			String exception)
+			throws Exception {
+		try {
+			cli.getJobInfo(jobid);
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			cli.getJobDescription(jobid);
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			cli.getJobStatus(jobid);
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			cli.getResults(jobid);
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+		try {
+			cli.getDetailedError(jobid);
+			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
 		}
 	}
 }

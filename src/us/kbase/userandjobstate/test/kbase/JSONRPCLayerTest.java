@@ -407,46 +407,6 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 				"There is no job %s viewable by user kbasetest", jobid));
 	}
 	
-	private void failGetJob(UserAndJobStateClient cli, String jobid,
-			String exception)
-			throws Exception {
-		try {
-			cli.getJobInfo(jobid);
-			fail("got job with bad id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-		try {
-			cli.getJobDescription(jobid);
-			fail("got job with bad id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-		try {
-			cli.getJobStatus(jobid);
-			fail("got job with bad id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-		try {
-			cli.getResults(jobid);
-			fail("got job with bad id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-		try {
-			cli.getDetailedError(jobid);
-			fail("got job with bad id");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-	}
-	
 	@Test
 	public void updateJob() throws Exception {
 		String[] nearfuture = getNearbyTimes();
