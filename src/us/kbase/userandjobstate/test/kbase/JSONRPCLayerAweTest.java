@@ -113,4 +113,16 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				1L, 1L, null, 1L, 0L, null, mtres);
 	}
 	
+	@Test
+	public void shareJob() throws Exception {
+		TestAweJob j = aweC.createJob("share serv", "share desc");
+		j.addTask();
+		String jobid = aweC.submitJob(j, CLIENT1.getToken());
+		System.out.println("Waiting 10s for job to run");
+		Thread.sleep(10000);
+		CLIENT1.getJobInfo(jobid); //should work
+		
+		
+	}
+	
 }
