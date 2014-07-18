@@ -17,11 +17,12 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * A place where the results of a job may be found.
  * All fields except description are required.
  * string server_type - the type of server storing the results. Typically
- *         either "Shock" or "Workspace".
- * string url - the url of the server.
+ *         either "Shock" or "Workspace". No more than 100 characters.
+ * string url - the url of the server. No more than 1000 characters.
  * string id - the id of the result in the server. Typically either a
- *         workspace id or a shock node.
+ *         workspace id or a shock node. No more than 1000 characters.
  * string description - a free text description of the result.
+ *          No more than 1000 characters.
  * </pre>
  * 
  */

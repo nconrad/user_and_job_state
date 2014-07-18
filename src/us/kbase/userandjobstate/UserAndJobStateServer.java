@@ -85,6 +85,9 @@ import us.kbase.userandjobstate.userstate.UserState.KeyState;
  * The service assumes other services are capable of simple math and does not
  * throw errors if a progress bar overflows.
  * Jobs are automatically deleted after 30 days.
+ * Where string limits are noted, these apply only to *incoming* strings. Other
+ * services that the UJS wraps (currently AWE) may provide longer strings for
+ * these fields and the UJS passes them on unchanged.
  * Potential job process flows:
  * Asysnc:
  * UI calls service function which returns with job id
@@ -1022,7 +1025,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * services.
      * </pre>
      * @param   services   instance of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
-     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. 'S' - shared jobs are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all self-owned jobs that have been started are returned. If only the S filter is present, all jobs that have been started are returned.)
+     * @param   filter   instance of original type "job_filter" (A string-based filter for listing jobs. If the string contains: 'Q' - queued jobs are returned (but see below). 'R' - running jobs are returned. 'C' - completed jobs are returned. 'E' - jobs that errored out are returned. 'S' - shared jobs are returned. The string can contain any combination of these codes in any order. If the string contains none of the codes or is null, all self-owned jobs are returned. If only the S filter is present, all jobs are returned. The Q filter has no meaning in the context of UJS based jobs (e.g. jobs that are not pulled by the UJS from an external job runner) and is ignored. A UJS job in the 'created' state is not yet 'owned', per se, by a job runner, and so UJS jobs in the 'created' state are never returned. In contrast, for a job runner like AWE, jobs may be in the submitted or queued state, and the Q filter will cause these jobs to be returned. Note that the S filter currently does not work with AWE. All AWE jobs visible to the user are always returned.)
      * @return   parameter "jobs" of list of original type "job_info" (Information about a job.) &rarr; tuple of size 14: parameter "job" of original type "job_id" (A job id.), parameter "service" of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.), parameter "stage" of original type "job_stage" (A string that describes the stage of processing of the job. One of 'created', 'started', 'completed', or 'error'.), parameter "started" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "status" of original type "job_status" (A job status string supplied by the reporting service. No more than 200 characters.), parameter "last_update" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "prog" of original type "total_progress" (The total progress of a job.), parameter "max" of original type "max_progress" (The maximum possible progress of a job.), parameter "ptype" of original type "progress_type" (The type of progress that is being tracked. One of: 'none' - no numerical progress tracking 'task' - Task based tracking, e.g. 3/24 'percent' - percentage based tracking, e.g. 5/100%), parameter "est_complete" of original type "timestamp" (A time in the format YYYY-MM-DDThh:mm:ssZ, where Z is the difference in time to UTC in the format +/-HHMM, eg: 2012-12-17T23:24:06-0500 (EST time) 2013-04-03T08:56:32+0000 (UTC time)), parameter "complete" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "error" of original type "boolean" (A boolean. 0 = false, other = true.), parameter "desc" of original type "job_description" (A job description string supplied by the reporting service. No more than 1000 characters.), parameter "res" of type {@link us.kbase.userandjobstate.Results Results}
      */
     @JsonServerMethod(rpc = "UserAndJobState.list_jobs")
@@ -1072,7 +1075,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: list_job_services</p>
      * <pre>
-     * List all job services.
+     * List all job services. Does not currently list AWE services.
      * </pre>
      * @return   parameter "services" of list of original type "service_name" (A service name. Alphanumerics and the underscore are allowed.)
      */
@@ -1128,7 +1131,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     /**
      * <p>Original spec-file function name: get_job_owner</p>
      * <pre>
-     * Get the owner of a job.
+     * Get the owner of a job. Does not currently work with AWE jobs.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
      * @return   parameter "owner" of original type "username" (Login name of a KBase user account.)
@@ -1147,7 +1150,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <p>Original spec-file function name: get_job_shared</p>
      * <pre>
      * Get the list of users with which a job is shared. Only the job owner
-     * may access this method.
+     * may access this method. Does not currently work with AWE jobs.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
      * @return   parameter "users" of list of original type "username" (Login name of a KBase user account.)
@@ -1172,6 +1175,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
      * <p>Original spec-file function name: delete_job</p>
      * <pre>
      * Delete a job. Will fail if the job is not complete.
+     * Does not currently work with AWE jobs.
      * </pre>
      * @param   job   instance of original type "job_id" (A job id.)
      */

@@ -18,13 +18,13 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
  * A pointer to job results. All arguments are optional. Applications
  * should use the default shock and workspace urls if omitted.
  * list<string> shocknodes - the shocknode(s) where the results can be
- *         found.
+ *         found. No more than 1000 characters.
  * string shockurl - the url of the shock service where the data was
- *         saved.
+ *         saved.  No more than 1000 characters.
  * list<string> workspaceids - the workspace ids where the results can be
- *         found.
+ *         found. No more than 1000 characters.
  * string workspaceurl - the url of the workspace service where the data
- *         was saved.
+ *         was saved.  No more than 1000 characters.
  * list<Result> - a set of job results. This format allows for specifying
  *         results at multiple server locations and providing a free text
  *         description of the result.

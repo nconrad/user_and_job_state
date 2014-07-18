@@ -49,6 +49,10 @@ throw errors if a progress bar overflows.
 
 Jobs are automatically deleted after 30 days.
 
+Where string limits are noted, these apply only to *incoming* strings. Other
+services that the UJS wraps (currently AWE) may provide longer strings for
+these fields and the UJS passes them on unchanged.
+
 Potential job process flows:
 
 Asysnc:
@@ -2336,7 +2340,7 @@ service_name is a string
 
 =item Description
 
-List all job services.
+List all job services. Does not currently list AWE services.
 
 =back
 
@@ -2584,7 +2588,7 @@ username is a string
 
 =item Description
 
-Get the owner of a job.
+Get the owner of a job. Does not currently work with AWE jobs.
 
 =back
 
@@ -2670,7 +2674,7 @@ username is a string
 =item Description
 
 Get the list of users with which a job is shared. Only the job owner
-may access this method.
+may access this method. Does not currently work with AWE jobs.
 
 =back
 
@@ -2752,6 +2756,7 @@ job_id is a string
 =item Description
 
 Delete a job. Will fail if the job is not complete.
+Does not currently work with AWE jobs.
 
 =back
 
@@ -3480,11 +3485,12 @@ A place where the results of a job may be found.
 All fields except description are required.
 
 string server_type - the type of server storing the results. Typically
-        either "Shock" or "Workspace".
-string url - the url of the server.
+        either "Shock" or "Workspace". No more than 100 characters.
+string url - the url of the server. No more than 1000 characters.
 string id - the id of the result in the server. Typically either a
-        workspace id or a shock node.
+        workspace id or a shock node. No more than 1000 characters.
 string description - a free text description of the result.
+         No more than 1000 characters.
 
 
 =item Definition
@@ -3528,13 +3534,13 @@ description has a value which is a string
 A pointer to job results. All arguments are optional. Applications
 should use the default shock and workspace urls if omitted.
 list<string> shocknodes - the shocknode(s) where the results can be
-        found.
+        found. No more than 1000 characters.
 string shockurl - the url of the shock service where the data was
-        saved.
+        saved.  No more than 1000 characters.
 list<string> workspaceids - the workspace ids where the results can be
-        found.
+        found. No more than 1000 characters.
 string workspaceurl - the url of the workspace service where the data
-        was saved.
+        was saved.  No more than 1000 characters.
 list<Result> - a set of job results. This format allows for specifying
         results at multiple server locations and providing a free text
         description of the result.
@@ -3644,14 +3650,27 @@ a reference to a list containing 14 items:
 A string-based filter for listing jobs.
 
         If the string contains:
+                'Q' - queued jobs are returned (but see below).
                 'R' - running jobs are returned.
                 'C' - completed jobs are returned.
                 'E' - jobs that errored out are returned.
                 'S' - shared jobs are returned.
         The string can contain any combination of these codes in any order.
         If the string contains none of the codes or is null, all self-owned 
-        jobs that have been started are returned. If only the S filter is
-        present, all jobs that have been started are returned.
+        jobs are returned. If only the S filter is
+        present, all jobs are returned.
+        
+        The Q filter has no meaning in the context of UJS based jobs (e.g. jobs
+        that are not pulled by the UJS from an external job runner) and is
+        ignored. A UJS job in the 'created' state is not yet 'owned', per se,
+        by a job runner, and so UJS jobs in the 'created' state are never
+        returned.
+        
+        In contrast, for a job runner like AWE, jobs may be in the submitted
+        or queued state, and the Q filter will cause these jobs to be returned.
+        
+        Note that the S filter currently does not work with AWE. All AWE jobs
+        visible to the user are always returned.
 
 
 =item Definition
