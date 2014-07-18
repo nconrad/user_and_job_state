@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
+import java.util.Arrays;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -31,8 +32,10 @@ public class AweClientTests {
 	
 	private final static boolean DELETE_TEMP_FILES_ON_EXIT = true;
 
-	private static BasicAweClient bac1;
-	private static BasicAweClient bac2;
+	private static BasicAweClient BAC1;
+	private static BasicAweClient BAC2;
+	private static String USER1;
+	private static String USER2;
 	
 	private static AweController aweC;
 
@@ -49,25 +52,25 @@ public class AweClientTests {
 				UserJobStateTestCommon.getMongoPwd(),
 				DELETE_TEMP_FILES_ON_EXIT);
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
-		String u1 = System.getProperty("test.user1");
-		String u2 = System.getProperty("test.user2");
+		USER1 = System.getProperty("test.user1");
+		USER2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
 		String p2 = System.getProperty("test.pwd2");
 
 		System.out.println("Logging in users");
 		AuthUser user1;
 		try {
-			user1 = AuthService.login(u1, p1);
+			user1 = AuthService.login(USER1, p1);
 		} catch (AuthException ae) {
-			throw new TestException("Unable to login with test.user1: " + u1 +
+			throw new TestException("Unable to login with test.user1: " + USER1 +
 					"\nPlease check the credentials in the test configuration.", ae);
 		}
 		System.out.println("Logged in user1");
 		AuthUser otherguy;
 		try {
-			otherguy = AuthService.login(u2, p2);
+			otherguy = AuthService.login(USER2, p2);
 		} catch (AuthException ae) {
-			throw new TestException("Unable to login with test.user2: " + u2 +
+			throw new TestException("Unable to login with test.user2: " + USER2 +
 					"\nPlease check the credentials in the test configuration.", ae);
 		}
 		System.out.println("Logged in user2");
@@ -79,8 +82,8 @@ public class AweClientTests {
 		
 		System.out.println("Testing awe clients pointed at: " + aweurl);
 		try {
-			bac1 = new BasicAweClient(aweurl, user1.getToken());
-			bac2 = new BasicAweClient(aweurl, otherguy.getToken());
+			BAC1 = new BasicAweClient(aweurl, user1.getToken());
+			BAC2 = new BasicAweClient(aweurl, otherguy.getToken());
 		} catch (IOException ioe) {
 			throw new TestException("Couldn't set up shock client: " +
 					ioe.getLocalizedMessage());
@@ -98,19 +101,32 @@ public class AweClientTests {
 	
 	@Test
 	public void getJob() throws Exception {
-		@SuppressWarnings("unused")
-		int breakpoint = 0;
 		TestAweJob j = aweC.createJob("myserv", "some desc");
 		j.addTask();
-		String jobid = aweC.submitJob(j, bac1.getToken());
+		String jobid = aweC.submitJob(j, BAC1.getToken());
 		System.out.println("Waiting 10s for job to enqueue");
 		Thread.sleep(10000); //wait for job to enqueue
 		checkJob(jobid, "myserv", "some desc", 0, 1, "completed", "");
 		
-		failGetJob(bac1, "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d",
+		failGetJob(BAC1, "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d",
 				new AweNoJobException(400, "job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
-		failGetJob(bac2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
+		failGetJob(BAC2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
 		
+	}
+	
+	@Test
+	public void shareJob() throws Exception {
+		TestAweJob j = aweC.createJob("shareserv", "share desc");
+		j.addTask();
+		String jobid = aweC.submitJob(j, BAC1.getToken());
+		System.out.println("Waiting 10s for job to enqueue");
+		Thread.sleep(10000); //wait for job to enqueue
+		BAC1.getJob(new AweJobId(jobid)); //should work
+		failGetJob(BAC2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
+		BAC1.setJobReadable(new AweJobId(jobid), Arrays.asList(USER2));
+		BAC2.getJob(new AweJobId(jobid)); //should work
+		BAC1.removeJobReadable(new AweJobId(jobid), Arrays.asList(USER2));
+		failGetJob(BAC2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
 	}
 	
 	private void failGetJob(BasicAweClient cli, String jobid, Exception e)
@@ -132,7 +148,7 @@ public class AweClientTests {
 	private void checkJob(String jobid, String service, String description,
 			int remaining, int total, String state, String notes)
 			throws Exception {
-		AweJob aj = bac1.getJob(new AweJobId(jobid));
+		AweJob aj = BAC1.getJob(new AweJobId(jobid));
 		assertThat("service correct", aj.getInfo().getService(), is(service));
 		assertThat("desc correct", aj.getInfo().getDescription(), is(description));
 		assertThat("remaining correct", aj.getRemaintasks(), is(remaining));

@@ -2,6 +2,7 @@ package us.kbase.userandjobstate.test.kbase;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.Map;
 
@@ -122,6 +123,14 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		Thread.sleep(10000);
 		CLIENT1.getJobInfo(jobid); //should work
 		
+		failGetJob(CLIENT2, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER2));
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO need a lib level test that checks multiple users
+		
+		CLIENT2.getJobInfo(jobid); //should work
+		CLIENT1.unshareJob(jobid, Arrays.asList(USER2));
+		failGetJob(CLIENT2, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER2));
 		
 	}
 	
