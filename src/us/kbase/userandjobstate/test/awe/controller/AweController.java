@@ -73,6 +73,7 @@ public class AweController {
 		tempDirectories.add("awec/data");
 		tempDirectories.add("awec/logs");
 		tempDirectories.add("awec/work");
+		tempDirectories.add("awec/site");
 	}
 	
 	private final static PoolingHttpClientConnectionManager connmgr =

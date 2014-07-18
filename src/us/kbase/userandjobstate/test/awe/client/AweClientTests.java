@@ -108,7 +108,7 @@ public class AweClientTests {
 		
 		failGetJob(bac1, "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d",
 				new AweNoJobException(400, "job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
-//		failGetJob(bac2, jobid, new AweAuthorizationException(401, "cannot access job"));
+		failGetJob(bac2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
 		
 	}
 	
