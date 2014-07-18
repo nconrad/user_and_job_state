@@ -2,6 +2,7 @@ package us.kbase.userandjobstate.test.awe.client;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
@@ -18,6 +19,7 @@ import us.kbase.common.test.TestException;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
+import us.kbase.userandjobstate.awe.client.exceptions.AweAuthorizationException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
@@ -25,17 +27,17 @@ import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
 
 public class AweClientTests {
 	
+	//TODO expand these tests for more coverage of API, only covers minimal use for now
+	
 	private final static boolean deleteTempFilesOnExit = false;
 
 	private static BasicAweClient bac1;
-//	private static BasicAweClient bac2;
-//	private static AuthUser otherguy;
+	private static BasicAweClient bac2;
 	
 	private static AweController aweC;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		//TODO set up the runner to work with these
 		UserJobStateTestCommon.destroyAndSetupAweDB();
 		aweC = new AweController(
 				new URL(UserJobStateTestCommon.getShockUrl()),
@@ -46,11 +48,11 @@ public class AweClientTests {
 				UserJobStateTestCommon.getMongoUser(),
 				UserJobStateTestCommon.getMongoPwd(),
 				deleteTempFilesOnExit);
-//		URL url = new URL(System.getProperty("test.awe.url"));
+		System.out.println("Awe temp dir is " + aweC.getTempDir());
 		String u1 = System.getProperty("test.user1");
-//		String u2 = System.getProperty("test.user2");
+		String u2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
-//		String p2 = System.getProperty("test.pwd2");
+		String p2 = System.getProperty("test.pwd2");
 
 		System.out.println("Logging in users");
 		AuthUser user1;
@@ -61,7 +63,8 @@ public class AweClientTests {
 					"\nPlease check the credentials in the test configuration.", ae);
 		}
 		System.out.println("Logged in user1");
-/*		try {
+		AuthUser otherguy;
+		try {
 			otherguy = AuthService.login(u2, p2);
 		} catch (AuthException ae) {
 			throw new TestException("Unable to login with test.user2: " + u2 +
@@ -70,14 +73,14 @@ public class AweClientTests {
 		System.out.println("Logged in user2");
 		if (user1.getUserId().equals(otherguy.getUserId())) {
 			throw new TestException("The user IDs of test.user1 and " + 
-					"test.user2 are the same. Please provide test users with different email addresses.");
-		}*/
-		System.out.println("Testing awe clients pointed at: http://localhost:"
-				+ aweC.getServerPort());
+					"test.user2 are the same. Please provide different test users.");
+		}
+		URL aweurl = new URL("http://localhost:" + aweC.getServerPort());
+		
+		System.out.println("Testing awe clients pointed at: " + aweurl);
 		try {
-			bac1 = new BasicAweClient(new URL("http://localhost:" +
-					aweC.getServerPort()), user1.getToken());
-//			bac2 = new BasicAweClient(url, otherguy.getToken());
+			bac1 = new BasicAweClient(aweurl, user1.getToken());
+			bac2 = new BasicAweClient(aweurl, otherguy.getToken());
 		} catch (IOException ioe) {
 			throw new TestException("Couldn't set up shock client: " +
 					ioe.getLocalizedMessage());
@@ -92,25 +95,45 @@ public class AweClientTests {
 		}
 	}
 	
-	//TODO real tests against a local server, need to load with jobs
 	@Test
-	public void printJob() throws Exception {
+	public void getJob() throws Exception {
 		@SuppressWarnings("unused")
 		int breakpoint = 0;
 		TestAweJob j = aweC.createJob("myserv", "some desc");
-		aweC.addTask(j);
+		j.addTask();
 		String jobid = aweC.submitJob(j, bac1.getToken());
-		Thread.sleep(10000);
-		AweJob aj = bac1.getJob(new AweJobId(jobid));
-		System.out.println(aj);
+		System.out.println("Waiting 10s for job to enqueue");
+		Thread.sleep(10000); //wait for job to enqueue
+		checkJob(jobid, "myserv", "some desc", 0, 1, "completed", "");
 		
-		jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d";
+		failGetJob(bac1, "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d",
+				new AweNoJobException(400, "job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
+//		failGetJob(bac2, jobid, new AweAuthorizationException(401, "cannot access job"));
+		
+	}
+	
+	private void failGetJob(BasicAweClient cli, String jobid, Exception e)
+			throws Exception {
 		try {
-			aj = bac1.getJob(new AweJobId(jobid));
-		} catch (AweNoJobException anje) {
-			assertThat("correct exception", anje.getMessage(), is(
-					"job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
+			cli.getJob(new AweJobId(jobid));
+			fail("got job sucessfully but expected fail");
+		} catch (Exception exp) {
+			assertThat("correct exception", exp.getLocalizedMessage(),
+					is(e.getLocalizedMessage()));
+			assertThat("correct exception type", exp, is(e.getClass()));
 		}
+	}
+	
+	private void checkJob(String jobid, String service, String description,
+			int remaining, int total, String state, String notes)
+			throws Exception {
+		AweJob aj = bac1.getJob(new AweJobId(jobid));
+		assertThat("service correct", aj.getInfo().getService(), is(service));
+		assertThat("desc correct", aj.getInfo().getDescription(), is(description));
+		assertThat("remaining correct", aj.getRemaintasks(), is(remaining));
+		assertThat("total correct", aj.getTasks().size(), is(total));
+		assertThat("state correct", aj.getState(), is(state));
+		assertThat("notes correct", aj.getNotes(), is(notes));
 	}
 	
 	@Test

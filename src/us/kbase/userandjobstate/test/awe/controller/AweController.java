@@ -127,29 +127,39 @@ public class AweController {
 		generateConfig(AWEC_CONFIG, context, aweclicfg);
 		copyScript(CLI_SCRIPT, tempDir.resolve(CLI_SCRIPT_FN));
 
-		awe = new ProcessBuilder(aweExe, "--conf", awecfg.toString())
+		ProcessBuilder servpb = new ProcessBuilder(aweExe, "--conf",
+				awecfg.toString())
 				.redirectErrorStream(true)
-				.redirectOutput(tempDir.resolve("awe_server.log").toFile())
-				.start();
+				.redirectOutput(tempDir.resolve("awe_server.log").toFile());
+		updateProcessEnvironment(servpb);
+		
+		awe = servpb.start();
 		Thread.sleep(1000); //wait for awe server to start
 		
-		ProcessBuilder pb = new ProcessBuilder(aweClientExe, "--conf",
+		ProcessBuilder clipb = new ProcessBuilder(aweClientExe, "--conf",
 				aweclicfg.toString())
 				.redirectErrorStream(true)
 				.redirectOutput(tempDir.resolve("awe_client.log").toFile());
+		updateProcessEnvironment(clipb);
+				
+		awec = clipb.start();
+	}
+	
+	private void updateProcessEnvironment(ProcessBuilder pb) {
 		Map<String, String> env = pb.environment();
 		if (env.get("PATH") == null) {
 			throw new TestException("WTF no path in the environment?");
 		}
 		String path = env.get("PATH") + File.pathSeparator + tempDir.toString();
-		
 		env.put("PATH", path);
-				
-		awec = pb.start();
 	}
 
 	public int getServerPort() {
 		return port;
+	}
+	
+	public Path getTempDir() {
+		return tempDir;
 	}
 	
 	public void destroy() throws IOException {
@@ -166,10 +176,6 @@ public class AweController {
 	
 	public TestAweJob createJob(String service, String description) {
 		return new TestAweJob(service, description);
-	}
-	
-	public void addTask(TestAweJob job) {
-		job.addTask(new TestAweTask());
 	}
 	
 	public String submitJob(TestAweJob job, AuthToken token) throws IOException {
@@ -353,8 +359,8 @@ public class AweController {
 			this.description = description;
 		}
 
-		private void addTask(TestAweTask testAweTask) {
-			tasks.add(testAweTask);
+		public void addTask() {
+			tasks.add(new TestAweTask());
 		}
 
 		@Override

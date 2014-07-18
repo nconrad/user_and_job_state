@@ -10,11 +10,11 @@ public class AweJob extends AweData {
 	//TODO lastfailed
 
 	private AweJobId id;
-	private String jid;
+//	private String jid;
 	private AweJobInfo info;
 	private List<AweJobTask> tasks;
 	private String state;
-	private Boolean registered;
+//	private Boolean registered;
 	private Integer remaintasks;
 	private String updatetime;
 	private String notes;
@@ -26,9 +26,9 @@ public class AweJob extends AweData {
 		return id;
 	}
 
-	public String getJid() {
-		return jid;
-	}
+//	public String getJid() {
+//		return jid;
+//	}
 
 	public AweJobInfo getInfo() {
 		return info;
@@ -42,9 +42,9 @@ public class AweJob extends AweData {
 		return state;
 	}
 
-	public Boolean getRegistered() {
-		return registered;
-	}
+//	public Boolean getRegistered() {
+//		return registered;
+//	}
 
 
 	public Integer getRemaintasks() {
@@ -68,16 +68,16 @@ public class AweJob extends AweData {
 		StringBuilder builder = new StringBuilder();
 		builder.append("AweJob [id=");
 		builder.append(id);
-		builder.append(", jid=");
-		builder.append(jid);
+//		builder.append(", jid=");
+//		builder.append(jid);
 		builder.append(", info=");
 		builder.append(info);
 		builder.append(", tasks=");
 		builder.append(tasks);
 		builder.append(", state=");
 		builder.append(state);
-		builder.append(", registered=");
-		builder.append(registered);
+//		builder.append(", registered=");
+//		builder.append(registered);
 		builder.append(", remaintasks=");
 		builder.append(remaintasks);
 		builder.append(", updatetime=");
