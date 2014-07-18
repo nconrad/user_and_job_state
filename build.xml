@@ -54,10 +54,19 @@
     <include name="apache_commons/http/httpcore-4.3.jar"/>
   </fileset>
 
+  <fileset dir="${jardir}" id="testlib">
+    <include name="apache_commons/commons-io-2.4.jar"/>
+    <include name="apache_commons/commons-collections-3.2.1.jar"/>
+    <include name="apache_commons/commons-lang-2.4.jar"/>
+    <include name="apache_commons/http/httpmime-4.3.1.jar"/>
+    <include name="apache_commons/velocity-1.7.jar"/>
+  </fileset>
+	
   <union id="serverside">
     <fileset refid="serverlib"/>
     <fileset refid="clientserverlib"/>
     <fileset refid="applicationlib"/>
+    <fileset refid="testlib"/>
   </union>
 
   <fileset id="client-jdoc-files" dir="${src}/us/kbase" defaultexcludes="yes">

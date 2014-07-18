@@ -5,7 +5,6 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 import java.io.File;
-import java.lang.reflect.Field;
 import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -24,10 +23,6 @@ import org.ini4j.Profile.Section;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.slf4j.LoggerFactory;
-
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
 
 import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
@@ -55,7 +50,7 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
  * {@link us.kbase.userandjobstate.userstate.test.UserStateTests} and
  * {@link us.kbase.userandjobstate.jobstate.test.JobStateTests} handles that.
  */
-public class JSONRPCLayerTest {
+public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 	
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
@@ -64,50 +59,6 @@ public class JSONRPCLayerTest {
 	private static String USER2 = null;
 	private static String TOKEN1;
 	private static String TOKEN2;
-
-	static {
-		//stfu Jetty
-		((Logger) LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME))
-				.setLevel(Level.OFF);
-	}
-	
-	private static String CHAR101 = "";
-	private static String CHAR1001 = "";
-	static {
-		String hundred = "";
-		for (int i = 0; i < 10; i++) {
-			hundred += "0123456789";
-		}
-		CHAR101 = hundred + "a";
-		String thousand = "";
-		for (int i = 0; i < 10; i++) {
-			thousand += hundred;
-		}
-		CHAR1001 = thousand + "a";
-	}
-	
-	private static class ServerThread extends Thread {
-		
-		public void run() {
-			try {
-				SERVER.startupServer();
-			} catch (Exception e) {
-				System.err.println("Can't start server:");
-				e.printStackTrace();
-			}
-		}
-	}
-	
-	//http://quirkygba.blogspot.com/2009/11/setting-environment-variables-in-java.html
-	@SuppressWarnings("unchecked")
-	public static Map<String, String> getenv() throws NoSuchFieldException,
-			SecurityException, IllegalArgumentException, IllegalAccessException {
-		Map<String, String> unmodifiable = System.getenv();
-		Class<?> cu = unmodifiable.getClass();
-		Field m = cu.getDeclaredField("m");
-		m.setAccessible(true);
-		return (Map<String, String>) m.get(unmodifiable);
-	}
 	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
@@ -135,7 +86,7 @@ public class JSONRPCLayerTest {
 		env.put("KB_SERVICE_NAME", "UserAndJobState");
 
 		SERVER = new UserAndJobStateServer();
-		new ServerThread().start();
+		new ServerThread(SERVER).start();
 		System.out.println("Main thread waiting for server to start up");
 		while(SERVER.getServerPort() == null) {
 			Thread.sleep(1000);
@@ -147,18 +98,8 @@ public class JSONRPCLayerTest {
 		CLIENT2 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER2, p2);
 		CLIENT1.setIsInsecureHttpConnectionAllowed(true);
 		CLIENT2.setIsInsecureHttpConnectionAllowed(true);
-		try {
-			TOKEN1 = AuthService.login(USER1, p1).getTokenString();
-		} catch (AuthException ae) {
-			throw new TestException("Unable to login with test.user1: " + USER1 +
-					"\nPlease check the credentials in the test configuration.", ae);
-		}
-		try {
-			TOKEN2 = AuthService.login(USER2, p2).getTokenString();
-		} catch (AuthException ae) {
-			throw new TestException("Unable to login with test.user2: " + USER2 +
-					"\nPlease check the credentials in the test configuration.", ae);
-		}
+		TOKEN1 = CLIENT1.getToken().toString();
+		TOKEN2 = CLIENT2.getToken().toString();
 	}
 	
 	@AfterClass

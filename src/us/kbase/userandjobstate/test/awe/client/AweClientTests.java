@@ -30,7 +30,7 @@ public class AweClientTests {
 	
 	//TODO expand these tests for more coverage of API, only covers minimal use for now
 	
-	private final static boolean deleteTempFilesOnExit = true;
+	private final static boolean DELETE_TEMP_FILES_ON_EXIT = true;
 
 	private static BasicAweClient bac1;
 	private static BasicAweClient bac2;
@@ -48,7 +48,7 @@ public class AweClientTests {
 				UserJobStateTestCommon.getAweDB(),
 				UserJobStateTestCommon.getMongoUser(),
 				UserJobStateTestCommon.getMongoPwd(),
-				deleteTempFilesOnExit);
+				DELETE_TEMP_FILES_ON_EXIT);
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
 		String u1 = System.getProperty("test.user1");
 		String u2 = System.getProperty("test.user2");
