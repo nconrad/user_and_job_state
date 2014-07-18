@@ -20,6 +20,7 @@ import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
 import us.kbase.userandjobstate.awe.client.exceptions.AweAuthorizationException;
+import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
@@ -29,7 +30,7 @@ public class AweClientTests {
 	
 	//TODO expand these tests for more coverage of API, only covers minimal use for now
 	
-	private final static boolean deleteTempFilesOnExit = false;
+	private final static boolean deleteTempFilesOnExit = true;
 
 	private static BasicAweClient bac1;
 	private static BasicAweClient bac2;
@@ -121,6 +122,11 @@ public class AweClientTests {
 			assertThat("correct exception", exp.getLocalizedMessage(),
 					is(e.getLocalizedMessage()));
 			assertThat("correct exception type", exp, is(e.getClass()));
+			if (exp instanceof AweHttpException) {
+				System.out.println(exp);
+				assertThat("correct http code", ((AweHttpException)exp).getHttpCode(),
+						is(((AweHttpException)e).getHttpCode()));
+			}
 		}
 	}
 	
