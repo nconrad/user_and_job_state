@@ -85,7 +85,7 @@ public class AweClientTests {
 	}
 	
 	@AfterClass
-	public static void tearDownClass() {
+	public static void tearDownClass() throws IOException {
 		if (aweC != null) {
 			aweC.destroy();
 		}

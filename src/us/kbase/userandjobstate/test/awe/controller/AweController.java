@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.Set;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -60,6 +61,7 @@ public class AweController {
 	private final Process awe;
 	private final Process awec;
 	private final int port;
+	private final boolean deleteTempDirOnExit;
 
 	public AweController(
 			final URL shockURL,
@@ -72,8 +74,9 @@ public class AweController {
 			final boolean deleteTempDirOnExit)
 					throws Exception {
 		this.shockURL = shockURL;
-		tempDir = makeTempDirs(deleteTempDirOnExit);
+		tempDir = makeTempDirs();
 		port = findFreePort();
+		this.deleteTempDirOnExit = deleteTempDirOnExit;
 		
 		checkExe(aweExe, "awe server");
 		checkExe(aweExe, "awe client");
@@ -107,12 +110,15 @@ public class AweController {
 		return port;
 	}
 	
-	public void destroy() {
+	public void destroy() throws IOException {
 		if (awe != null) {
 			awe.destroy();
 		}
 		if (awec != null) {
 			awec.destroy();
+		}
+		if (tempDir != null && deleteTempDirOnExit) {
+			FileUtils.deleteDirectory(tempDir.toFile());
 		}
 	}
 
@@ -134,16 +140,12 @@ public class AweController {
 	}
 
 
-	private Path makeTempDirs(final boolean deleteTempDirOnExit)
-			throws IOException {
+	private Path makeTempDirs() throws IOException {
 		Set<PosixFilePermission> perms =
 				PosixFilePermissions.fromString("rwx------");
 		FileAttribute<Set<PosixFilePermission>> attr =
 				PosixFilePermissions.asFileAttribute(perms);
 		Path tempDir = Files.createTempDirectory("AweController-", attr);
-		if (deleteTempDirOnExit) {
-			tempDir.toFile().deleteOnExit();
-		}
 		for(String p: tempDirectories) {
 			Files.createDirectories(tempDir.resolve(p));
 		}
