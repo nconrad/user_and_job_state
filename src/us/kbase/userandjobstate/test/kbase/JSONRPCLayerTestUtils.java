@@ -11,7 +11,6 @@ import java.util.Map;
 
 import org.slf4j.LoggerFactory;
 
-import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple14;
 import us.kbase.common.service.Tuple5;
 import us.kbase.common.service.Tuple7;

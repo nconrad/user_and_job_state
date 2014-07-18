@@ -393,9 +393,9 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 	
 	@Test
 	public void getJobInfoBadArgs() throws Exception {
-		failGetJob(null, "id cannot be null or the empty string");
-		failGetJob("", "id cannot be null or the empty string");
-		failGetJob("foo", "Job ID foo is not a legal ID");
+		failGetJob(CLIENT1, null, "id cannot be null or the empty string");
+		failGetJob(CLIENT1, "", "id cannot be null or the empty string");
+		failGetJob(CLIENT1, "foo", "Job ID foo is not a legal ID");
 		
 		String jobid = CLIENT1.createJob();
 		if (jobid.charAt(0) == 'a') {
@@ -403,42 +403,43 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		} else {
 			jobid = "a" + jobid.substring(1);
 		}
-		failGetJob(jobid, String.format(
+		failGetJob(CLIENT1, jobid, String.format(
 				"There is no job %s viewable by user kbasetest", jobid));
 	}
 	
-	private void failGetJob(String jobid, String exception)
+	private void failGetJob(UserAndJobStateClient cli, String jobid,
+			String exception)
 			throws Exception {
 		try {
-			CLIENT1.getJobInfo(jobid);
+			cli.getJobInfo(jobid);
 			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
-			CLIENT1.getJobDescription(jobid);
+			cli.getJobDescription(jobid);
 			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
-			CLIENT1.getJobStatus(jobid);
+			cli.getJobStatus(jobid);
 			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
-			CLIENT1.getResults(jobid);
+			cli.getResults(jobid);
 			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));
 		}
 		try {
-			CLIENT1.getDetailedError(jobid);
+			cli.getDetailedError(jobid);
 			fail("got job with bad id");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
@@ -698,31 +699,31 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		String jobid = CLIENT1.createAndStartJob(TOKEN2, "d stat", "d desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d stat2", null, null);
 		CLIENT1.deleteJob(jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "e stat", "e desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "e stat2", "err", null);
 		CLIENT1.deleteJob(jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d2 stat", "d2 desc", noprog, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d3 stat", "d3 desc", noprog, null);
 		CLIENT1.updateJobProgress(jobid, TOKEN2, "d3 stat2", 3L, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d4 stat", "d4 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d4 stat2", null, null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createAndStartJob(TOKEN2, "d5 stat", "d5 desc", noprog, null);
 		CLIENT1.completeJob(jobid, TOKEN2, "d5 stat2", "err", null);
 		CLIENT1.forceDeleteJob(TOKEN2, jobid);
-		failGetJob(jobid, String.format(nojob, jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format(nojob, jobid, USER1));
 		
 		jobid = CLIENT1.createJob();
 		failToDeleteJob(jobid, String.format(
@@ -1086,7 +1087,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		assertThat("owner ok", CLIENT1.getJobOwner(jobid), is(USER2));
 		assertThat("owner ok", CLIENT2.getJobOwner(jobid), is(USER2));
 		CLIENT2.unshareJob(jobid, Arrays.asList(USER1));
-		failGetJob(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		failGetJobOwner(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		failGetJobShared(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		
@@ -1094,7 +1095,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		failUnshareJob(jobid, Arrays.asList(USER2), String.format(
 				"User %s may only stop sharing job %s for themselves", USER1, jobid));
 		CLIENT1.unshareJob(jobid, Arrays.asList(USER1));
-		failGetJob(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
+		failGetJob(CLIENT1, jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		
 		String jobid2 = CLIENT1.createAndStartJob(TOKEN1, "sh stat2", "sh desc2", noprog, null);
 		failShareUnshareJob(jobid2, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
