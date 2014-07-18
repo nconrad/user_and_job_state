@@ -106,12 +106,28 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	public void getJob() throws Exception {
 		TestAweJob j = aweC.createJob("myserv", "some desc");
 		j.addTask();
-		String jobid = aweC.submitJob(j, CLIENT1.getToken());
-		System.out.println("Waiting 10s for job to run");
+		String jobid1 = aweC.submitJob(j, CLIENT1.getToken());
+		j = aweC.createJob("myserv 2", "some desc 2");
+		j.addTask();
+		j.addTask();
+		j.addTask();
+		String jobid2 = aweC.submitJob(j, CLIENT1.getToken());
+		j = aweC.createJob("myserv err", "some desc err");
+		j.addTask();
+		j.addErrorTask();
+		j.addTask();
+		String jobiderr = aweC.submitJob(j, CLIENT1.getToken());
+		
+		System.out.println("Waiting 10s for jobs to run");
 		Thread.sleep(10000);
 		Results mtres = new Results().withResults(new LinkedList<Result>());
-		checkJob(CLIENT1, jobid, "complete", "", "myserv", "some desc", "task",
+		checkJob(CLIENT1, jobid1, "complete", "", "myserv", "some desc", "task",
 				1L, 1L, null, 1L, 0L, null, mtres);
+		checkJob(CLIENT1, jobid2, "complete", "", "myserv 2", "some desc 2", "task",
+				3L, 3L, null, 1L, 0L, null, mtres);
+		String err = "workunit " + jobiderr + "_1_0 failed 1 time(s).";
+		checkJob(CLIENT1, jobiderr, "error", err, "myserv err", "some desc err", "task",
+				1L, 3L, null, 0L, 1L, err, mtres);
 	}
 	
 	@Test

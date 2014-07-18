@@ -11,7 +11,13 @@ import sys
 #	sys.exit(1)
 
 print('sys.argv: ' + str(sys.argv))
-sys.stdout.flush()
+if (len(sys.argv) == 1):
+    sys.exit(0);
+
+if (sys.argv[1] == 'error'):
+    print("I was told to error out, now I'm printing to stdout")
+    sys.stderr.write("I was told to error out, now I'm printing to stderr\n")
+    sys.exit(1);
 
 #if (sys.argv[1] != 'fakefake'):
 #	with open(sys.argv[1], 'r') as f:

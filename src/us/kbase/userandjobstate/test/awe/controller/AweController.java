@@ -211,18 +211,18 @@ public class AweController {
 		if (job.description != null) {
 			info.put("description", job.description);
 		}
-		info.put("pipeline", "foo");
 		info.put("noretry", true);
 		info.put("clientgroups", "kbase-fake-group");
 		j.put("info", info);
 		List<Map<String, Object>> tasks = new LinkedList<Map<String,Object>>();
 		int count = 0;
-		for (@SuppressWarnings("unused") TestAweTask task: job.tasks) {
+		for (TestAweTask task: job.tasks) {
 			Map<String, Object> t = new HashMap<String, Object>();
 			t.put("taskid", "" + count);
 			count++;
 			Map<String, String> cmd = new HashMap<String, String>();
 			cmd.put("name", "client_script.py");
+			cmd.put("args", task.getArgs());
 			t.put("cmd", cmd);
 			tasks.add(t);
 		}
@@ -363,6 +363,10 @@ public class AweController {
 		public void addTask() {
 			tasks.add(new TestAweTask());
 		}
+		
+		public void addErrorTask() {
+			tasks.add(new TestAweErrorTask());
+		}
 
 		@Override
 		public String toString() {
@@ -378,7 +382,35 @@ public class AweController {
 		}
 	}
 	
-	private class TestAweTask {
+	public class TestAweTask {
+		private TestAweTask() {};
 		
+		protected String getArgs() {
+			return "";
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("TestAweTask []");
+			return builder.toString();
+		}
+	}
+	
+	private class TestAweErrorTask extends TestAweTask {
+		
+		private TestAweErrorTask() {};
+		
+		@Override
+		protected String getArgs() {
+			return "error";
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("TestAweErrorTask []");
+			return builder.toString();
+		}
 	}
 }
