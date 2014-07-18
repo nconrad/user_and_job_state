@@ -21,6 +21,7 @@ import us.kbase.userandjobstate.awe.client.BasicAweClient;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
+import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
 
 public class AweClientTests {
 	
@@ -94,7 +95,11 @@ public class AweClientTests {
 	//TODO real tests against a local server, need to load with jobs
 	@Test
 	public void printJob() throws Exception {
-		String jobid = "fdcafcec-f66c-4d37-be5c-8bfbf7cd268f";
+		@SuppressWarnings("unused")
+		int breakpoint = 0;
+		TestAweJob j = aweC.createJob("myserv", "some desc");
+		aweC.addTask(j);
+		String jobid = aweC.submitJob(j, bac1.getToken());
 		AweJob aj = bac1.getJob(new AweJobId(jobid));
 		System.out.println(aj);
 		
