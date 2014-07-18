@@ -123,7 +123,6 @@ public class AweClientTests {
 					is(e.getLocalizedMessage()));
 			assertThat("correct exception type", exp, is(e.getClass()));
 			if (exp instanceof AweHttpException) {
-				System.out.println(exp);
 				assertThat("correct http code", ((AweHttpException)exp).getHttpCode(),
 						is(((AweHttpException)e).getHttpCode()));
 			}
