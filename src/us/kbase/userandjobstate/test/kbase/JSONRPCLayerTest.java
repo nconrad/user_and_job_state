@@ -1064,37 +1064,6 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		failShareUnshareJob(CLIENT1, jobid2, new ArrayList<String>(), "The user list may not be null or empty");
 	}
 	
-	private void failShareUnshareJob(UserAndJobStateClient cli, String id,
-			List<String> users, String exception)
-			throws Exception {
-		failShareJob(cli, id, users, exception);
-		failUnshareJob(cli, id, users, exception);
-	}
-	
-	private void failShareJob(UserAndJobStateClient cli, String id,
-			List<String> users, String exception)
-			throws Exception {
-		try {
-			cli.shareJob(id, users);
-			fail("shared job w/ bad args");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-	}
-	
-	private void failUnshareJob(UserAndJobStateClient cli, String id,
-			List<String> users, String exception)
-			throws Exception {
-		try {
-			cli.unshareJob(id, users);
-			fail("shared job w/ bad args");
-		} catch (ServerException se) {
-			assertThat("correct exception", se.getLocalizedMessage(),
-					is(exception));
-		}
-	}
-	
 	private void failGetJobOwner(String id, String exception) throws Exception {
 		try {
 			CLIENT1.getJobOwner(id);

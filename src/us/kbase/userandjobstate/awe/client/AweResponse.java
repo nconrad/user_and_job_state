@@ -5,6 +5,7 @@ import java.util.List;
 import us.kbase.userandjobstate.awe.client.exceptions.AweAuthorizationException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
+import us.kbase.userandjobstate.awe.client.exceptions.AweIllegalSharingException;
 
 
 abstract class AweResponse {
@@ -28,9 +29,14 @@ abstract class AweResponse {
 		if (hasError()) {
 			if (status == 401) {
 				throw new AweAuthorizationException(getStatus(), getError());
-			} else if (status == 400
-					&& getError().contains("job not found")) {
+			} else if (status == 400 &&
+					getError().contains("job not found")) {
 				throw new AweNoJobException(getStatus(), getError());
+			} else if (status == 400 &&
+					(getError().contains(
+							"can only delete themselves from ACLs.") ||
+					getError().contains("can delete one and only"))) {
+				throw new AweIllegalSharingException(getStatus(), getError());
 			} else {
 				throw new AweHttpException(getStatus(), getError());
 			}

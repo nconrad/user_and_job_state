@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 import org.slf4j.LoggerFactory;
@@ -200,6 +201,37 @@ public class JSONRPCLayerTestUtils {
 		try {
 			cli.getDetailedError(jobid);
 			fail("got job with bad id");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	protected void failShareUnshareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
+			throws Exception {
+		failShareJob(cli, id, users, exception);
+		failUnshareJob(cli, id, users, exception);
+	}
+	
+	protected void failShareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
+			throws Exception {
+		try {
+			cli.shareJob(id, users);
+			fail("shared job w/ bad args");
+		} catch (ServerException se) {
+			assertThat("correct exception", se.getLocalizedMessage(),
+					is(exception));
+		}
+	}
+	
+	protected void failUnshareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
+			throws Exception {
+		try {
+			cli.unshareJob(id, users);
+			fail("unshared job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
 					is(exception));

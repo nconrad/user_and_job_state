@@ -2,8 +2,10 @@ package us.kbase.userandjobstate.test.kbase;
 
 import java.io.File;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 import org.ini4j.Ini;
@@ -146,20 +148,58 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		System.out.println("Waiting 10s for job to run");
 		Thread.sleep(10000);
 		CLIENT1.getJobInfo(jobid); //should work
+		failShareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"There is no job %s owned by user %s", jobid, USER2));
+		failUnshareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"User %s may only stop sharing job %s for themselves", USER2, jobid));
 		
 		failGetJob(CLIENT2, jobid, String.format(
 				"There is no job %s viewable by user %s", jobid, USER2));
-		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO 1 need a lib level test that checks multiple users
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO 1 need a test that checks multiple users
 		
+		failShareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"There is no job %s owned by user %s", jobid, USER2));
+		failUnshareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"User %s may only stop sharing job %s for themselves", USER2, jobid));
+		
+		Results mtres = new Results().withResults(new LinkedList<Result>());
+		checkJob(CLIENT2, jobid, "complete", "", "share serv", "share desc", "task",
+				1L, 1L, null, 1L, 0L, null, mtres);
+		CLIENT2.unshareJob(jobid, Arrays.asList(USER2));
+		failGetJob(CLIENT2, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER2));
+		failShareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"There is no job %s owned by user %s", jobid, USER2));
+		failUnshareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
+				"User %s may only stop sharing job %s for themselves", USER2, jobid));
+		
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2));
 		CLIENT2.getJobInfo(jobid); //should work
 		CLIENT1.unshareJob(jobid, Arrays.asList(USER2));
 		failGetJob(CLIENT2, jobid, String.format(
 				"There is no job %s viewable by user %s", jobid, USER2));
-		//TODO bad job ids, bad users
-		//TODO illegal sharing
+		
+		failShareUnshareJob(CLIENT1, "foo", Arrays.asList(USER2),
+				"Job ID foo is not a legal ID");
+		failShareUnshareJob(CLIENT1, null, Arrays.asList(USER2),
+				"id cannot be null or the empty string");
+		failShareUnshareJob(CLIENT1, "", Arrays.asList(USER2),
+				"id cannot be null or the empty string");
+		failShareUnshareJob(CLIENT1, jobid, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
+				"User thishadbetterbeafakeuserorthistestwillfail is not a valid user");
+		
+		failShareUnshareJob(CLIENT1, jobid, null, "The user list may not be null or empty");
+		
+		List<String> users = new ArrayList<>();
+		failShareUnshareJob(CLIENT1, jobid, users, "The user list may not be null or empty");
+		users.add(null);
+		failShareUnshareJob(CLIENT1, jobid, users, "A user name cannot be null or the empty string");
+		users.set(0, "");
+		failShareUnshareJob(CLIENT1, jobid, users, "A user name cannot be null or the empty string");
+		
 	}
 	
-	//TODO 1 mix awe and ujs jobs
+	//TODO 1 mix awe and ujs jobs in list
 	//TODO 1 failing and unavailable operations
 	//TODO go through the awe job state class and check for tests
 	

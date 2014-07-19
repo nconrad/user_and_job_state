@@ -393,6 +393,12 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			throw new IllegalArgumentException(
 					"The user list may not be null or empty");
 		}
+		for (final String u: users) {
+			if (u == null || u.isEmpty()) {
+				throw new IllegalArgumentException(
+						"A user name cannot be null or the empty string");
+			}
+		}
 		final Map<String, Boolean> userok = AuthService.isValidUserName(
 				users, token);
 		for (String u: userok.keySet()) {
