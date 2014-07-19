@@ -275,7 +275,7 @@ module UserAndJobState {
 	/* A string-based filter for listing jobs.
 	
 		If the string contains:
-			'Q' - queued jobs are returned (but see below).
+			'Q' - created / queued jobs are returned (but see below).
 			'R' - running jobs are returned.
 			'C' - completed jobs are returned.
 			'E' - jobs that errored out are returned.

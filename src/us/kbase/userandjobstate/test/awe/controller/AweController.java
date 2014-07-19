@@ -63,6 +63,9 @@ public class AweController {
 			"us/kbase/userandjobstate/test/awe/controller/script/" +
 					CLI_SCRIPT_FN;
 	
+	private final static String EXISTING_CLIENTGROUP = "kbase-fake-group";
+	private final static String MISSING_CLIENTGROUP = "kbase-missing-group";
+	
 	private final static List<String> tempDirectories =
 			new LinkedList<String>();
 	static {
@@ -176,10 +179,16 @@ public class AweController {
 	}
 	
 	public TestAweJob createJob(String service, String description) {
-		return new TestAweJob(service, description);
+		return new TestAweJob(service, description, EXISTING_CLIENTGROUP);
 	}
 	
-	public String submitJob(TestAweJob job, AuthToken token) throws IOException {
+	public TestAweJob createJobWithNoClient(String service,
+			String description) {
+		return new TestAweJob(service, description, MISSING_CLIENTGROUP);
+	}
+	
+	public String submitJob(TestAweJob job, AuthToken token)
+			throws IOException {
 		if (job.tasks.isEmpty()) {
 			throw new IllegalStateException("no tasks");
 		}
@@ -212,7 +221,7 @@ public class AweController {
 			info.put("description", job.description);
 		}
 		info.put("noretry", true);
-		info.put("clientgroups", "kbase-fake-group");
+		info.put("clientgroups", job.clientgroup);
 		j.put("info", info);
 		List<Map<String, Object>> tasks = new LinkedList<Map<String,Object>>();
 		int count = 0;
@@ -352,12 +361,15 @@ public class AweController {
 		
 		private final String description;
 		private final String service;
+		private final String clientgroup;
 		private final List<TestAweTask> tasks = new LinkedList<TestAweTask>();
 		
 		
-		private TestAweJob(String service, String description) {
+		private TestAweJob(String service, String description,
+				String clientgroup) {
 			this.service = service;
 			this.description = description;
+			this.clientgroup = clientgroup;
 		}
 
 		public void addTask() {

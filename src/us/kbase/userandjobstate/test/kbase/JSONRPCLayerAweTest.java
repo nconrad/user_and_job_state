@@ -118,6 +118,10 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		j.addTask();
 		String jobiderr = aweC.submitJob(j, CLIENT1.getToken());
 		
+		j = aweC.createJobWithNoClient("myserv q", "some desc q");
+		j.addTask();
+		String jobidq = aweC.submitJob(j, CLIENT1.getToken());
+		
 		System.out.println("Waiting 10s for jobs to run");
 		Thread.sleep(10000);
 		Results mtres = new Results().withResults(new LinkedList<Result>());
@@ -128,6 +132,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		String err = "workunit " + jobiderr + "_1_0 failed 1 time(s).";
 		checkJob(CLIENT1, jobiderr, "error", err, "myserv err", "some desc err", "task",
 				1L, 3L, null, 0L, 1L, err, mtres);
+		checkJob(CLIENT1, jobidq, "created", "", "myserv q", "some desc q", "task",
+				0L, 1L, null, 0L, 0L, null, mtres);
 	}
 	
 	@Test

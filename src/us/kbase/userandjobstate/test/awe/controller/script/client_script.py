@@ -25,7 +25,7 @@ if (sys.argv[1] == 'delay'):
         try:
             delay = int(sys.argv[2]);
         except TypeError:
-            pass # just use 30s
+            pass # just use 10s
     time.sleep(delay)
 
 #if (sys.argv[1] != 'fakefake'):
