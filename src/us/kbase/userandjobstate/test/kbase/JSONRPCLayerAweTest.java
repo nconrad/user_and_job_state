@@ -134,6 +134,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				1L, 3L, null, 0L, 1L, err, mtres);
 		checkJob(CLIENT1, jobidq, "created", "", "myserv q", "some desc q", "task",
 				0L, 1L, null, 0L, 0L, null, mtres);
+		//TODO 1 results
+		//TODO bad job ids
 	}
 	
 	@Test
@@ -147,14 +149,19 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		
 		failGetJob(CLIENT2, jobid, String.format(
 				"There is no job %s viewable by user %s", jobid, USER2));
-		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO need a lib level test that checks multiple users
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO 1 need a lib level test that checks multiple users
 		
 		CLIENT2.getJobInfo(jobid); //should work
 		CLIENT1.unshareJob(jobid, Arrays.asList(USER2));
 		failGetJob(CLIENT2, jobid, String.format(
 				"There is no job %s viewable by user %s", jobid, USER2));
-		
+		//TODO bad job ids, bad users
+		//TODO illegal sharing
 	}
+	
+	//TODO 1 mix awe and ujs jobs
+	//TODO 1 failing and unavailable operations
+	//TODO go through the awe job state class and check for tests
 	
 	@Test
 	public void delayedJob() throws Exception {

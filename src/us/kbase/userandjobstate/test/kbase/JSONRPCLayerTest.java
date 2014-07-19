@@ -1040,7 +1040,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		CLIENT2.shareJob(jobid, Arrays.asList(USER1));
 		//next line ensures that all job read functions are accessible to client 1
 		checkJob(CLIENT1, jobid, "started", "sh stat", USER1, "sh desc", "none", null, null, null, 0L, 0L, null, null);
-		failShareJob(jobid, Arrays.asList(USER2), String.format(
+		failShareJob(CLIENT1, jobid, Arrays.asList(USER2), String.format(
 				"There is no job %s owned by user %s", jobid, USER1));
 		assertThat("shared list ok", CLIENT2.getJobShared(jobid), is(Arrays.asList(USER1)));
 		failGetJobShared(jobid, String.format("User %s may not access the sharing list of job %s", USER1, jobid));
@@ -1052,28 +1052,30 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		failGetJobShared(jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		
 		CLIENT2.shareJob(jobid, Arrays.asList(USER1));
-		failUnshareJob(jobid, Arrays.asList(USER2), String.format(
+		failUnshareJob(CLIENT1, jobid, Arrays.asList(USER2), String.format(
 				"User %s may only stop sharing job %s for themselves", USER1, jobid));
 		CLIENT1.unshareJob(jobid, Arrays.asList(USER1));
 		failGetJob(CLIENT1, jobid, String.format("There is no job %s viewable by user %s", jobid, USER1));
 		
 		String jobid2 = CLIENT1.createAndStartJob(TOKEN1, "sh stat2", "sh desc2", noprog, null);
-		failShareUnshareJob(jobid2, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
+		failShareUnshareJob(CLIENT1, jobid2, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
 				"User thishadbetterbeafakeuserorthistestwillfail is not a valid user");
-		failShareUnshareJob(jobid2, null, "The user list may not be null or empty");
-		failShareUnshareJob(jobid2, new ArrayList<String>(), "The user list may not be null or empty");
+		failShareUnshareJob(CLIENT1, jobid2, null, "The user list may not be null or empty");
+		failShareUnshareJob(CLIENT1, jobid2, new ArrayList<String>(), "The user list may not be null or empty");
 	}
 	
-	private void failShareUnshareJob(String id, List<String> users, String exception)
+	private void failShareUnshareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
 			throws Exception {
-		failShareJob(id, users, exception);
-		failUnshareJob(id, users, exception);
+		failShareJob(cli, id, users, exception);
+		failUnshareJob(cli, id, users, exception);
 	}
 	
-	private void failShareJob(String id, List<String> users, String exception)
+	private void failShareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
 			throws Exception {
 		try {
-			CLIENT1.shareJob(id, users);
+			cli.shareJob(id, users);
 			fail("shared job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
@@ -1081,10 +1083,11 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		}
 	}
 	
-	private void failUnshareJob(String id, List<String> users, String exception)
+	private void failUnshareJob(UserAndJobStateClient cli, String id,
+			List<String> users, String exception)
 			throws Exception {
 		try {
-			CLIENT1.unshareJob(id, users);
+			cli.unshareJob(id, users);
 			fail("shared job w/ bad args");
 		} catch (ServerException se) {
 			assertThat("correct exception", se.getLocalizedMessage(),
