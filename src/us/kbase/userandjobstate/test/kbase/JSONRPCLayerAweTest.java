@@ -150,4 +150,28 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		
 	}
 	
+	@Test
+	public void delayedJob() throws Exception {
+		TestAweJob j = aweC.createJob("delay serv", "delay desc");
+		j.addDelayTask(20);
+		j.addDelayTask(20);
+		String jobid = aweC.submitJob(j, CLIENT1.getToken());
+		System.out.println(jobid);
+		
+		System.out.println("Waiting 10s for job to run");
+		Thread.sleep(10000);
+		Results mtres = new Results().withResults(new LinkedList<Result>());
+		checkJob(CLIENT1, jobid, "started", "", "delay serv", "delay desc", "task",
+				0L, 2L, null, 0L, 0L, null, mtres);
+		
+		System.out.println("Waiting 20s for next task");
+		Thread.sleep(20000);
+		checkJob(CLIENT1, jobid, "started", "", "delay serv", "delay desc", "task",
+				1L, 2L, null, 0L, 0L, null, mtres);
+		
+		System.out.println("Waiting 20s for job complete");
+		Thread.sleep(20000);
+		checkJob(CLIENT1, jobid, "complete", "", "delay serv", "delay desc", "task",
+				2L, 2L, null, 1L, 0L, null, mtres);
+	}
 }

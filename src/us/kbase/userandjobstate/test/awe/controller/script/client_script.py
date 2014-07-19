@@ -18,6 +18,15 @@ if (sys.argv[1] == 'error'):
     print("I was told to error out, now I'm printing to stdout")
     sys.stderr.write("I was told to error out, now I'm printing to stderr\n")
     sys.exit(1);
+    
+if (sys.argv[1] == 'delay'):
+    delay = 10;
+    if (len(sys.argv) > 2):
+        try:
+            delay = int(sys.argv[2]);
+        except TypeError:
+            pass # just use 30s
+    time.sleep(delay)
 
 #if (sys.argv[1] != 'fakefake'):
 #	with open(sys.argv[1], 'r') as f:

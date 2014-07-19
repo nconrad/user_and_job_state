@@ -367,6 +367,10 @@ public class AweController {
 		public void addErrorTask() {
 			tasks.add(new TestAweErrorTask());
 		}
+		
+		public void addDelayTask(int secDelay) {
+			tasks.add(new TestAweDelayTask(secDelay));
+		}
 
 		@Override
 		public String toString() {
@@ -410,6 +414,29 @@ public class AweController {
 		public String toString() {
 			StringBuilder builder = new StringBuilder();
 			builder.append("TestAweErrorTask []");
+			return builder.toString();
+		}
+	}
+
+	private class TestAweDelayTask extends TestAweTask {
+
+		private final int secDelay;
+
+		private TestAweDelayTask(int secDelay) {
+			this.secDelay = secDelay;
+		};
+
+		@Override
+		protected String getArgs() {
+			return "delay " + secDelay;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("TestAweDelayTask [secDelay=");
+			builder.append(secDelay);
+			builder.append("]");
 			return builder.toString();
 		}
 	}
