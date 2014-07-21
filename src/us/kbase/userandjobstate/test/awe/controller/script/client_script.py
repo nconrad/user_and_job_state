@@ -25,13 +25,14 @@ if __name__ == '__main__':
         sys.stderr.write("I was told to error out, now I'm printing to stderr\n")
         sys.exit(1);
     if (args.delay > 0):
+        print("Delaying for " + str(args.delay) + " sec")
         time.sleep(args.delay)
     
     if (args.outfiles and len(args.outfiles) > 0):
         for i in xrange(len(args.outfiles)):
             with open(args.outfiles[i], 'w') as outfile:
                 if (args.infiles and len(args.infiles) > i):
-                    with open(args.infiles[1]) as infile:
+                    with open(args.infiles[i]) as infile:
                         outfile.write(infile.read())
                 outfile.write(args.outfiles[i] + '\n')
                     

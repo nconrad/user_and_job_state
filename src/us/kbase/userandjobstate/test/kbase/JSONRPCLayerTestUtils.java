@@ -9,6 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,9 @@ import ch.qos.logback.classic.Logger;
 
 public class JSONRPCLayerTestUtils {
 
+	private static final Pattern UUID =
+			Pattern.compile("[\\da-f]{8}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{4}-[\\da-f]{12}");
+	
 	protected static String CHAR101 = "";
 	protected static String CHAR1001 = "";
 	static {
@@ -88,6 +92,15 @@ public class JSONRPCLayerTestUtils {
 			Long maxprog, String estCompl, Long complete, Long error,
 			String errormsg, Results results)
 			throws Exception {
+		checkJob(cli, id, stage, status, service, desc, progtype, prog, maxprog,
+				estCompl, complete, error, errormsg, results, false);
+	}
+	
+	protected void checkJob(UserAndJobStateClient cli, String id, String stage, String status,
+			String service, String desc, String progtype, Long prog,
+			Long maxprog, String estCompl, Long complete, Long error,
+			String errormsg, Results results, boolean resIDsAsUUIDs)
+			throws Exception {
 		SimpleDateFormat dateform = getDateFormat();
 		Tuple14<String, String, String, String, String, String,
 				Long, Long, String, String, Long, Long, String,
@@ -108,7 +121,7 @@ public class JSONRPCLayerTestUtils {
 		dateform.parse(ret.getE6()); //should throw error if bad format
 		assertThat("job complete ok" + s, ret.getE11(), is(complete));
 		assertThat("job error ok" + s, ret.getE12(), is(error));
-		checkResults(ret.getE14(), results);
+		checkResults(ret.getE14(), results, resIDsAsUUIDs);
 		
 		Tuple5<String, String, Long, String, String> jobdesc =
 				cli.getJobDescription(id);
@@ -130,13 +143,14 @@ public class JSONRPCLayerTestUtils {
 		assertThat("job complete ok" + s, jobstat.getE6(), is(complete));
 		assertThat("job error ok" + s, jobstat.getE7(), is(error));
 		
-		checkResults(cli.getResults(id), results);
+		checkResults(cli.getResults(id), results, resIDsAsUUIDs);
 		
 		assertThat("job error msg ok" + s, cli.getDetailedError(id),
 				is(errormsg));
 	}
 	
-	protected void checkResults(Results got, Results expected) throws Exception {
+	protected void checkResults(Results got, Results expected,
+			boolean resIDsAsUUIDs) throws Exception {
 		if (got == null & expected == null) {
 			return;
 		}
@@ -163,7 +177,13 @@ public class JSONRPCLayerTestUtils {
 			Result eres = er.next();
 			assertThat("server type same", gres.getServerType(), is(eres.getServerType()));
 			assertThat("url same", gres.getUrl(), is(eres.getUrl()));
-			assertThat("id same", gres.getId(), is(eres.getId()));
+			if (resIDsAsUUIDs) {
+				if (!UUID.matcher(gres.getId()).matches()) {
+					fail("expected results IDs to be UUIDs");
+				}
+			} else {
+				assertThat("id same", gres.getId(), is(eres.getId()));
+			}
 			assertThat("description same", gres.getDescription(), is(eres.getDescription()));
 		}
 	}

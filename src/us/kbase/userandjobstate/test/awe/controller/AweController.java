@@ -13,8 +13,10 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -197,6 +199,7 @@ public class AweController {
 		byte[] jobdoc = makeJobDoc(job);
 		HttpPost hp = new HttpPost("http://localhost:" + port + "/job"); 
 		hp.setHeader("Authorization", "OAuth " + token);
+		hp.setHeader("Datatoken", token.toString());
 		final MultipartEntityBuilder mpeb = MultipartEntityBuilder.create();
 		mpeb.addBinaryBody("upload", jobdoc, ContentType.DEFAULT_BINARY, "foo");
 		hp.setEntity(mpeb.build());
@@ -230,12 +233,38 @@ public class AweController {
 		for (TestAweTask task: job.tasks) {
 			Map<String, Object> t = new HashMap<String, Object>();
 			t.put("taskid", "" + count);
-			count++;
+			if (count > 0) {
+				t.put("dependsOn", Arrays.asList("" + (count - 1)));
+			}
 			Map<String, String> cmd = new HashMap<String, String>();
 			cmd.put("name", "client_script.py");
 			cmd.put("args", task.getArgs());
 			t.put("cmd", cmd);
+			if (!task.getInputs().isEmpty()) {
+				Map<String, Map<String, String>> inputs =
+						new HashMap<String, Map<String, String>>();
+				for (String i: task.getInputs()) {
+					i = i.substring(1); //remove @
+					inputs.put(i, new HashMap<String, String>());
+					inputs.get(i).put("host", shockURL.toExternalForm());
+					inputs.get(i).put("origin", "" + (count - 1));
+				}
+				t.put("inputs", inputs);
+			}
+			if (!task.getOutputs().isEmpty()) {
+				Map<String, Map<String, Object>> outputs =
+						new HashMap<String, Map<String, Object>>();
+				Iterator<Boolean> temp = task.getTemporaryOutput().iterator(); 
+				for (String i: task.getOutputs()) {
+					outputs.put(i, new HashMap<String, Object>());
+					outputs.get(i).put("host", shockURL.toExternalForm());
+					outputs.get(i).put("temporary", temp.next());
+				}
+				t.put("outputs", outputs);
+			}
+			
 			tasks.add(t);
+			count++;
 		}
 		
 		j.put("tasks", tasks);
@@ -387,11 +416,11 @@ public class AweController {
 		}
 		
 		public void addIOTask(final List<String> inputfiles,
-				final List<String> outputfiles) {
+				final List<String> outputfiles, List<Boolean> temporary) {
 			List<String> in = inputfiles;
 			if (inputfiles != null && !inputfiles.isEmpty()) {
-				if (tasks.isEmpty() || tasks.get(tasks.size() - 1)
-						instanceof TestAweIOTask) {
+				if (tasks.isEmpty() || !(tasks.get(tasks.size() - 1)
+						instanceof TestAweIOTask)) {
 					throw new IllegalArgumentException(
 							"task requires input files but either no prior task or prior task has no output");
 				}
@@ -407,7 +436,7 @@ public class AweController {
 					in.add("@" + s);
 				}
 			}
-			tasks.add(new TestAweIOTask(in, outputfiles));
+			tasks.add(new TestAweIOTask(in, outputfiles, temporary));
 			
 		}
 
@@ -430,6 +459,18 @@ public class AweController {
 		
 		protected String getArgs() {
 			return "";
+		}
+		
+		protected List<String> getInputs() {
+			return new LinkedList<String>();
+		}
+		
+		protected List<String> getOutputs() {
+			return new LinkedList<String>();
+		}
+		
+		protected List<Boolean> getTemporaryOutput() {
+			return new LinkedList<Boolean>();
 		}
 
 		@Override
@@ -484,9 +525,11 @@ public class AweController {
 		
 		private final List<String> inputs;
 		private final List<String> outputs;
+		private final List<Boolean> temp;
 		private TestAweIOTask(final List<String> inputs,
-				final List<String> outputs) {
+				final List<String> outputs, final List<Boolean> temporary) {
 			super();
+			//TODO test lists are unique sets
 			if (inputs == null) {
 				this.inputs = new LinkedList<String>();
 			} else {
@@ -495,10 +538,36 @@ public class AweController {
 			}
 			if (outputs == null) {
 				this.outputs = new LinkedList<String>();
+				this.temp = new LinkedList<Boolean>();
 			} else {
 				this.outputs = Collections.unmodifiableList(
-						new LinkedList<String>(inputs));
+						new LinkedList<String>(outputs));
+				if (temporary == null) {
+					throw new NullPointerException(
+							"if output files are provided, temporary list must be as well");
+				}
+				if (temporary.size() != outputs.size()) {
+					throw new IllegalArgumentException(
+							"Must provide temporary indicator for every output file");
+				}
+				this.temp = Collections.unmodifiableList(
+						new LinkedList<Boolean>(temporary));
 			}
+		}
+		
+		@Override
+		protected List<String> getInputs() {
+			return inputs;
+		}
+		
+		@Override
+		protected List<String> getOutputs() {
+			return outputs;
+		}
+		
+		@Override
+		protected List<Boolean> getTemporaryOutput() {
+			return temp;
 		}
 		
 		@Override
