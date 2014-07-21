@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -25,6 +26,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ContentType;
@@ -383,6 +385,31 @@ public class AweController {
 		public void addDelayTask(int secDelay) {
 			tasks.add(new TestAweDelayTask(secDelay));
 		}
+		
+		public void addIOTask(final List<String> inputfiles,
+				final List<String> outputfiles) {
+			List<String> in = inputfiles;
+			if (inputfiles != null && !inputfiles.isEmpty()) {
+				if (tasks.isEmpty() || tasks.get(tasks.size() - 1)
+						instanceof TestAweIOTask) {
+					throw new IllegalArgumentException(
+							"task requires input files but either no prior task or prior task has no output");
+				}
+				final TestAweIOTask prior =
+						(TestAweIOTask) tasks.get(tasks.size() - 1);
+				in = new LinkedList<String>();
+				for (String s: inputfiles) {
+					if (!prior.outputs.contains(s)) {
+						throw new IllegalArgumentException(
+								"prior task does not have output file called "
+								+ s);
+					}
+					in.add("@" + s);
+				}
+			}
+			tasks.add(new TestAweIOTask(in, outputfiles));
+			
+		}
 
 		@Override
 		public String toString() {
@@ -419,7 +446,7 @@ public class AweController {
 		
 		@Override
 		protected String getArgs() {
-			return "error";
+			return "--error";
 		}
 		
 		@Override
@@ -440,7 +467,7 @@ public class AweController {
 
 		@Override
 		protected String getArgs() {
-			return "delay " + secDelay;
+			return "--delay " + secDelay;
 		}
 
 		@Override
@@ -448,6 +475,51 @@ public class AweController {
 			StringBuilder builder = new StringBuilder();
 			builder.append("TestAweDelayTask [secDelay=");
 			builder.append(secDelay);
+			builder.append("]");
+			return builder.toString();
+		}
+	}
+	
+	private class TestAweIOTask extends TestAweTask {
+		
+		private final List<String> inputs;
+		private final List<String> outputs;
+		private TestAweIOTask(final List<String> inputs,
+				final List<String> outputs) {
+			super();
+			if (inputs == null) {
+				this.inputs = new LinkedList<String>();
+			} else {
+				this.inputs = Collections.unmodifiableList(
+						new LinkedList<String>(inputs));
+			}
+			if (outputs == null) {
+				this.outputs = new LinkedList<String>();
+			} else {
+				this.outputs = Collections.unmodifiableList(
+						new LinkedList<String>(inputs));
+			}
+		}
+		
+		@Override
+		protected String getArgs() {
+			String ret = "";
+			if (!inputs.isEmpty()) {
+				ret += "--infiles " + StringUtils.join(inputs, " ") + " ";
+			}
+			if (!outputs.isEmpty()) {
+				ret += "--outfiles " + StringUtils.join(outputs, " ");
+			}
+			return ret;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder builder = new StringBuilder();
+			builder.append("TestAweIOTask [inputs=");
+			builder.append(inputs);
+			builder.append(", outputs=");
+			builder.append(outputs);
 			builder.append("]");
 			return builder.toString();
 		}

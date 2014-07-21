@@ -92,29 +92,30 @@ public class JSONRPCLayerTestUtils {
 		Tuple14<String, String, String, String, String, String,
 				Long, Long, String, String, Long, Long, String,
 				Results> ret = cli.getJobInfo(id);
-		assertThat("job id ok", ret.getE1(), is(id));
-		assertThat("job stage ok", ret.getE3(), is(stage));
+		String s = " for job " + id;
+		assertThat("job id ok" + s, ret.getE1(), is(id));
+		assertThat("job stage ok" + s, ret.getE3(), is(stage));
 		if (ret.getE4() != null) {
 			dateform.parse(ret.getE4()); //should throw error if bad format
 		}
-		assertThat("job est compl ok", ret.getE10(), is(estCompl));
-		assertThat("job service ok", ret.getE2(), is(service));
-		assertThat("job desc ok", ret.getE13(), is(desc));
-		assertThat("job progtype ok", ret.getE9(), is(progtype));
-		assertThat("job prog ok", ret.getE7(), is(prog));
-		assertThat("job maxprog ok", ret.getE8(), is(maxprog));
-		assertThat("job status ok", ret.getE5(), is(status));
+		assertThat("job est compl ok" + s, ret.getE10(), is(estCompl));
+		assertThat("job service ok" + s, ret.getE2(), is(service));
+		assertThat("job desc ok" + s, ret.getE13(), is(desc));
+		assertThat("job progtype ok" + s, ret.getE9(), is(progtype));
+		assertThat("job prog ok" + s, ret.getE7(), is(prog));
+		assertThat("job maxprog ok" + s, ret.getE8(), is(maxprog));
+		assertThat("job status ok" + s, ret.getE5(), is(status));
 		dateform.parse(ret.getE6()); //should throw error if bad format
-		assertThat("job complete ok", ret.getE11(), is(complete));
-		assertThat("job error ok", ret.getE12(), is(error));
+		assertThat("job complete ok" + s, ret.getE11(), is(complete));
+		assertThat("job error ok" + s, ret.getE12(), is(error));
 		checkResults(ret.getE14(), results);
 		
 		Tuple5<String, String, Long, String, String> jobdesc =
 				cli.getJobDescription(id);
-		assertThat("job service ok", jobdesc.getE1(), is(service));
-		assertThat("job progtype ok", jobdesc.getE2(), is(progtype));
-		assertThat("job maxprog ok", jobdesc.getE3(), is(maxprog));
-		assertThat("job desc ok", jobdesc.getE4(), is(desc));
+		assertThat("job service ok" + s, jobdesc.getE1(), is(service));
+		assertThat("job progtype ok" + s, jobdesc.getE2(), is(progtype));
+		assertThat("job maxprog ok" + s, jobdesc.getE3(), is(maxprog));
+		assertThat("job desc ok" + s, jobdesc.getE4(), is(desc));
 		if (jobdesc.getE5() != null) {
 			dateform.parse(jobdesc.getE5()); //should throw error if bad format
 		}
@@ -122,16 +123,16 @@ public class JSONRPCLayerTestUtils {
 		Tuple7<String, String, String, Long, String, Long, Long> 
 				jobstat = cli.getJobStatus(id);
 		dateform.parse(jobstat.getE1()); //should throw error if bad format
-		assertThat("job stage ok", jobstat.getE2(), is(stage));
-		assertThat("job status ok", jobstat.getE3(), is(status));
-		assertThat("job progress ok", jobstat.getE4(), is(prog));
-		assertThat("job est compl ok", jobstat.getE5(), is(estCompl));
-		assertThat("job complete ok", jobstat.getE6(), is(complete));
-		assertThat("job error ok", jobstat.getE7(), is(error));
+		assertThat("job stage ok" + s, jobstat.getE2(), is(stage));
+		assertThat("job status ok" + s, jobstat.getE3(), is(status));
+		assertThat("job progress ok" + s, jobstat.getE4(), is(prog));
+		assertThat("job est compl ok" + s, jobstat.getE5(), is(estCompl));
+		assertThat("job complete ok" + s, jobstat.getE6(), is(complete));
+		assertThat("job error ok" + s, jobstat.getE7(), is(error));
 		
 		checkResults(cli.getResults(id), results);
 		
-		assertThat("job error msg ok", cli.getDetailedError(id),
+		assertThat("job error msg ok" + s, cli.getDetailedError(id),
 				is(errormsg));
 	}
 	
