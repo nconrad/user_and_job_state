@@ -1,5 +1,9 @@
 package us.kbase.userandjobstate.test.kbase;
 
+import static org.junit.Assert.fail;
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
+
 import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
@@ -14,6 +18,8 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import us.kbase.common.service.ServerException;
+import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
@@ -218,7 +224,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	}
 	
 	//TODO 1 mix awe and ujs jobs in list
-	//TODO 1 failing and unavailable operations
 	//TODO go through the awe job state class and check for tests
 	
 	@Test
@@ -227,7 +232,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		j.addDelayTask(20);
 		j.addDelayTask(20);
 		String jobid = aweC.submitJob(j, CLIENT1.getToken());
-		System.out.println(jobid);
 		
 		System.out.println("Waiting 10s for job to run");
 		Thread.sleep(10000);
@@ -244,5 +248,84 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		Thread.sleep(30000);
 		checkJob(CLIENT1, jobid, "complete", "", "delay serv", "delay desc", "task",
 				2L, 2L, null, 1L, 0L, null, mtres);
+	}
+	
+	@Test
+	public void unavailableOps() throws Exception {
+		TestAweJob j = aweC.createJob("share serv", "share desc");
+		j.addTask();
+		String jobid = aweC.submitJob(j, CLIENT1.getToken());
+		String token = CLIENT1.getToken().toString();
+		
+		try {
+			CLIENT1.completeJob(jobid, token, "stat", null, null);
+			fail("shouldn't be able to complete AWE jobs");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs cannot be manually completed."));
+		}
+		try {
+			CLIENT1.forceDeleteJob(token, jobid);
+			fail("shouldn't be able to delete AWE jobs");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Force deleting Awe jobs via the UJS is not allowed."));
+		}
+		try {
+			CLIENT1.deleteJob(jobid);
+			fail("shouldn't be able to delete AWE jobs");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Deleting Awe jobs via the UJS is not yet implemented."));
+		}
+		try {
+			CLIENT1.getJobOwner(jobid);
+			fail("shouldn't be able to get AWE job owners");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"It is not currently possible to get the users associated with an Awe job."));
+		}
+		try {
+			CLIENT1.getJobShared(jobid);
+			fail("shouldn't be able to get AWE job shared list");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"It is not currently possible to get the users associated with an Awe job."));
+		}
+		try {
+			CLIENT1.startJob(jobid, token, "stat", "desc", new InitProgress().withPtype("none"), null);
+			fail("shouldn't be able to start AWE job");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs must be created and / or started from the Awe server."));
+		}
+		try {
+			CLIENT1.startJob(jobid, token, "stat", "desc", new InitProgress().withPtype("task").withMax(3L), null);
+			fail("shouldn't be able to start AWE job");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs must be created and / or started from the Awe server."));
+		}
+		try {
+			CLIENT1.startJob(jobid, token, "stat", "desc", new InitProgress().withPtype("percent"), null);
+			fail("shouldn't be able to start AWE job");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs must be created and / or started from the Awe server."));
+		}
+		try {
+			CLIENT1.updateJob(jobid, token, "stat", null);
+			fail("shouldn't be able to update AWE jobs");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs cannot be manually updated."));
+		}
+		try {
+			CLIENT1.updateJobProgress(jobid, token, "stat", 4L, null);
+			fail("shouldn't be able to update AWE jobs");
+		} catch (ServerException se) {
+			assertThat("exception correct", se.getMessage(), is(
+					"Awe jobs cannot be manually updated."));
+		}
 	}
 }

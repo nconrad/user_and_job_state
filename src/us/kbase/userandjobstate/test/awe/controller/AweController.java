@@ -42,6 +42,7 @@ import org.apache.velocity.app.Velocity;
 
 import us.kbase.auth.AuthToken;
 import us.kbase.common.test.TestException;
+import us.kbase.shock.client.BasicShockClient;
 
 
 
@@ -112,6 +113,7 @@ public class AweController {
 			final boolean deleteTempDirOnExit)
 					throws Exception {
 		this.shockURL = shockURL;
+		new BasicShockClient(shockURL); // check url
 		tempDir = makeTempDirs();
 		port = findFreePort();
 		this.deleteTempDirOnExit = deleteTempDirOnExit;

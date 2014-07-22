@@ -97,7 +97,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException, NoSuchJobException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 
 	}
 
@@ -109,7 +109,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException, NoSuchJobException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 	}
 
 	@Override
@@ -119,7 +119,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException, NoSuchJobException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 	}
 
 	@Override
@@ -128,7 +128,7 @@ public class AweJobState implements JobState {
 			final Date estComplete) throws CommunicationException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 	}
 
 	@Override
@@ -138,7 +138,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 	}
 
 	@Override
@@ -148,7 +148,7 @@ public class AweJobState implements JobState {
 			throws CommunicationException {
 		throw new IllegalAweOperationException(
 				"Awe jobs must be created and / " +
-				"or started from the awe server.");
+				"or started from the Awe server.");
 	}
 
 	@Override
@@ -184,7 +184,7 @@ public class AweJobState implements JobState {
 			final String service)
 			throws NoSuchJobException, CommunicationException {
 		throw new IllegalAweOperationException(
-				"AWE Jobs that are not completed or errored out may not be deleted via the UJS");
+				"Force deleting Awe jobs via the UJS is not allowed.");
 	}
 
 	@Override

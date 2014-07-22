@@ -80,7 +80,7 @@ public class UJSAweJob implements Job {
 	public String getUser() {
 		//TODO implement when awe has human readable ACLs
 		throw new UnimplementedException(
-				"It is not currently possible to get the owner of an Awe job.");
+				"It is not currently possible to get the users associated with an Awe job.");
 	}
 
 	@Override
@@ -176,7 +176,7 @@ public class UJSAweJob implements Job {
 	public List<String> getShared() {
 		//TODO implement when awe has human readable ACLs
 		throw new UnimplementedException(
-				"It is not currently possible to get the list of users that can view an Awe job.");
+				"It is not currently possible to get the users associated with an Awe job.");
 	}
 
 	@Override

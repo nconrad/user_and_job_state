@@ -14,12 +14,11 @@ def _parseArgs():
                          help='wait for X seconds.')
     parser.add_argument('--infiles', nargs='*', help='input files')
     parser.add_argument('--outfiles', nargs='*', help='output files')
-    parser.add_argument('-l', '--domain and use the standard gc.')
     return parser.parse_args()
 
 if __name__ == '__main__':
-    print('sys.argv: ' + str(sys.argv))
     args = _parseArgs()
+    print('sys.argv: ' + str(sys.argv))
     if (args.error):
         print("I was told to error out, now I'm printing to stdout")
         sys.stderr.write("I was told to error out, now I'm printing to stderr\n")
