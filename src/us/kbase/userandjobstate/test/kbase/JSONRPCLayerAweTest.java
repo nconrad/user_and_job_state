@@ -161,7 +161,15 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				.withDescription("wugga")); //leave out id
 		checkJob(CLIENT1, jobres, "complete", "", "results", "res desc", "task",
 				3L, 3L, null, 1L, 0L, null, mtres, true);
-		//TODO bad job ids
+		
+		failGetJob(CLIENT1, "a0c44010-9ad6-4714-8280-9f05b1ae8bcc",
+				String.format("There is no job %s viewable by user %s",
+						"a0c44010-9ad6-4714-8280-9f05b1ae8bcc", USER1));
+		failGetJob(CLIENT1, "a0c44010-9ad6-4714-8280-9f05b1ae8bc",
+				String.format("Job ID %s is not a legal ID",
+						"a0c44010-9ad6-4714-8280-9f05b1ae8bc"));
+		failGetJob(CLIENT1, "", "id cannot be null or the empty string");
+		failGetJob(CLIENT1, null, "id cannot be null or the empty string");
 	}
 	
 	@Test
