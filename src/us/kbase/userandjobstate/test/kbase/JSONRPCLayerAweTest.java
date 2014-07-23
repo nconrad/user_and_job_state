@@ -38,6 +38,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	private static String USER1 = null;
 	private static UserAndJobStateClient CLIENT2 = null;
 	private static String USER2 = null;
+	private static UserAndJobStateClient CLIENT3 = null;
+	private static String USER3 = null;
 	
 	private static AweController aweC;
 	private static String shockURL = UserJobStateTestCommon.getShockUrl();
@@ -59,8 +61,10 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		
 		USER1 = System.getProperty("test.user1");
 		USER2 = System.getProperty("test.user2");
+		USER3 = System.getProperty("test.user3");
 		String p1 = System.getProperty("test.pwd1");
 		String p2 = System.getProperty("test.pwd2");
+		String p3 = System.getProperty("test.pwd3");
 		UserJobStateTestCommon.destroyAndSetupDB();
 		
 		//write the server config file:
@@ -94,8 +98,10 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		System.out.println("logging in users");
 		CLIENT1 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER1, p1);
 		CLIENT2 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER2, p2);
+		CLIENT3 = new UserAndJobStateClient(new URL("http://localhost:" + port), USER3, p3);
 		CLIENT1.setIsInsecureHttpConnectionAllowed(true);
 		CLIENT2.setIsInsecureHttpConnectionAllowed(true);
+		CLIENT3.setIsInsecureHttpConnectionAllowed(true);
 		System.out.println("Starting tests");
 	}
 	
@@ -187,7 +193,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		
 		failGetJob(CLIENT2, jobid, String.format(
 				"There is no job %s viewable by user %s", jobid, USER2));
-		CLIENT1.shareJob(jobid, Arrays.asList(USER2)); //TODO 1 need a test that checks multiple users
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2));
 		
 		failShareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
 				"There is no job %s owned by user %s", jobid, USER2));
@@ -229,9 +235,23 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		users.set(0, "");
 		failShareUnshareJob(CLIENT1, jobid, users, "A user name cannot be null or the empty string");
 		
+		
+		//test multiple users
+		failGetJob(CLIENT3, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER3));
+		failGetJob(CLIENT3, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER3));
+		CLIENT1.shareJob(jobid, Arrays.asList(USER2, USER3));
+		CLIENT2.getJobInfo(jobid);
+		CLIENT3.getJobInfo(jobid);
+		CLIENT1.unshareJob(jobid, Arrays.asList(USER2, USER3));
+		failGetJob(CLIENT3, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER3));
+		failGetJob(CLIENT3, jobid, String.format(
+				"There is no job %s viewable by user %s", jobid, USER3));
 	}
 	
-	//TODO 1 mix awe and ujs jobs in list
+	//TODO 1 mix awe and ujs jobs in list jobs test
 	//TODO go through the awe job state class and check for tests
 	
 	@Test
