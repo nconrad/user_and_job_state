@@ -16,6 +16,7 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -531,12 +532,14 @@ public class AweController {
 		private TestAweIOTask(final List<String> inputs,
 				final List<String> outputs, final List<Boolean> temporary) {
 			super();
-			//TODO test lists are unique sets
 			if (inputs == null) {
 				this.inputs = new LinkedList<String>();
 			} else {
 				this.inputs = Collections.unmodifiableList(
 						new LinkedList<String>(inputs));
+				if (new HashSet<String>(inputs).size() != inputs.size()) {
+					throw new IllegalArgumentException("duplicated input files");
+				}
 			}
 			if (outputs == null) {
 				this.outputs = new LinkedList<String>();
@@ -554,6 +557,9 @@ public class AweController {
 				}
 				this.temp = Collections.unmodifiableList(
 						new LinkedList<Boolean>(temporary));
+				if (new HashSet<String>(outputs).size() != outputs.size()) {
+					throw new IllegalArgumentException("duplicated output files");
+				}
 			}
 		}
 		

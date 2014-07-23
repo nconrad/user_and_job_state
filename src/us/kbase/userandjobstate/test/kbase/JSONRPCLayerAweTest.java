@@ -257,7 +257,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	}
 	
 	//TODO 1 mix awe and ujs jobs in list jobs test
-	//TODO go through the awe job state class and check for tests
 	
 	@Test
 	public void delayedJob() throws Exception {
