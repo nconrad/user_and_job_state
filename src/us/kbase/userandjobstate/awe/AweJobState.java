@@ -16,7 +16,8 @@ import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
 import us.kbase.userandjobstate.awe.client.exceptions.AweAuthorizationException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweHttpException;
-import us.kbase.userandjobstate.awe.client.exceptions.AweIllegalSharingException;
+import us.kbase.userandjobstate.awe.client.exceptions.AweIllegalShareException;
+import us.kbase.userandjobstate.awe.client.exceptions.AweIllegalUnshareException;
 import us.kbase.userandjobstate.awe.client.exceptions.AweNoJobException;
 import us.kbase.userandjobstate.awe.client.exceptions.InvalidAweUrlException;
 import us.kbase.userandjobstate.exceptions.CommunicationException;
@@ -254,7 +255,7 @@ public class AweJobState implements JobState {
 			throw new NoSuchJobException(String.format(
 					"There is no job %s viewable by user %s", jobID,
 					getUserName(), e));
-		} catch (AweIllegalSharingException e) {
+		} catch (AweIllegalShareException e) {
 			throw new NoSuchJobException(String.format(
 					"There is no job %s owned by user %s",
 					jobID, getUserName(), e));
@@ -295,17 +296,10 @@ public class AweJobState implements JobState {
 			throw new CommunicationException(String.format(
 					"The Awe server could not authorize user %s to unshare job %s: %s",
 					getUserName(), jobID, e.getMessage()), e);
-		} catch (AweIllegalSharingException e) {
-			if (e.getMessage().contains(
-					"can only delete themselves from ACLs.")) {
-				throw new NoSuchJobException(String.format(
-						"There is no job %s visible to user %s", jobID, user),
-						e);
-			} else {
-				throw new NoSuchJobException(String.format(
-						"User %s may only stop sharing job %s for themselves",
-						user, jobID), e);
-			}
+		} catch (AweIllegalUnshareException e) {
+			throw new NoSuchJobException(String.format(
+					"User %s may only stop sharing job %s for themselves",
+					user, jobID), e);
 		} catch (AweNoJobException e) {
 			throw new NoSuchJobException(String.format(
 					"There is no job %s viewable by user %s", jobID,

@@ -178,6 +178,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		failGetJob(CLIENT1, null, "id cannot be null or the empty string");
 	}
 	
+	
+	//TODO 1 list jobs tests
 	@Test
 	public void shareJob() throws Exception {
 		TestAweJob j = aweC.createJob("share serv", "share desc");
@@ -223,6 +225,9 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				"id cannot be null or the empty string");
 		failShareUnshareJob(CLIENT1, "", Arrays.asList(USER2),
 				"id cannot be null or the empty string");
+		String badid = "f47460e1-dbaa-46d2-840c-7b5f34604af9";
+		failShareUnshareJob(CLIENT1, badid, Arrays.asList(USER2),
+				 String.format("There is no job %s viewable by user %s", badid, USER1));
 		failShareUnshareJob(CLIENT1, jobid, Arrays.asList("thishadbetterbeafakeuserorthistestwillfail"),
 				"User thishadbetterbeafakeuserorthistestwillfail is not a valid user");
 		

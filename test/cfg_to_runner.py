@@ -47,7 +47,13 @@ if __name__ == '__main__':
             CFG_SECTION + '. Halting.'
         sys.exit(1)
     if testcfg['test.user1'] == testcfg['test.user2']:
-        print "The two test users are identical. Halting."
+        print "Test users 1 & 2 are identical. Halting."
+        sys.exit(1)
+    if testcfg['test.user1'] == testcfg['test.user3']:
+        print "Test users 1 & 3 are identical. Halting."
+        sys.exit(1)
+    if testcfg['test.user2'] == testcfg['test.user3']:
+        print "Test users 2 & 3 are identical. Halting."
         sys.exit(1)
     with open(out, 'w') as run:
         run.write('# Generated file - do not check into git\n')
