@@ -6,9 +6,12 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.slf4j.LoggerFactory;
@@ -21,6 +24,7 @@ import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
+import us.kbase.userandjobstate.test.FakeJob;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -258,4 +262,26 @@ public class JSONRPCLayerTestUtils {
 					is(exception));
 		}
 	}
+
+	protected void checkListJobs(UserAndJobStateClient cli, String service, String filter,
+			Set<FakeJob> expected) throws Exception {
+				Set<FakeJob> got = new HashSet<FakeJob>();
+				for (Tuple14<String, String, String, String, String, String, Long,
+						Long, String, String, Long, Long, String, Results> ji: 
+							cli.listJobs(Arrays.asList(service), filter)) {
+					got.add(new FakeJob(ji));
+				}
+				assertThat("got the correct jobs", got, is(expected));
+			}
+
+	protected void testListJobsWithBadArgs(UserAndJobStateClient cli, String service,
+			String exception) throws Exception {
+				try {
+					cli.listJobs(Arrays.asList(service), "RCE");
+					fail("list jobs worked w/ bad service");
+				} catch (ServerException se) {
+					assertThat("correct exception", se.getLocalizedMessage(),
+							is(exception));
+				}
+			}
 }

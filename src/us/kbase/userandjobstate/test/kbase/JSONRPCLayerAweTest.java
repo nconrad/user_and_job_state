@@ -8,9 +8,11 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -24,6 +26,7 @@ import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
+import us.kbase.userandjobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
 import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
@@ -145,10 +148,10 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		j.addIOTask(Arrays.asList("bar"), Arrays.asList("baz", "boo"), Arrays.asList(false, true));
 		j.addIOTask(Arrays.asList("baz", "boo"), Arrays.asList("wugga"), Arrays.asList(false));
 		String jobres = aweC.submitJob(j, CLIENT1.getToken());
-
 		
 		System.out.println("Waiting 40s for jobs to run");
 		Thread.sleep(40000);
+		
 		Results mtres = new Results().withResults(new LinkedList<Result>());
 		checkJob(CLIENT1, jobidComplete, "complete", "", "myserv", "some desc", "task",
 				1L, 1L, null, 1L, 0L, null, mtres);
@@ -178,8 +181,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		failGetJob(CLIENT1, null, "id cannot be null or the empty string");
 	}
 	
-	
-	//TODO 1 list jobs tests
 	@Test
 	public void shareJob() throws Exception {
 		TestAweJob j = aweC.createJob("share serv", "share desc");
@@ -256,8 +257,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				"There is no job %s viewable by user %s", jobid, USER3));
 	}
 	
-	//TODO 1 mix awe and ujs jobs in list jobs test
-	
 	@Test
 	public void delayedJob() throws Exception {
 		TestAweJob j = aweC.createJob("delay serv", "delay desc");
@@ -280,6 +279,71 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		Thread.sleep(30000);
 		checkJob(CLIENT1, jobid, "complete", "", "delay serv", "delay desc", "task",
 				2L, 2L, null, 1L, 0L, null, mtres);
+	}
+	
+	@Test
+	public void listJobs() throws Exception {
+		//TODO 1 mix awe and ujs jobs in list jobs test
+		//TODO 1 list jobs tests
+		
+		//TODO 1 start long running job and test
+		Set<FakeJob> empty = new HashSet<FakeJob>();
+		
+		//this is just getting too fecking big. Just to some random Qs.
+		checkListJobs(CLIENT2, USER1, null, empty);
+		checkListJobs(CLIENT2, USER1, "", empty);
+		checkListJobs(CLIENT2, USER1, "Q", empty); 
+		checkListJobs(CLIENT2, USER1, "S", empty);
+		checkListJobs(CLIENT2, USER1, "R", empty);
+		checkListJobs(CLIENT2, USER1, "RQ", empty);
+		checkListJobs(CLIENT2, USER1, "RS", empty);
+		checkListJobs(CLIENT2, USER1, "C", empty);
+		checkListJobs(CLIENT2, USER1, "CS", empty);
+		checkListJobs(CLIENT2, USER1, "E", empty);
+		checkListJobs(CLIENT2, USER1, "ES", empty);
+		checkListJobs(CLIENT2, USER1, "ESQ", empty);
+		checkListJobs(CLIENT2, USER1, "RC", empty);
+		checkListJobs(CLIENT2, USER1, "RCS", empty);
+		checkListJobs(CLIENT2, USER1, "CE", empty);
+		checkListJobs(CLIENT2, USER1, "CES", empty);
+		checkListJobs(CLIENT2, USER1, "RE", empty);
+		checkListJobs(CLIENT2, USER1, "REQ", empty);
+		checkListJobs(CLIENT2, USER1, "RES", empty);
+		checkListJobs(CLIENT2, USER1, "RCE", empty);
+		checkListJobs(CLIENT2, USER1, "RCES", empty);
+		checkListJobs(CLIENT2, USER1, "RCEX", empty);
+		checkListJobs(CLIENT2, USER1, "RCEXQ", empty);
+		checkListJobs(CLIENT2, USER1, "RCEXS", empty);
+		
+		TestAweJob j = aweC.createJob("list serv", "some desc");
+		j.addTask();
+		String jobidComplete = aweC.submitJob(j, CLIENT2.getToken());
+		
+		j = aweC.createJob("list serv 2", "some desc 2");
+		j.addTask();
+		j.addTask();
+		j.addTask();
+		String jobidComplete3 = aweC.submitJob(j, CLIENT2.getToken());
+		
+		j = aweC.createJob("list serv err", "some desc err");
+		j.addTask();
+		j.addErrorTask();
+		j.addTask();
+		String jobiderr = aweC.submitJob(j, CLIENT2.getToken());
+		
+		j = aweC.createJobWithNoClient("list serv q", "some desc q");
+		j.addTask();
+		String jobidq = aweC.submitJob(j, CLIENT2.getToken());
+		
+		j = aweC.createJob("list results", "list res desc");
+		j.addIOTask(null, Arrays.asList("foo", "bar"), Arrays.asList(true, false));
+		j.addIOTask(Arrays.asList("bar"), Arrays.asList("baz", "boo"), Arrays.asList(false, true));
+		j.addIOTask(Arrays.asList("baz", "boo"), Arrays.asList("wugga"), Arrays.asList(false));
+		String jobres = aweC.submitJob(j, CLIENT2.getToken());
+		
+		System.out.println("Waiting 40s for jobs to run");
+		Thread.sleep(40000);
+		
 	}
 	
 	@Test
