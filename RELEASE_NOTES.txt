@@ -5,6 +5,31 @@ OVERVIEW
 A service for 1) maintaining global KBase user state, and 2) maintaining
 job state. See the API docs for more details.
 
+VERSION: 0.1.0 (7/24/2014)
+--------------------------------------
+
+NEW FEATURES:
+- Can now get the status of and share Awe jobs by providing the Awe
+  job ID rather than an UJS job ID; the UJS service must be set up to
+  communicate with an Awe server for this functionality to be enabled.
+    - the UJS service and description fields are populated from the Awe job
+      document info.service and info.description fields.
+- Extended results data structure allowing more flexibility in defining
+  results locations.
+- UJS jobs are now auto-deleted after 6 months rather than 1.
+
+UPDATED FEATURES / MAJOR BUG FIXES:
+- N/A
+
+ANTICIPATED FUTURE DEVELOPMENTS:
+- Delete Awe jobs
+- Report client stdout/stderr on suspended jobs if available
+- get Awe service list
+- get Awe job owners / shared lists
+- listing jobs currently has a hardcoded limit of 1000 for Awe jobs. This
+  needs a yet to be determined fix.
+- Linking Awe and UJS jobs
+
 VERSION: 0.0.5 (7/7/2014)
 --------------------------------------
 

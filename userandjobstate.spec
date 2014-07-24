@@ -334,6 +334,7 @@ module UserAndJobState {
 	/* Force delete a job - will succeed unless the job has not been started.
 		In that case, the service must start the job and then delete it, since
 		a job is not "owned" by any service until it is started.
+		Does not currently work with AWE jobs.
 	*/
 	funcdef force_delete_job(service_token token, job_id job) returns();
 };
