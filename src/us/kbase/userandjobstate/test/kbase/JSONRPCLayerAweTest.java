@@ -8,11 +8,11 @@ import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
+//import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+//import java.util.Set;
 
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
@@ -26,7 +26,7 @@ import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
 import us.kbase.userandjobstate.UserAndJobStateClient;
 import us.kbase.userandjobstate.UserAndJobStateServer;
-import us.kbase.userandjobstate.test.FakeJob;
+//import us.kbase.userandjobstate.test.FakeJob;
 import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 import us.kbase.userandjobstate.test.awe.controller.AweController;
 import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
@@ -281,7 +281,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				2L, 2L, null, 1L, 0L, null, mtres);
 	}
 	
-	@Test
+/*	@Test
 	public void listJobs() throws Exception {
 		//TODO 1 mix awe and ujs jobs in list jobs test
 		//TODO 1 list jobs tests
@@ -344,7 +344,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		System.out.println("Waiting 40s for jobs to run");
 		Thread.sleep(40000);
 		
-	}
+	}*/
 	
 	@Test
 	public void unavailableOps() throws Exception {
