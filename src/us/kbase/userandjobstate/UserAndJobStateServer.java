@@ -116,7 +116,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
     //TODO needs to look through the AWE code and look for cruft, this was written in haste
     //TODO 1 a full suite of tests for AWE integration
 
-	private static final String VER = "0.1.0";
+	private static final String VER = "0.1.1";
 
 	//required deploy parameters:
 	private static final String HOST = "mongodb-host";
