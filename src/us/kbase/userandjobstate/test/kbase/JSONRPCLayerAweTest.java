@@ -34,6 +34,8 @@ import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
 //TODO note about this only covering server ops, main tests cover all ops
 public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	
+	//TODO use shock controller and start up shock
+	
 	private static final boolean DELETE_TEMP_FILES_ON_EXIT = true;
 
 	private static UserAndJobStateServer SERVER = null;

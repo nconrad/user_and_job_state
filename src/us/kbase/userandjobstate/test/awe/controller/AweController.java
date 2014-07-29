@@ -376,21 +376,6 @@ public class AweController {
 				"Could not find a free TCP/IP port");
 	}
 	
-	public static void main(String[] args) throws Exception {
-		AweController ac = new AweController(
-				new URL("http://localhost:7044"),
-				"/kb/deployment/bin/awe-server",
-				"/kb/deployment/bin/awe-client",
-				"localhost",
-				"delete_awe_db",
-				"foo", "foo", false);
-		Scanner reader = new Scanner(System.in);
-		System.out.println("any char to shut down");
-		//get user input for a
-		reader.next();
-		ac.destroy();
-	}
-	
 	public class TestAweJob {
 		
 		private final String description;
@@ -600,5 +585,22 @@ public class AweController {
 			builder.append("]");
 			return builder.toString();
 		}
+	}
+	
+	
+	public static void main(String[] args) throws Exception {
+		AweController ac = new AweController(
+				new URL("http://localhost:7044"),
+				"/kb/deployment/bin/awe-server",
+				"/kb/deployment/bin/awe-client",
+				"localhost",
+				"delete_awe_db",
+				"foo", "foo", false);
+		Scanner reader = new Scanner(System.in);
+		System.out.println(ac.getServerPort());
+		System.out.println("any char to shut down");
+		//get user input for a
+		reader.next();
+		ac.destroy();
 	}
 }
