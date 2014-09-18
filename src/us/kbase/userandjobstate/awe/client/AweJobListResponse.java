@@ -11,13 +11,10 @@ class AweJobListResponse extends AweResponse {
 	
 	private AweJobListResponse(){}
 	
-	@SuppressWarnings("unused")
 	@JsonProperty
 	private int limit;
-	@SuppressWarnings("unused")
 	@JsonProperty
 	private int offset;
-	@SuppressWarnings("unused")
 	@JsonProperty
 	private int total_count;
 	

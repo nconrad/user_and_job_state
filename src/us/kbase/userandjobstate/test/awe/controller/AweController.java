@@ -602,5 +602,6 @@ public class AweController {
 		//get user input for a
 		reader.next();
 		ac.destroy();
+		reader.close();
 	}
 }
