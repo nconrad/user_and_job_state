@@ -5,6 +5,7 @@ import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -14,10 +15,12 @@ import java.util.List;
 import java.util.Set;
 
 import org.bson.types.ObjectId;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import us.kbase.common.test.RegexMatcher;
+import us.kbase.common.test.controllers.mongo.MongoController;
 import us.kbase.userandjobstate.jobstate.Job;
 import us.kbase.userandjobstate.jobstate.JobResult;
 import us.kbase.userandjobstate.jobstate.JobResults;
@@ -29,21 +32,25 @@ import us.kbase.userandjobstate.test.UserJobStateTestCommon;
 
 public class JobStateTests {
 	
+	private static MongoController mongo;
+	
 	private static JobState js;
 	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		UserJobStateTestCommon.destroyAndSetupDB();
+		mongo = new MongoController(
+				UserJobStateTestCommon.getMongoExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()));
+		System.out.println("Using Mongo temp dir " + mongo.getTempDir());
 		
-		String host = UserJobStateTestCommon.getHost();
-		String mUser = UserJobStateTestCommon.getMongoUser();
-		String mPwd = UserJobStateTestCommon.getMongoPwd();
-		String db = UserJobStateTestCommon.getDB();
-		
-		if (mUser != null) {
-			js = new UJSJobState(host, db, "jobstate", mUser, mPwd, 0);
-		} else {
-			js = new UJSJobState(host, db, "jobstate", 0);
+		js = new UJSJobState("localhost:" + mongo.getServerPort(),
+				"JobStateTests", "jobstate", 0);
+	}
+	
+	@AfterClass
+	public static void tearDownClass() throws Exception {
+		if (mongo != null) {
+			mongo.destroy(UserJobStateTestCommon.getDeleteTempFiles());
 		}
 	}
 	
@@ -55,6 +62,7 @@ public class JobStateTests {
 	private static String long201;
 	private static String long1001;
 	private static String long100001;
+
 	static {
 		long101 = "";
 		long201 = "";

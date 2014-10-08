@@ -12,20 +12,18 @@ ANT = 'ant'
 
 CFG_SECTION = 'UserJobTest'
 
-CONFIG_OPTS = ['test.mongo.host',
-               'test.mongo.db',
-               'test.mongo.user',
-               'test.mongo.pwd',
-               'test.user1',
+CONFIG_OPTS = ['test.user1',
                'test.pwd1',
                'test.user2',
                'test.pwd2',
                'test.user3',
                'test.pwd3',
-               'test.shock.url',
-               'test.awe.db',
+               'test.shock.exe',
+               'test.mongo.exe',
                'test.awe.server.exe',
-               'test.awe.client.exe'
+               'test.awe.client.exe',
+               'test.temp.dir',
+               'test.temp.dir.keep'
                ]
 
 if __name__ == '__main__':
