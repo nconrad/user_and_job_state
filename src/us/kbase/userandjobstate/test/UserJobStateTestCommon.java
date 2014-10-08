@@ -21,11 +21,11 @@ public class UserJobStateTestCommon {
 	public static final String TEST_TEMP_DIR = "test.temp.dir";
 	public static final String KEEP_TEMP_DIR = "test.temp.dir.keep";
 	
-	public static final String DB = "test.mongo.db";
-	public static final String HOST = "test.mongo.host";
-	public static final String M_USER = "test.mongo.user";
-	public static final String M_PWD = "test.mongo.pwd";
-	public static final String AWE_DB = "test.awe.db";
+//	public static final String DB = "test.mongo.db";
+//	public static final String HOST = "test.mongo.host";
+//	public static final String M_USER = "test.mongo.user";
+//	public static final String M_PWD = "test.mongo.pwd";
+//	public static final String AWE_DB = "test.awe.db";
 	public static final String SHOCK_URL = "test.shock.url";
 	public static final String AWE_EXE = "test.awe.server.exe";
 	public static final String AWEC_EXE = "test.awe.client.exe";
@@ -73,9 +73,9 @@ public class UserJobStateTestCommon {
 //		return getProp(DB);
 //	}
 //	
-	public static String getAweDB() {
-		return getProp(AWE_DB);
-	}
+//	public static String getAweDB() {
+//		return getProp(AWE_DB);
+//	}
 	
 	public static String getAweExe() {
 		return getProp(AWE_EXE);
