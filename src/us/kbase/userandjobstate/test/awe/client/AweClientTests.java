@@ -33,8 +33,6 @@ public class AweClientTests {
 	
 	//TODO expand these tests for more coverage of API, only covers minimal use for now
 	
-	private final static boolean DELETE_TEMP_FILES_ON_EXIT = true; //TODO 1 remove
-
 	private static BasicAweClient BAC1;
 	private static BasicAweClient BAC2;
 	private static String USER1;
@@ -69,7 +67,7 @@ public class AweClientTests {
 				"AweClientTests_AweDB",
 				"foo",
 				"foo",
-				DELETE_TEMP_FILES_ON_EXIT);
+				Paths.get(UserJobStateTestCommon.getTempDir()));
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
 		
 		USER1 = System.getProperty("test.user1");
@@ -115,7 +113,7 @@ public class AweClientTests {
 	public static void tearDownClass() throws IOException {
 		if (aweC != null) {
 			System.out.println("Deleting Awe temporary directory");
-			aweC.destroy();
+			aweC.destroy(UserJobStateTestCommon.getDeleteTempFiles());
 		}
 		if (shock != null) {
 			shock.destroy(UserJobStateTestCommon.getDeleteTempFiles());

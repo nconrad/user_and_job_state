@@ -40,8 +40,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	
 	//TODO use shock controller and start up shock
 	
-	private static final boolean DELETE_TEMP_FILES_ON_EXIT = true; //TODO 1 remove
-
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
 	private static String USER1 = null;
@@ -83,7 +81,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				"AweClientTests_AweDB",
 				"foo",
 				"foo",
-				DELETE_TEMP_FILES_ON_EXIT);
+				Paths.get(UserJobStateTestCommon.getTempDir()));
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
 		
 		
@@ -141,7 +139,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		}
 		if (aweC != null) {
 			System.out.println("Deleting Awe temporary directory");
-			aweC.destroy();
+			aweC.destroy(UserJobStateTestCommon.getDeleteTempFiles());
 		}
 		if (shock != null) {
 			shock.destroy(UserJobStateTestCommon.getDeleteTempFiles());
