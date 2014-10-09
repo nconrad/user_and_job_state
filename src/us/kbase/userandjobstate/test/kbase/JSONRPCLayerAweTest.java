@@ -176,8 +176,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 //		j.addIOTask(Arrays.asList("baz", "boo"), Arrays.asList("wugga"), Arrays.asList(false));
 //		String jobres = aweC.submitJob(j, CLIENT1.getToken());
 		
-		System.out.println("Waiting 60s for jobs to run");
-		Thread.sleep(60000);
+		System.out.println("Waiting 70s for jobs to run");
+		Thread.sleep(70000);
 		
 		Results mtres = new Results().withResults(new LinkedList<Result>());
 		checkJob(CLIENT1, jobidComplete, "complete", "", "myserv", "some desc", "task",

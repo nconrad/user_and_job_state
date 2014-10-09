@@ -32,7 +32,7 @@ import com.mongodb.WriteResult;
 
 public class UJSJobState implements JobState {
 
-	private final static int JOB_EXPIRES = 180 * 24 * 60 * 60; // 180 days
+//	private final static int JOB_EXPIRES = 180 * 24 * 60 * 60; // 180 days
 	
 	private final static int MAX_LEN_USER = 100;
 	private final static int MAX_LEN_SERVICE = 100;
@@ -87,10 +87,10 @@ public class UJSJobState implements JobState {
 	private void ensureIndexes() {
 		ensureUserIndex(USER);
 		ensureUserIndex(SHARED);
-		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
-		final DBObject opts = new BasicDBObject("expireAfterSeconds",
-				JOB_EXPIRES);
-		jobcol.ensureIndex(ttlidx, opts);
+//		final DBObject ttlidx = new BasicDBObject(CREATED, 1);
+//		final DBObject opts = new BasicDBObject("expireAfterSeconds",
+//				JOB_EXPIRES);
+//		jobcol.ensureIndex(ttlidx, opts);
 	}
 
 	private void ensureUserIndex(final String userField) {
