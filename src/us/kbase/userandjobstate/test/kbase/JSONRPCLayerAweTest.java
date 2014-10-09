@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThat;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 //import java.util.HashSet;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 //import java.util.Set;
 
+
 import org.ini4j.Ini;
 import org.ini4j.Profile.Section;
 import org.junit.AfterClass;
@@ -21,6 +23,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import us.kbase.common.service.ServerException;
+import us.kbase.common.test.controllers.mongo.MongoController;
+import us.kbase.common.test.controllers.shock.ShockController;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
@@ -36,7 +40,7 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	
 	//TODO use shock controller and start up shock
 	
-	private static final boolean DELETE_TEMP_FILES_ON_EXIT = true;
+	private static final boolean DELETE_TEMP_FILES_ON_EXIT = true; //TODO 1 remove
 
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
@@ -46,20 +50,39 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	private static UserAndJobStateClient CLIENT3 = null;
 	private static String USER3 = null;
 	
+	private static MongoController mongo;
+	private static ShockController shock;
 	private static AweController aweC;
-	private static String shockURL = UserJobStateTestCommon.getShockUrl();
+	
+	private static String shockURL;
 	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		UserJobStateTestCommon.destroyAndSetupAweDB();
+		mongo = new MongoController(
+				UserJobStateTestCommon.getMongoExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()));
+		System.out.println("Using Mongo temp dir " + mongo.getTempDir());
+		
+		shock = new ShockController(
+				UserJobStateTestCommon.getShockExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()),
+				"***---fakeuser---***",
+				"localhost:" + mongo.getServerPort(),
+				"AweClientTests_ShockDB",
+				"foo",
+				"foo");
+		System.out.println("Using Shock temp dir " + shock.getTempDir());
+		
+		shockURL = "http://localhost:" + shock.getServerPort();
+		
 		aweC = new AweController(
 				new URL(shockURL),
 				UserJobStateTestCommon.getAweExe(),
 				UserJobStateTestCommon.getAweClientExe(),
-				UserJobStateTestCommon.getHost(),
-				UserJobStateTestCommon.getAweDB(),
-				UserJobStateTestCommon.getMongoUser(),
-				UserJobStateTestCommon.getMongoPwd(),
+				"localhost:" + mongo.getServerPort(),
+				"AweClientTests_AweDB",
+				"foo",
+				"foo",
 				DELETE_TEMP_FILES_ON_EXIT);
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
 		
@@ -70,7 +93,6 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		String p1 = System.getProperty("test.pwd1");
 		String p2 = System.getProperty("test.pwd2");
 		String p3 = System.getProperty("test.pwd3");
-		UserJobStateTestCommon.destroyAndSetupDB();
 		
 		//write the server config file:
 		File iniFile = File.createTempFile("test", ".cfg", new File("./"));
@@ -78,10 +100,10 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		System.out.println("Created temporary config file: " + iniFile.getAbsolutePath());
 		Ini ini = new Ini();
 		Section ws = ini.add("UserAndJobState");
-		ws.add("mongodb-host", UserJobStateTestCommon.getHost());
-		ws.add("mongodb-database", UserJobStateTestCommon.getDB());
-		ws.add("mongodb-user", UserJobStateTestCommon.getMongoUser());
-		ws.add("mongodb-pwd", UserJobStateTestCommon.getMongoPwd());
+		ws.add("mongodb-host", "localhost:" + mongo.getServerPort());
+		ws.add("mongodb-database", "JSONRPCLayerTest_DB");
+		ws.add("mongodb-user", "foo");
+		ws.add("mongodb-pwd", "foo");
 		ws.add("awe-url", "http://localhost:" + aweC.getServerPort());
 		ini.store(iniFile);
 		
@@ -120,6 +142,12 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		if (aweC != null) {
 			System.out.println("Deleting Awe temporary directory");
 			aweC.destroy();
+		}
+		if (shock != null) {
+			shock.destroy(UserJobStateTestCommon.getDeleteTempFiles());
+		}
+		if (mongo != null) {
+			mongo.destroy(UserJobStateTestCommon.getDeleteTempFiles());
 		}
 	}
 	

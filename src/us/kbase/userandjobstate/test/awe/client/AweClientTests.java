@@ -65,7 +65,7 @@ public class AweClientTests {
 				new URL("http://localhost:" + shock.getServerPort()),
 				UserJobStateTestCommon.getAweExe(),
 				UserJobStateTestCommon.getAweClientExe(),
-				"http://localhost:" + mongo.getServerPort(),
+				"localhost:" + mongo.getServerPort(),
 				"AweClientTests_AweDB",
 				"foo",
 				"foo",
