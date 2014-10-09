@@ -104,7 +104,7 @@ public class AweController {
 	private final Process awe;
 	private final Process awec;
 	private final int port;
-
+	
 	public AweController(
 			final URL shockURL,
 			final String aweExe,
@@ -117,7 +117,8 @@ public class AweController {
 			throws Exception {
 		this.shockURL = shockURL;
 		new BasicShockClient(shockURL); // check url
-		tempDir = makeTempDirs(rootTempDir, "AweController-", tempDirectories);
+		tempDir = makeTempDirs(rootTempDir, "AweController-", tempDirectories)
+				.toAbsolutePath();
 		port = findFreePort();
 		
 		checkExe(aweExe, "awe server");

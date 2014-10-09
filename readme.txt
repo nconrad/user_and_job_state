@@ -2,6 +2,9 @@ Service to maintain global user state and job status
 
 Also has an option to wrap an Awe server and report job state
 
+Tested against https://github.com/kbase/awe_service 
+244e569c35375e638d39fc0f2667c976070da92f
+
 *WARNING*: DO NOT RUN TESTS ON A PRODUCTION DATABASE! THE TEST SCRIPTS WILL
   WIPE THE DB.
 

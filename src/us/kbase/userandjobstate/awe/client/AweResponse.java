@@ -41,6 +41,8 @@ abstract class AweResponse {
 				} else {
 					throw new AweHttpException(getStatus(), getError());
 				}
+			} else if (status == 404) {
+				throw new AweNoJobException(getStatus(), getError());
 			} else {
 				throw new AweHttpException(getStatus(), getError());
 			}

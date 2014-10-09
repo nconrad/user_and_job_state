@@ -128,12 +128,12 @@ public class AweClientTests {
 		TestAweJob j = aweC.createJob("myserv", "some desc");
 		j.addTask();
 		String jobid = aweC.submitJob(j, BAC1.getToken());
-		System.out.println("Waiting 10s for job to enqueue");
-		Thread.sleep(10000); //wait for job to enqueue
+		System.out.println("Waiting 20s for job to enqueue");
+		Thread.sleep(20000); //wait for job to enqueue
 		checkJob(jobid, "myserv", "some desc", 0, 1, "completed", "");
 		
 		failGetJob(BAC1, "fdcafcec-f66c-4d37-be5c-8bfbf7cd268d",
-				new AweNoJobException(400, "job not found:fdcafcec-f66c-4d37-be5c-8bfbf7cd268d"));
+				new AweNoJobException(404, "Not Found"));
 		failGetJob(BAC2, jobid, new AweAuthorizationException(401, "User Unauthorized"));
 		
 	}
