@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import us.kbase.common.service.ServerException;
 import us.kbase.common.service.Tuple2;
 import us.kbase.common.service.UObject;
+import us.kbase.common.test.controllers.mongo.MongoController;
 import us.kbase.userandjobstate.InitProgress;
 import us.kbase.userandjobstate.Result;
 import us.kbase.userandjobstate.Results;
@@ -53,13 +55,19 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 	private static String TOKEN1;
 	private static String TOKEN2;
 	
+	private static MongoController mongo;
+	
 	@BeforeClass
 	public static void setUpClass() throws Exception {
 		USER1 = System.getProperty("test.user1");
 		USER2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
 		String p2 = System.getProperty("test.pwd2");
-		UserJobStateTestCommon.destroyAndSetupDB();
+
+		mongo = new MongoController(
+				UserJobStateTestCommon.getMongoExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()));
+		System.out.println("Using Mongo temp dir " + mongo.getTempDir());
 		
 		//write the server config file:
 		File iniFile = File.createTempFile("test", ".cfg", new File("./"));
@@ -67,10 +75,10 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		System.out.println("Created temporary config file: " + iniFile.getAbsolutePath());
 		Ini ini = new Ini();
 		Section ws = ini.add("UserAndJobState");
-		ws.add("mongodb-host", UserJobStateTestCommon.getHost());
-		ws.add("mongodb-database", UserJobStateTestCommon.getDB());
-		ws.add("mongodb-user", UserJobStateTestCommon.getMongoUser());
-		ws.add("mongodb-pwd", UserJobStateTestCommon.getMongoPwd());
+		ws.add("mongodb-host", "localhost:" + mongo.getServerPort());
+		ws.add("mongodb-database", "JSONRPCLayerTest_DB");
+		ws.add("mongodb-user", "foo");
+		ws.add("mongodb-pwd", "foo");
 		ini.store(iniFile);
 		
 		//set up env
@@ -102,11 +110,14 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 			SERVER.stopServer();
 			System.out.println("Done");
 		}
+		if (mongo != null) {
+			mongo.destroy(UserJobStateTestCommon.getDeleteTempFiles());
+		}
 	}
 	
 	@Test
 	public void ver() throws Exception {
-		assertThat("got correct version", CLIENT1.ver(), is("0.1.1"));
+		assertThat("got correct version", CLIENT1.ver(), is("0.1.2"));
 	}
 	
 	

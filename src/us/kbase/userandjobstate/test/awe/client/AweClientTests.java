@@ -6,6 +6,7 @@ import static org.junit.Assert.fail;
 
 import java.io.IOException;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.Arrays;
 
 import org.junit.AfterClass;
@@ -16,6 +17,8 @@ import us.kbase.auth.AuthException;
 import us.kbase.auth.AuthService;
 import us.kbase.auth.AuthUser;
 import us.kbase.common.test.TestException;
+import us.kbase.common.test.controllers.mongo.MongoController;
+import us.kbase.common.test.controllers.shock.ShockController;
 import us.kbase.userandjobstate.awe.client.AweJob;
 import us.kbase.userandjobstate.awe.client.AweJobId;
 import us.kbase.userandjobstate.awe.client.BasicAweClient;
@@ -30,28 +33,45 @@ public class AweClientTests {
 	
 	//TODO expand these tests for more coverage of API, only covers minimal use for now
 	
-	private final static boolean DELETE_TEMP_FILES_ON_EXIT = true;
+	private final static boolean DELETE_TEMP_FILES_ON_EXIT = true; //TODO 1 remove
 
 	private static BasicAweClient BAC1;
 	private static BasicAweClient BAC2;
 	private static String USER1;
 	private static String USER2;
 	
+	private static MongoController mongo;
+	private static ShockController shock;
 	private static AweController aweC;
 
 	@BeforeClass
 	public static void setUpClass() throws Exception {
-		UserJobStateTestCommon.destroyAndSetupAweDB();
+		mongo = new MongoController(
+				UserJobStateTestCommon.getMongoExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()));
+		System.out.println("Using Mongo temp dir " + mongo.getTempDir());
+		
+		shock = new ShockController(
+				UserJobStateTestCommon.getShockExe(),
+				Paths.get(UserJobStateTestCommon.getTempDir()),
+				"***---fakeuser---***",
+				"localhost:" + mongo.getServerPort(),
+				"AweClientTests_ShockDB",
+				"foo",
+				"foo");
+		System.out.println("Using Shock temp dir " + shock.getTempDir());
+		
 		aweC = new AweController(
-				new URL(UserJobStateTestCommon.getShockUrl()),
+				new URL("http://localhost:" + shock.getServerPort()),
 				UserJobStateTestCommon.getAweExe(),
 				UserJobStateTestCommon.getAweClientExe(),
-				UserJobStateTestCommon.getHost(),
-				UserJobStateTestCommon.getAweDB(),
-				UserJobStateTestCommon.getMongoUser(),
-				UserJobStateTestCommon.getMongoPwd(),
+				"http://localhost:" + mongo.getServerPort(),
+				"AweClientTests_AweDB",
+				"foo",
+				"foo",
 				DELETE_TEMP_FILES_ON_EXIT);
 		System.out.println("Awe temp dir is " + aweC.getTempDir());
+		
 		USER1 = System.getProperty("test.user1");
 		USER2 = System.getProperty("test.user2");
 		String p1 = System.getProperty("test.pwd1");
@@ -96,6 +116,12 @@ public class AweClientTests {
 		if (aweC != null) {
 			System.out.println("Deleting Awe temporary directory");
 			aweC.destroy();
+		}
+		if (shock != null) {
+			shock.destroy(UserJobStateTestCommon.getDeleteTempFiles());
+		}
+		if (mongo != null) {
+			mongo.destroy(UserJobStateTestCommon.getDeleteTempFiles());
 		}
 	}
 	
