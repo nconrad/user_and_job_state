@@ -38,8 +38,6 @@ import us.kbase.userandjobstate.test.awe.controller.AweController.TestAweJob;
 //TODO note about this only covering server ops, main tests cover all ops
 public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 	
-	//TODO use shock controller and start up shock
-	
 	private static UserAndJobStateServer SERVER = null;
 	private static UserAndJobStateClient CLIENT1 = null;
 	private static String USER1 = null;
@@ -171,14 +169,15 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		j.addTask();
 		String jobidq = aweC.submitJob(j, CLIENT1.getToken());
 		
-		j = aweC.createJob("results", "res desc");
-		j.addIOTask(null, Arrays.asList("foo", "bar"), Arrays.asList(true, false));
-		j.addIOTask(Arrays.asList("bar"), Arrays.asList("baz", "boo"), Arrays.asList(false, true));
-		j.addIOTask(Arrays.asList("baz", "boo"), Arrays.asList("wugga"), Arrays.asList(false));
-		String jobres = aweC.submitJob(j, CLIENT1.getToken());
+		//TODO restore when AWE fixed https://github.com/MG-RAST/AWE/issues/325
+//		j = aweC.createJob("results", "res desc");
+//		j.addIOTask(null, Arrays.asList("foo", "bar"), Arrays.asList(true, false));
+//		j.addIOTask(Arrays.asList("bar"), Arrays.asList("baz", "boo"), Arrays.asList(false, true));
+//		j.addIOTask(Arrays.asList("baz", "boo"), Arrays.asList("wugga"), Arrays.asList(false));
+//		String jobres = aweC.submitJob(j, CLIENT1.getToken());
 		
-		System.out.println("Waiting 40s for jobs to run");
-		Thread.sleep(40000);
+		System.out.println("Waiting 60s for jobs to run");
+		Thread.sleep(60000);
 		
 		Results mtres = new Results().withResults(new LinkedList<Result>());
 		checkJob(CLIENT1, jobidComplete, "complete", "", "myserv", "some desc", "task",
@@ -196,8 +195,9 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 				.withDescription("baz")); //leave out id
 		mtres.getResults().add(new Result().withServerType("Shock").withUrl(shockURL)
 				.withDescription("wugga")); //leave out id
-		checkJob(CLIENT1, jobres, "complete", "", "results", "res desc", "task",
-				3L, 3L, null, 1L, 0L, null, mtres, true);
+		//TODO restore when AWE fixed (see TD above)
+//		checkJob(CLIENT1, jobres, "complete", "", "results", "res desc", "task",
+//				3L, 3L, null, 1L, 0L, null, mtres, true);
 		
 		failGetJob(CLIENT1, "a0c44010-9ad6-4714-8280-9f05b1ae8bcc",
 				String.format("There is no job %s viewable by user %s",
@@ -214,8 +214,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		TestAweJob j = aweC.createJob("share serv", "share desc");
 		j.addTask();
 		String jobid = aweC.submitJob(j, CLIENT1.getToken());
-		System.out.println("Waiting 10s for job to run");
-		Thread.sleep(10000);
+		System.out.println("Waiting 20s for job to run");
+		Thread.sleep(20000);
 		CLIENT1.getJobInfo(jobid); //should work
 		failShareJob(CLIENT2, jobid, Arrays.asList(USER1), String.format(
 				"There is no job %s owned by user %s", jobid, USER2));
@@ -292,8 +292,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		j.addDelayTask(20);
 		String jobid = aweC.submitJob(j, CLIENT1.getToken());
 		
-		System.out.println("Waiting 10s for job to run");
-		Thread.sleep(10000);
+		System.out.println("Waiting 20s for job to run");
+		Thread.sleep(20000);
 		Results mtres = new Results().withResults(new LinkedList<Result>());
 		checkJob(CLIENT1, jobid, "started", "", "delay serv", "delay desc", "task",
 				0L, 2L, null, 0L, 0L, null, mtres);
@@ -303,8 +303,8 @@ public class JSONRPCLayerAweTest extends JSONRPCLayerTestUtils {
 		checkJob(CLIENT1, jobid, "started", "", "delay serv", "delay desc", "task",
 				1L, 2L, null, 0L, 0L, null, mtres);
 		
-		System.out.println("Waiting 30s for job complete");
-		Thread.sleep(30000);
+		System.out.println("Waiting 40s for job complete");
+		Thread.sleep(40000);
 		checkJob(CLIENT1, jobid, "complete", "", "delay serv", "delay desc", "task",
 				2L, 2L, null, 1L, 0L, null, mtres);
 	}
