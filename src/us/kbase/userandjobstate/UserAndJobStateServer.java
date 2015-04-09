@@ -1,6 +1,7 @@
 package us.kbase.userandjobstate;
 
 import java.util.List;
+
 import us.kbase.auth.AuthToken;
 import us.kbase.common.service.JsonServerMethod;
 import us.kbase.common.service.JsonServerServlet;
@@ -38,9 +39,9 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.AppenderBase;
-
+import us.kbase.auth.AuthConfig;
 import us.kbase.auth.AuthException;
-import us.kbase.auth.AuthService;
+import us.kbase.auth.ConfigurableAuthService;
 import us.kbase.auth.TokenExpiredException;
 import us.kbase.auth.TokenFormatException;
 import us.kbase.common.mongo.exceptions.InvalidHostException;
@@ -128,7 +129,10 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	private static final String MONGO_RECONNECT = "mongodb-retry";
 	//awe url
 	private static final String AWE_URL = "awe-url";
-	
+	//credentials to use for user queries
+	private static final String KBASE_ADMIN_USER = "kbase-admin-user";
+	private static final String KBASE_ADMIN_PWD = "kbase-admin-pwd";
+			
 	private static Map<String, String> ujConfig = null;
 	
 	private static final String USER_COLLECTION = "userstate";
@@ -137,9 +141,12 @@ public class UserAndJobStateServer extends JsonServerServlet {
 	public final static int MAX_LEN_SERVTYPE = 100;
 	public final static int MAX_LEN_DESC = 1000;
 	
+	private final static int TOKEN_REFRESH_INTERVAL_SEC = 24 * 60 * 60;
+	
 	private final UserState us;
 	private final JobState js;
 	private final URL aweUrl;
+	private final ConfigurableAuthService auth;
 	
 	private final static DateTimeFormatter DATE_PARSER =
 			new DateTimeFormatterBuilder()
@@ -273,14 +280,14 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		startupFailed();
 	}
 	
-	private static String getServiceName(String serviceToken)
+	private String getServiceName(String serviceToken)
 			throws TokenFormatException, TokenExpiredException, IOException {
 		if (serviceToken == null || serviceToken.isEmpty()) {
 			throw new IllegalArgumentException(
 					"Service token cannot be null or the empty string");
 		}
 		final AuthToken t = new AuthToken(serviceToken);
-		if (!AuthService.validateToken(t)) {
+		if (!auth.validateToken(t)) {
 			throw new IllegalArgumentException("Service token is invalid");
 		}
 		return t.getUserName();
@@ -399,8 +406,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 						"A user name cannot be null or the empty string");
 			}
 		}
-		final Map<String, Boolean> userok = AuthService.isValidUserName(
-				users, token);
+		final Map<String, Boolean> userok = auth.isValidUserName(users);
 		for (String u: userok.keySet()) {
 			if (!userok.get(u)) {
 				throw new IllegalArgumentException(String.format(
@@ -460,6 +466,28 @@ public class UserAndJobStateServer extends JsonServerServlet {
 		return recint;
 	}
 	
+
+	private ConfigurableAuthService setUpAuthClient(
+			final String kbaseAdminUser,
+			final String kbaseAdminPwd) {
+		AuthConfig c = new AuthConfig();
+		ConfigurableAuthService auth;
+		try {
+			auth = new ConfigurableAuthService(c);
+			c.withRefreshingToken(auth.getRefreshingToken(
+					kbaseAdminUser, kbaseAdminPwd,
+					TOKEN_REFRESH_INTERVAL_SEC));
+			return auth;
+		} catch (AuthException e) {
+			fail("Couldn't log in the KBase administrative user " +
+					kbaseAdminUser + " : " + e.getLocalizedMessage());
+		} catch (IOException e) {
+			fail("Couldn't connect to authorization service at " +
+					c.getAuthServerURL() + " : " + e.getLocalizedMessage());
+		}
+		return null;
+	}
+	
 	public static void clearConfigForTests() {
 		ujConfig = null;
 	}
@@ -493,11 +521,24 @@ public class UserAndJobStateServer extends JsonServerServlet {
 					"is to be used");
 			failed = true;
 		}
+		
+		if (!ujConfig.containsKey(KBASE_ADMIN_USER)) {
+			fail("Must provide param " + KBASE_ADMIN_USER + " in config file");
+			failed = true;
+		}
+		final String adminUser = ujConfig.get(KBASE_ADMIN_USER);
+		if (!ujConfig.containsKey(KBASE_ADMIN_PWD)) {
+			fail("Must provide param " + KBASE_ADMIN_PWD + " in config file");
+			failed = true;
+		}
+		final String adminPwd = ujConfig.get(KBASE_ADMIN_PWD);
+		
 		if (failed) {
 			fail("Server startup failed - all calls will error out.");
 			us = null;
 			js = null;
 			aweUrl = null;
+			auth = null;
 		} else {
 			final String user = ujConfig.get(USER);
 			final String pwd = ujConfig.get(PWD);
@@ -518,6 +559,7 @@ public class UserAndJobStateServer extends JsonServerServlet {
 			js = getUJSJobState(host, dbs, user, pwd, mongoConnectRetry);
 			final String aweUrlString = ujConfig.get(AWE_URL);
 			aweUrl = checkAweUrl(aweUrlString);
+			auth = setUpAuthClient(adminUser, adminPwd);
 		}
         //END_CONSTRUCTOR
     }

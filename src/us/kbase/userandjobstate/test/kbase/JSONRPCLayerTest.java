@@ -79,6 +79,8 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		ws.add("mongodb-database", "JSONRPCLayerTest_DB");
 		ws.add("mongodb-user", "foo");
 		ws.add("mongodb-pwd", "foo");
+		ws.add("kbase-admin-user", USER1);
+		ws.add("kbase-admin-pwd", p1);
 		ini.store(iniFile);
 		
 		//set up env
