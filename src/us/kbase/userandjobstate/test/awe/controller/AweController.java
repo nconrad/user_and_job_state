@@ -116,6 +116,8 @@ public class AweController {
 			final Path rootTempDir)
 			throws Exception {
 		this.shockURL = shockURL;
+		Thread.sleep(1000); //wait for shock to start 
+		//TODO add a sleep to the shock controller post start rather than sleeping here
 		new BasicShockClient(shockURL); // check url
 		tempDir = makeTempDirs(rootTempDir, "AweController-", tempDirectories)
 				.toAbsolutePath();
