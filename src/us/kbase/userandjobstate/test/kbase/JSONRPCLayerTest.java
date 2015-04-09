@@ -79,6 +79,8 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		ws.add("mongodb-database", "JSONRPCLayerTest_DB");
 		ws.add("mongodb-user", "foo");
 		ws.add("mongodb-pwd", "foo");
+		ws.add("kbase-admin-user", USER1);
+		ws.add("kbase-admin-pwd", p1);
 		ini.store(iniFile);
 		
 		//set up env
@@ -414,7 +416,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 			jobid = "a" + jobid.substring(1);
 		}
 		failGetJob(CLIENT1, jobid, String.format(
-				"There is no job %s viewable by user kbasetest", jobid));
+				"There is no job %s viewable by user %s", jobid, USER1));
 	}
 	
 	@Test
@@ -502,7 +504,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		updateJobBadArgs(jobid, "foo", "s", null,
 				"Auth token is in the incorrect format, near 'foo'");
 		updateJobBadArgs(jobid, TOKEN1, "s", null, String.format(
-				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
+				"There is no uncompleted job %s for user %s started by service %s",
 				jobid, USER1, USER1));
 		updateJobBadArgs(jobid, TOKEN2 + "a", "s", null,
 				"Service token is invalid");
@@ -581,7 +583,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		failCompleteJob(jobid, TOKEN2 + "w", "s", null, null,
 				"Service token is invalid");
 		failCompleteJob(jobid, TOKEN1, "s", null, null, String.format(
-				"There is no uncompleted job %s for user kbasetest started by service kbasetest",
+				"There is no uncompleted job %s for user %s started by service %s",
 				jobid, USER1, USER1));
 		Results badres = new Results();
 		badres.setAdditionalProperties("foo", "bar");
@@ -727,7 +729,7 @@ public class JSONRPCLayerTest extends JSONRPCLayerTestUtils {
 		failToDeleteJob(jobid, TOKEN2 + 'w',
 				"Service token is invalid");
 		failToDeleteJob(jobid, TOKEN1, String.format(
-				"There is no job %s for user kbasetest and service kbasetest",
+				"There is no job %s for user %s and service %s",
 				jobid, USER1, USER1));
 	}
 	
